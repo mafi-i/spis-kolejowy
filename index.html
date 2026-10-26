@@ -312,7 +312,7 @@
         .friend-card { background: #0d0d0f; border-color: var(--border-color); }
         .photo-card { background: #0d0d0f; border: 1px solid var(--border-color); border-left: 3px solid var(--purple-photo); padding: 12px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
 
-        .zaliczak-stats { background: #151518; border-bottom: 1px solid var(--border-color); padding: 20px; font-family: 'Share Tech Mono', monospace; display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
+        .zaliczak-stats { background: #151518; border-bottom: 1px solid var(--border-color); padding: 20px; font-family: 'Share Tech Mono', monospace; display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-radius: 6px; }
         .stat-item span { display: block; }
         .stat-val { font-size: 20px; color: var(--accent-orange); font-weight: bold; }
         .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
@@ -487,72 +487,70 @@
         </section>
 
         <!-- ZAKŁADKA 2: AKTUALIZOWANIE MAPY -->
-        <section id="view-aktualizacja-section" style="display:none; padding: 0; background: none; border: none;">
-            <div style="background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px;">
-                <h2 style="padding: 20px 20px 0 20px; margin-bottom: 10px;">// Panel Aktualizowania Mapy, Tras i Taboru</h2>
+        <section id="view-aktualizacja-section" style="display:none;">
+            <h2>// Panel Aktualizowania Mapy, Tras i Taboru</h2>
 
-                <div class="zaliczak-stats">
-                    <div class="stat-item"><span class="stat-val" id="stat-stations">0 / 33</span><span class="stat-label">Zaliczone Stacje</span></div>
-                    <div class="stat-item"><span class="stat-val" id="stat-rides">0</span><span class="stat-label">Przejechane Odcinki</span></div>
-                    <div class="stat-item"><span class="stat-val" id="stat-km">0 km</span><span class="stat-label">Kilometraż Tras</span></div>
-                </div>
+            <div class="zaliczak-stats">
+                <div class="stat-item"><span class="stat-val" id="stat-stations">0 / 33</span><span class="stat-label">Zaliczone Stacje</span></div>
+                <div class="stat-item"><span class="stat-val" id="stat-rides">0</span><span class="stat-label">Przejechane Odcinki</span></div>
+                <div class="stat-item"><span class="stat-val" id="stat-km">0 km</span><span class="stat-label">Kilometraż Tras</span></div>
+            </div>
 
-                <div class="update-grid" style="padding: 0 20px 20px 20px;">
-                    <div class="update-box" style="background: none; border: none; padding: 0;">
-                        <h3 style="border-bottom: none;">1. Dodawanie Przejazdu Linią (Id-12)</h3>
-                        <div class="row-flex">
-                            <div class="form-group" style="flex:1;"><label>Data przejazdu:</label><input type="date" id="ride-date"></div>
-                            <div class="form-group" style="flex:1;">
-                                <label>Środek transportu:</label>
-                                <select id="ride-transport">
-                                    <option value="Pociąg planowy">Pociąg planowy</option>
-                                    <option value="Pociąg specjalny">Pociąg specjalny</option>
-                                    <option value="Inne">Inne</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Wyszukaj linię PKP PLK:</label>
-                            <div class="row-flex">
-                                <input type="text" id="ride-search-input" placeholder="np. LK1, LK4, Warszawa..." style="flex:1;" oninput="searchLinesForStation()">
-                                <button class="btn-small" onclick="searchLinesForStation()">Pokaż linie</button>
-                            </div>
-                        </div>
-                        <div id="line-search-results" class="results-list" style="display:none;"></div>
-
-                        <div id="segment-selector-box" style="display:none; background: #0d0d0f; padding: 12px; border-radius: 4px; border: 1px solid var(--border-color);" class="form-group">
-                            <label style="color:var(--accent-cyan)" id="selected-line-title">Linia</label>
-                            <div class="row-flex">
-                                <div class="form-group" style="flex:1;"><label>Stacja start:</label><select id="select-start-station"></select></div>
-                                <div class="form-group" style="flex:1;"><label>Stacja koniec:</label><select id="select-end-station"></select></div>
-                            </div>
-                            <button class="btn-small" id="btn-add-ride" style="margin-top:8px;" onclick="addTraveledSegment()">[ Dodaj Przejazd po Torach » ]</button>
-                        </div>
-
-                        <div class="form-group" style="margin-top:15px;">
-                            <label>Twoje przejechane odcinki:</label>
-                            <div id="user-rides-list" style="display:flex; flex-direction:column; gap:6px; max-height: 200px; overflow-y:auto;">
-                                <span style="font-size:12px; color:var(--text-muted);">Brak przejazdów.</span>
-                            </div>
+            <div class="update-grid">
+                <div class="update-box">
+                    <h3>Dodaj Przejazd Linią (Id-12)</h3>
+                    <div class="row-flex">
+                        <div class="form-group" style="flex:1;"><label>Data przejazdu:</label><input type="date" id="ride-date"></div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Środek transportu:</label>
+                            <select id="ride-transport">
+                                <option value="Pociąg planowy">Pociąg planowy</option>
+                                <option value="Pociąg specjalny">Pociąg specjalny</option>
+                                <option value="Inne">Inne</option>
+                            </select>
                         </div>
                     </div>
-
-                    <div class="update-box" style="background: none; border: none; padding: 0;">
-                        <h3 style="border-bottom: none;">2. Dodawanie Odwiedzonej Stacji</h3>
-                        <div class="form-group">
-                            <label>Wyszukaj stację węzłową:</label>
-                            <div class="row-flex">
-                                <input type="text" id="station-search-input" placeholder="np. Katowice, Gdańsk, Poznań..." style="flex:1;" oninput="searchStationsOnly()">
-                                <button class="btn-small" onclick="searchStationsOnly()">Szukaj</button>
-                            </div>
+                    <div class="form-group">
+                        <label>Wyszukaj linię PKP PLK:</label>
+                        <div class="row-flex">
+                            <input type="text" id="ride-search-input" placeholder="np. LK1, LK4, Warszawa..." style="flex:1;" oninput="searchLinesForStation()">
+                            <button class="btn-small" onclick="searchLinesForStation()">Pokaż linie</button>
                         </div>
-                        <div id="station-search-results" class="results-list" style="display:none;"></div>
+                    </div>
+                    <div id="line-search-results" class="results-list" style="display:none;"></div>
 
-                        <div class="form-group" style="margin-top:10px;">
-                            <label>Twoje odwiedzone stacje:</label>
-                            <div id="user-visited-stations" style="display:flex; flex-direction:column; gap:6px; max-height: 250px; overflow-y:auto;">
-                                <span style="font-size:12px; color:var(--text-muted);">Brak odwiedzonych stacji.</span>
-                            </div>
+                    <div id="segment-selector-box" style="display:none; background: #0d0d0f; padding: 12px; border-radius: 4px; border: 1px solid var(--border-color);" class="form-group">
+                        <label style="color:var(--accent-cyan)" id="selected-line-title">Linia</label>
+                        <div class="row-flex">
+                            <div class="form-group" style="flex:1;"><label>Stacja start:</label><select id="select-start-station"></select></div>
+                            <div class="form-group" style="flex:1;"><label>Stacja koniec:</label><select id="select-end-station"></select></div>
+                        </div>
+                        <button class="btn-small" id="btn-add-ride" style="margin-top:8px;" onclick="addTraveledSegment()">[ Dodaj Przejazd po Torach » ]</button>
+                    </div>
+
+                    <div class="form-group" style="margin-top:15px;">
+                        <label>Twoje przejechane odcinki:</label>
+                        <div id="user-rides-list" style="display:flex; flex-direction:column; gap:6px; max-height: 200px; overflow-y:auto;">
+                            <span style="font-size:12px; color:var(--text-muted);">Brak przejazdów.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="update-box">
+                    <h3>Dodaj Odwiedzoną Stację</h3>
+                    <div class="form-group">
+                        <label>Wyszukaj stację węzłową:</label>
+                        <div class="row-flex">
+                            <input type="text" id="station-search-input" placeholder="np. Katowice, Gdańsk, Poznań..." style="flex:1;" oninput="searchStationsOnly()">
+                            <button class="btn-small" onclick="searchStationsOnly()">Szukaj</button>
+                        </div>
+                    </div>
+                    <div id="station-search-results" class="results-list" style="display:none;"></div>
+
+                    <div class="form-group" style="margin-top:10px;">
+                        <label>Twoje odwiedzone stacje:</label>
+                        <div id="user-visited-stations" style="display:flex; flex-direction:column; gap:6px; max-height: 250px; overflow-y:auto;">
+                            <span style="font-size:12px; color:var(--text-muted);">Brak odwiedzonych stacji.</span>
                         </div>
                     </div>
                 </div>
@@ -569,17 +567,37 @@
                             <label>Typ lokomotywy / EZT:</label>
                             <select id="sketch-series" onchange="toggleCustomSeriesInput(this)">
                                 <optgroup label="Lokomotywy Elektryczne">
-                                    <option>EU07</option><option>EP07</option><option>EP08</option><option>EP09</option>
-                                    <option>ET22</option><option>ET41</option><option>EU160</option><option>EU200</option>
-                                    <option>Vectron</option><option>Traxx</option><option>Dragon</option>
+                                    <option value="Dragon">Dragon</option>
+                                    <option value="EP07">EP07</option>
+                                    <option value="EP08">EP08</option>
+                                    <option value="EP09">EP09</option>
+                                    <option value="ET22">ET22</option>
+                                    <option value="ET41">ET41</option>
+                                    <option value="EU07">EU07</option>
+                                    <option value="EU160">EU160</option>
+                                    <option value="EU200">EU200</option>
+                                    <option value="Traxx">Traxx</option>
+                                    <option value="Vectron">Vectron</option>
                                 </optgroup>
                                 <optgroup label="Lokomotywy Spalinowe">
-                                    <option>SM42</option><option>SU42</option><option>ST44</option><option>ST43</option>
-                                    <option>6Dg</option><option>15D</option><option>SU160</option><option>BR232</option>
+                                    <option value="15D">15D</option>
+                                    <option value="6Dg">6Dg</option>
+                                    <option value="BR232">BR232</option>
+                                    <option value="SM42">SM42</option>
+                                    <option value="ST43">ST43</option>
+                                    <option value="ST44">ST44</option>
+                                    <option value="SU160">SU160</option>
+                                    <option value="SU42">SU42</option>
                                 </optgroup>
                                 <optgroup label="EZT / Zespoły">
-                                    <option>EN57</option><option>ED161</option><option>ED250</option><option>45WE</option><option>31WE</option>
-                                    <option>Impuls</option><option>Elf</option><option>Flirt</option>
+                                    <option value="31WE">31WE</option>
+                                    <option value="45WE">45WE</option>
+                                    <option value="ED161">ED161</option>
+                                    <option value="ED250">ED250</option>
+                                    <option value="Elf">Elf</option>
+                                    <option value="EN57">EN57</option>
+                                    <option value="Flirt">Flirt</option>
+                                    <option value="Impuls">Impuls</option>
                                 </optgroup>
                                 <option value="CUSTOM">[ Wpisz własny typ... ]</option>
                             </select>
@@ -910,11 +928,12 @@
             pendingRequests: []
         };
 
+        // Zaktualizowany dziennik zmian
         const changelogData = [
             {
                 version: "Alpha 1.0.0",
-                title: "Globalna Moderacja, Unikalność i Reorganizacja Z systemu Alpha",
-                date: "Dzisiaj",
+                title: "Globalna Moderacja, Unikalność i Reorganizacja z Systemu Alpha",
+                date: "26.10.2026",
                 added: [
                     "Blokada tworzenia kont z takim samym nickiem",
                     "Całkowicie przepisany system znajomych (akceptacja/odrzucanie po stronie serwera)",
@@ -922,16 +941,6 @@
                     "Panel Informacyjny [ i ] o działaniu strony",
                     "Zarządzanie globalnymi listami z poziomu panelu Mod/Admin",
                     "Zawieszenia/Bany w czasie rzeczywistym"
-                ]
-            },
-            {
-                version: "v4.5.0",
-                title: "Integracja z Firebase i Nowe Role",
-                date: "Ostatnio",
-                added: [
-                    "Pełna synchronizacja bazy taboru i tras w czasie rzeczywistym z Google Firebase",
-                    "Wprowadzenie systemu ról: Administrator, Moderator oraz Beta Tester",
-                    "Przywrócono pełną bazę trasowania BRouter oraz kompresję Canvas"
                 ]
             }
         ];
@@ -1553,7 +1562,7 @@
             showToast('Usunięto zdjęcie.', 'warn');
         }
 
-        // --- STATYSTYKI TABORU & DRILLDOWN (Sortowanie Alpha 'pl') ---
+        // --- STATYSTYKI TABORU & DRILLDOWN (Sortowanie alfabetyczne naturalne - z obsługą cyfr) ---
         function getCategoryForSeries(seriesStr) {
             let s = seriesStr.toUpperCase().trim();
             if (/^(EN|ED|WE|EW|31WE|45WE|IMPULS|ELF|FLIRT)/.test(s)) return "Elektryczne zespoły trakcyjne";
@@ -1566,11 +1575,11 @@
         function updateTaborStats() {
             let tbody = document.getElementById('map-ilostan-tbody'); if (!tbody) return;
             const cats = [
-                { id: "Lokomotywy elektryczne", title: "Lokomotywy elektryczne" },
                 { id: "Elektryczne zespoły trakcyjne", title: "Elektryczne zespoły trakcyjne" },
+                { id: "Lokomotywy elektryczne", title: "Lokomotywy elektryczne" },
+                { id: "Lokomotywy parowe", title: "Lokomotywy parowe" },
                 { id: "Lokomotywy spalinowe", title: "Lokomotywy spalinowe" },
-                { id: "Spalinowe zespoły trakcyjne i autobusy szynowe", title: "Spalinowe zespoły trakcyjne i autobusy szynowe" },
-                { id: "Lokomotywy parowe", title: "Lokomotywy parowe" }
+                { id: "Spalinowe zespoły trakcyjne i autobusy szynowe", title: "Spalinowe zespoły trakcyjne i autobusy szynowe" }
             ];
 
             const stats = {};
@@ -1615,8 +1624,8 @@
                 seriesMap[s] = (seriesMap[s] || 0) + 1;
             });
 
-            // Alpha - Alfabetyczne sortowanie z locale 'pl'
-            let sortedSeries = Object.keys(seriesMap).sort((a, b) => a.localeCompare(b, 'pl'));
+            // Gwarancja sortowania naturalnego alfabetycznie dla Polskiego (np. EU07 > EU160 zamiast od długości stringu)
+            let sortedSeries = Object.keys(seriesMap).sort((a, b) => a.localeCompare(b, 'pl', { numeric: true }));
 
             sortedSeries.forEach(sName => {
                 let card = document.createElement('div'); card.className = 'drilldown-series-card';
@@ -1637,8 +1646,8 @@
             let photosCont = document.getElementById('drilldown-photos-container'); photosCont.innerHTML = '';
             let targetPhotos = userData.photos.filter(p => p.series.toUpperCase().trim() === seriesName);
             
-            // Alpha - Alfabetyczne sortowanie numerów z locale 'pl'
-            targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl'));
+            // Dokładne sortowanie po numerze pociągu (tak by numer 9 nie był przez przypadek wyżej niż 123)
+            targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl', { numeric: true }));
 
             targetPhotos.forEach(p => {
                 let div = document.createElement('div'); div.className = 'photo-card'; div.style.marginBottom = "0";
