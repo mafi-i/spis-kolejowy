@@ -183,7 +183,7 @@
 
         .profile-dropdown {
             position: absolute; right: 0; top: 40px; background: var(--panel-bg);
-            border: 2px solid var(--accent-blue); border-radius: 6px; width: 250px;
+            border: 2px solid var(--accent-blue); border-radius: 6px; width: 260px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1100;
             overflow: hidden;
         }
@@ -360,7 +360,11 @@
 
         <div class="user-profile-wrapper" id="user-profile-wrapper">
             <button class="user-profile-btn">
-                <img src="https://via.placeholder.com/38/ff9e00/000000?text=SK" alt="Avatar" class="user-avatar" id="nav-user-avatar">
+                <div style="position: relative;">
+                    <img src="https://via.placeholder.com/38/ff9e00/000000?text=SK" alt="Avatar" class="user-avatar" id="nav-user-avatar">
+                    <!-- Globalny znacznik powiadomień dla Admina na Avatarze -->
+                    <span class="notif-badge-on-tile" id="global-admin-badge" style="top:-4px; right:-4px; z-index:5;">0</span>
+                </div>
                 <div style="display:flex; flex-direction:column;">
                     <span class="user-name" id="user-display-name">Spotter</span>
                     <span class="role-badge role-user" id="user-role-badge">USER</span>
@@ -380,7 +384,10 @@
                 <button class="dropdown-item" onclick="switchView('changelog')">&#128221; Dziennik zmian</button>
                 
                 <!-- Przycisk zgłoszeń dla Admina i zgłaszania błędów dla Testera -->
-                <button class="dropdown-item" id="btn-admin-feedback" style="display:none; color:var(--role-admin);" onclick="openAdminFeedbackModal()">&#128227; Odczytaj Zgłoszenia (Admin)</button>
+                <button class="dropdown-item" id="btn-admin-feedback" style="display:none; color:var(--role-admin); justify-content: space-between;" onclick="openAdminFeedbackModal()">
+                    <span>&#128227; Odczytaj Zgłoszenia (Admin)</span>
+                    <span id="admin-feedback-badge" style="background:#ff4d4d; color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; display:none; font-weight:bold;">0</span>
+                </button>
                 <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Tester)</button>
                 
                 <button class="dropdown-item danger" onclick="handleLogout()">&#9211; Wyloguj się</button>
@@ -615,16 +622,11 @@
                     </div>
 
                     <div class="sketch-row">
+                        <!-- Wyszukiwarka przewoźnika (Datalist Combobox) -->
                         <div class="form-group">
                             <label>Przewoźnik:</label>
-                            <select id="sketch-carrier-select">
-                                <option value="PKP Intercity S.A.">PKP Intercity S.A.</option>
-                                <option value="PKP Cargo S.A.">PKP Cargo S.A.</option>
-                                <option value="Polregio S.A.">Polregio S.A.</option>
-                                <option value="Koleje Śląskie">Koleje Śląskie</option>
-                                <option value="Koleje Mazowieckie">Koleje Mazowieckie</option>
-                                <option value="Koleje Dolnośląskie">Koleje Dolnośląskie</option>
-                            </select>
+                            <input type="text" id="sketch-carrier-select" list="sketch-carrier-list" placeholder="np. PKP Intercity, wpisz by wyszukać...">
+                            <datalist id="sketch-carrier-list"></datalist>
                         </div>
                         <div class="form-group"><label>Malowanie:</label><input type="text" id="sketch-painting" placeholder="np. Fabryczne, Historyczne"></div>
                     </div>
@@ -949,10 +951,11 @@
                 title: "Globalna Moderacja, Unikalność i Reorganizacja z Systemu Alpha",
                 date: "26.10.2026",
                 added: [
+                    "Wyszukiwarka i duża pre-definiowana baza przewoźników z UTK",
+                    "Blokada duplikatów przy dodawaniu globalnych danych",
+                    "Złożony mechanizm sortujący tabele (alfabetyczno-cyfrowy pod polski tabor)",
                     "Blokada tworzenia kont z takim samym nickiem",
-                    "Całkowicie przepisany system znajomych (akceptacja/odrzucanie po stronie serwera)",
-                    "Alfabetyczne sortowanie taboru za pomocą polskiego Locale",
-                    "Panel Informacyjny [ i ] o działaniu strony",
+                    "Całkowicie przepisany system znajomych (akceptacja/odrzucanie i usuwanie)",
                     "Zarządzanie globalnymi listami z poziomu panelu Mod/Admin",
                     "Zawieszenia/Bany w czasie rzeczywistym"
                 ]
@@ -960,9 +963,26 @@
         ];
 
         let uploadedImageDataUrl = "";
+        
+        // --- DANE GLOBALNE PRZEWOŹNIKÓW BAZOWYCH ---
+        const defaultCarriers = [
+            "Arriva RP", "Captrain Polska", "CD Cargo Poland", "CTL Logistics",
+            "DB Cargo Polska", "Ecco Rail", "EPL", "Freightliner PL",
+            "Koleje Dolnośląskie", "Koleje Małopolskie", "Koleje Mazowieckie",
+            "Koleje Śląskie", "Koleje Wielkopolskie", "Laude Smart Intermodal",
+            "Lotos Kolej", "LTE Polska", "Łódzka Kolej Aglomeracyjna (ŁKA)", 
+            "Majkoltrans", "Metrans", "Orlen KolTrans", "PCC Intermodal", 
+            "PKP Cargo", "PKP Intercity", "PKP LHS", "Polregio", "Rail Polska", 
+            "SKM Trójmiasto", "SKM Warszawa", "Warszawska Kolej Dojazdowa (WKD)"
+        ];
+        defaultCarriers.sort((a, b) => a.localeCompare(b, 'pl'));
+
+        let cloudCarriers = [];
+        let cloudSeries = [];
 
         // --- AUTH OBSŁUGA Z FIREBASE (UNIKALNOŚĆ NICKU - ALPHA) ---
         let userDocUnsubscribe = null;
+        let adminFeedbackUnsubscribe = null;
 
         function switchAuthTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -995,7 +1015,6 @@
             if (type === 'register') {
                 const username = document.getElementById('reg-username').value.trim();
                 
-                // SPRAWDZENIE UNIKALNOŚCI NICKU W FIRESTORE (Alpha)
                 const nickCheck = await db.collection('users').where('username', '==', username).get();
                 if (!nickCheck.empty) {
                     showToast("Ten Nick jest już zajęty! Wybierz inny.", "error");
@@ -1046,19 +1065,14 @@
 
         // Listener stanu logowania na żywo z chmury + Blokada BAN (Alpha)
         auth.onAuthStateChanged((user) => {
-            // ZABEZPIECZENIE: Zatrzymujemy nasłuchiwanie poprzedniego konta przed nową akcją
-            if (userDocUnsubscribe) {
-                userDocUnsubscribe();
-                userDocUnsubscribe = null;
-            }
+            if (userDocUnsubscribe) { userDocUnsubscribe(); userDocUnsubscribe = null; }
+            if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
 
             if (user) {
-                // PRZYPISANIE nasłuchiwacza do zmiennej, aby móc go później wyłączyć
                 userDocUnsubscribe = db.collection('users').doc(user.uid).onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
                         
-                        // Zabezpieczenie na Bana (Alpha)
                         if (data.bannedUntil && data.bannedUntil > Date.now()) {
                             auth.signOut();
                             alert("To konto zostało zawieszone przez Moderatora do: " + new Date(data.bannedUntil).toLocaleString());
@@ -1094,12 +1108,10 @@
 
         function saveUserDataToStorage() {
             if (!currentUser) return;
-            // Zapis w pamięci przeglądarki
             localStorage.setItem(`spis_kolejowy_data_${currentUser.email}`, JSON.stringify(userData));
             refreshStatsAndRank();
             if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData);
 
-            // Asynchroniczny zapis do Firestore
             db.collection('users').doc(currentUser.uid).update({
                 userData: userData
             }).catch(e => console.warn("Błąd synchronizacji chmury:", e));
@@ -1118,17 +1130,18 @@
             document.getElementById('profile-friend-code').value = currentUser.friendCode;
             document.getElementById('profile-edit-name').value = currentUser.username;
 
-            // Rangi i role (Alpha - Panel Zarządzania i Zgłaszania Błędów)
             const badge = document.getElementById('user-role-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
             const testerBtn = document.getElementById('btn-tester-feedback');
             const adminFeedbackBtn = document.getElementById('btn-admin-feedback');
+            const globalAdminBadge = document.getElementById('global-admin-badge');
             const role = (currentUser.role || 'user').toLowerCase();
 
             badge.className = 'role-badge';
             adminNavBtn.style.display = 'none'; 
             testerBtn.style.display = 'none';
             adminFeedbackBtn.style.display = 'none';
+            globalAdminBadge.style.display = 'none';
 
             if (role === 'admin' || role === 'moderator') {
                 badge.classList.add(role === 'admin' ? 'role-admin' : 'role-moderator');
@@ -1138,8 +1151,9 @@
                 
                 if(role === 'admin') {
                     document.getElementById('admin-role-manager-container').style.display = 'flex';
-                    adminFeedbackBtn.style.display = 'flex'; // Widoczne tylko dla admina w profilu
+                    adminFeedbackBtn.style.display = 'flex'; 
                     loadAdminUsers(); 
+                    listenToAdminFeedback();
                 } else {
                     document.getElementById('admin-role-manager-container').style.display = 'none';
                 }
@@ -1147,9 +1161,11 @@
                 badge.classList.add('role-tester');
                 badge.innerText = 'BETA TESTER';
                 testerBtn.style.display = 'block';
+                if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
             } else {
                 badge.classList.add('role-user');
                 badge.innerText = 'USER';
+                if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
             }
 
             initMap();
@@ -1168,12 +1184,35 @@
             db.collection('globalData').doc('lists').onSnapshot(doc => {
                 if(doc.exists) {
                     const data = doc.data();
-                    if(data.carriers) {
-                        const dl = document.getElementById('sketch-carrier-select');
-                        if(dl) {
-                            dl.innerHTML = '';
-                            data.carriers.forEach(c => dl.innerHTML += `<option value="${c}">${c}</option>`);
+                    cloudCarriers = data.carriers || [];
+                    cloudSeries = data.series || [];
+                    
+                    const dl = document.getElementById('sketch-carrier-list');
+                    if(dl) {
+                        dl.innerHTML = '';
+                        let merged = [...new Set([...defaultCarriers, ...cloudCarriers])];
+                        merged.sort((a,b) => a.localeCompare(b, 'pl'));
+                        merged.forEach(c => dl.innerHTML += `<option value="${c}"></option>`);
+                    }
+
+                    const sl = document.getElementById('sketch-series');
+                    if(sl && cloudSeries.length > 0) {
+                        let og = document.getElementById('cloud-series-optgroup');
+                        if(!og) {
+                            og = document.createElement('optgroup');
+                            og.id = 'cloud-series-optgroup';
+                            og.label = 'Dodane z Chmury';
+                            sl.insertBefore(og, sl.querySelector('option[value="CUSTOM"]'));
                         }
+                        og.innerHTML = '';
+                        let sortedSeries = [...cloudSeries].sort((a,b) => a.localeCompare(b, 'pl'));
+                        sortedSeries.forEach(s => og.innerHTML += `<option value="${s}">${s}</option>`);
+                    }
+                } else {
+                    const dl = document.getElementById('sketch-carrier-list');
+                    if(dl) {
+                        dl.innerHTML = '';
+                        defaultCarriers.forEach(c => dl.innerHTML += `<option value="${c}"></option>`);
                     }
                 }
             });
@@ -1184,6 +1223,21 @@
             const val = document.getElementById('mod-add-value').value.trim();
             if(!val) return;
             
+            // Check for duplicates before pushing
+            if (type === 'carriers') {
+                let merged = [...new Set([...defaultCarriers, ...cloudCarriers])];
+                if (merged.map(c => c.toLowerCase()).includes(val.toLowerCase())) {
+                    showToast("Taki przewoźnik już istnieje w bazie!", "warn");
+                    return;
+                }
+            } else if (type === 'series') {
+                let existingOptions = Array.from(document.getElementById('sketch-series').options).map(o => o.value.toLowerCase());
+                if (existingOptions.includes(val.toLowerCase())) {
+                    showToast("Taka seria taboru już istnieje!", "warn");
+                    return;
+                }
+            }
+
             try {
                 await db.collection('globalData').doc('lists').set({
                     [type]: firebase.firestore.FieldValue.arrayUnion(val)
@@ -1227,30 +1281,60 @@
         }
 
         // ODCZYTYWANIE ZGŁOSZEŃ PRZEZ ADMINA
-        async function openAdminFeedbackModal() {
-            document.getElementById('admin-feedback-modal').style.display = 'flex';
-            const list = document.getElementById('admin-feedback-list');
-            list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Ładowanie zgłoszeń z chmury...</span>';
-            try {
-                const snap = await db.collection('feedback').orderBy('time', 'desc').get();
-                if(snap.empty) { 
-                    list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Brak nowych zgłoszeń.</span>'; 
-                    return; 
+        function listenToAdminFeedback() {
+            if(adminFeedbackUnsubscribe) return; 
+            
+            adminFeedbackUnsubscribe = db.collection('feedback').orderBy('time', 'desc').onSnapshot(snap => {
+                const globalBadge = document.getElementById('global-admin-badge');
+                const dropBadge = document.getElementById('admin-feedback-badge');
+                const list = document.getElementById('admin-feedback-list');
+                
+                if (snap.empty) {
+                    globalBadge.style.display = 'none';
+                    dropBadge.style.display = 'none';
+                    if(list) list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Brak zgłoszeń.</span>';
+                } else {
+                    globalBadge.style.display = 'block';
+                    globalBadge.innerText = snap.size;
+                    dropBadge.style.display = 'block';
+                    dropBadge.innerText = snap.size;
+                    
+                    if(list) {
+                        let listHTML = '';
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            let dateStr = new Date(d.time).toLocaleString('pl-PL');
+                            listHTML += `
+                                <div style="background:#0d0d0f; border:1px solid var(--border-color); padding:12px; border-radius:4px; display:flex; flex-direction:column; gap:8px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                        <div>
+                                            <strong style="color:var(--accent-yellow); font-family:'Share Tech Mono';">${d.user}</strong> 
+                                            <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span>
+                                        </div>
+                                        <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="deleteAdminFeedback('${doc.id}')">Usuń</button>
+                                    </div>
+                                    <p style="margin:0; font-size:13px; color:#fff; white-space:pre-wrap;">${d.text}</p>
+                                </div>
+                            `;
+                        });
+                        list.innerHTML = listHTML;
+                    }
                 }
-                list.innerHTML = '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    let dateStr = new Date(d.time).toLocaleString('pl-PL');
-                    list.innerHTML += `
-                        <div style="background:#0d0d0f; border:1px solid var(--border-color); padding:12px; border-radius:4px;">
-                            <strong style="color:var(--accent-yellow); font-family:'Share Tech Mono';">${d.user}</strong> 
-                            <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span>
-                            <p style="margin-top:6px; font-size:13px; color:#fff; white-space:pre-wrap;">${d.text}</p>
-                        </div>
-                    `;
-                });
-            } catch(e) {
-                list.innerHTML = `<span style="color:#ff4d4d; font-size:12px;">Błąd pobierania: ${e.message}</span>`;
+            });
+        }
+
+        function openAdminFeedbackModal() {
+            document.getElementById('admin-feedback-modal').style.display = 'flex';
+        }
+
+        async function deleteAdminFeedback(docId) {
+            if(confirm("Czy na pewno chcesz usunąć to zgłoszenie z bazy?")) {
+                try {
+                    await db.collection('feedback').doc(docId).delete();
+                    showToast("Zgłoszenie zostało usunięte.", "success");
+                } catch (e) {
+                    showToast("Błąd przy usuwaniu: " + e.message, "error");
+                }
             }
         }
 
@@ -1619,7 +1703,7 @@
             showToast('Usunięto zdjęcie.', 'warn');
         }
 
-        // --- STATYSTYKI TABORU & DRILLDOWN (Niestandardowe sortowanie polskich lokomotyw) ---
+        // --- STATYSTYKI TABORU & DRILLDOWN ---
         function getCategoryForSeries(seriesStr) {
             let s = seriesStr.toUpperCase().trim();
             if (/^(EN|ED|WE|EW|31WE|45WE|IMPULS|ELF|FLIRT)/.test(s)) return "Elektryczne zespoły trakcyjne";
@@ -1629,7 +1713,6 @@
             return "Lokomotywy elektryczne";
         }
 
-        // 1. Sortowanie tabeli wg żądanej specyfikacji użytkownika
         function updateTaborStats() {
             let tbody = document.getElementById('map-ilostan-tbody'); if (!tbody) return;
             
@@ -1670,16 +1753,10 @@
             document.getElementById('drilldown-photos').style.display = 'none';
         }
 
-        // 2. Własny algorytm sortujący serie alfabetyczno-cyfrowo (według numeru wariantu)
         function sortPolishLocoSeries(a, b) {
             let numA = parseInt(a.match(/\d+/)?.[0] || 9999);
             let numB = parseInt(b.match(/\d+/)?.[0] || 9999);
-            
-            // Jeśli numery cyfrowe są różne, to po nich sortujemy (czyli 07 z EU07 wejdzie przed 22 z ET22)
-            if (numA !== numB) {
-                return numA - numB;
-            }
-            // W przypadku takich samych cyfr (np. EU07 i EP07) decyduje alfabet bazowy polski
+            if (numA !== numB) return numA - numB;
             return a.localeCompare(b, 'pl');
         }
 
@@ -1696,7 +1773,6 @@
                 seriesMap[s] = (seriesMap[s] || 0) + 1;
             });
 
-            // Sortowanie specjalne dla polskich oznaczeń
             let sortedSeries = Object.keys(seriesMap).sort(sortPolishLocoSeries);
 
             sortedSeries.forEach(sName => {
@@ -1718,7 +1794,6 @@
             let photosCont = document.getElementById('drilldown-photos-container'); photosCont.innerHTML = '';
             let targetPhotos = userData.photos.filter(p => p.series.toUpperCase().trim() === seriesName);
             
-            // Wewnątrz danej serii sortujemy już numery inwentarzowe zwykłą metodą numeryczną
             targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl', { numeric: true }));
 
             targetPhotos.forEach(p => {
@@ -1945,9 +2020,8 @@
             }
         }
 
-        // 4. Usuwanie znajomych
+        // --- USUWANIE ZNAJOMYCH ---
         function removeFriend(uid, event) {
-            // Zatrzymujemy kliknięcie, aby nie otworzyła się w tle mapa znajomego
             event.stopPropagation();
             if (confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
                 userData.friends = userData.friends.filter(f => f.uid !== uid);
@@ -1971,7 +2045,7 @@
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <span style="color:var(--accent-cyan)">&raquo;</span>
-                        <button class="btn-danger" onclick="removeFriend('${fr.uid}', event)">Usuń</button>
+                        <button class="btn-danger" style="padding:4px 8px;" onclick="removeFriend('${fr.uid}', event)">Usuń</button>
                     </div>`;
                 fContainer.appendChild(card);
             });
