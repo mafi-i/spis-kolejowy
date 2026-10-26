@@ -183,7 +183,7 @@
 
         .profile-dropdown {
             position: absolute; right: 0; top: 40px; background: var(--panel-bg);
-            border: 2px solid var(--accent-blue); border-radius: 6px; width: 240px;
+            border: 2px solid var(--accent-blue); border-radius: 6px; width: 250px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1100;
             overflow: hidden;
         }
@@ -378,7 +378,11 @@
                 <button class="dropdown-item" onclick="switchView('profil')">&#9881; Zarządzaj profilem i bazą</button>
                 <button class="dropdown-item" onclick="switchView('znajomi')">&#128101; Lista Znajomych</button>
                 <button class="dropdown-item" onclick="switchView('changelog')">&#128221; Dziennik zmian</button>
+                
+                <!-- Przycisk zgłoszeń dla Admina i zgłaszania błędów dla Testera -->
+                <button class="dropdown-item" id="btn-admin-feedback" style="display:none; color:var(--role-admin);" onclick="openAdminFeedbackModal()">&#128227; Odczytaj Zgłoszenia (Admin)</button>
                 <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Tester)</button>
+                
                 <button class="dropdown-item danger" onclick="handleLogout()">&#9211; Wyloguj się</button>
             </div>
         </div>
@@ -816,6 +820,17 @@
         </div>
     </div>
 
+    <!-- MODAL ODCZYTU ZGŁOSZEŃ (ADMIN) -->
+    <div class="modal-overlay" id="admin-feedback-modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <button class="modal-close" onclick="document.getElementById('admin-feedback-modal').style.display='none'">&times;</button>
+            <h2 style="color:var(--role-admin); font-family:'Share Tech Mono';">// Zgłoszenia od Beta Testerów</h2>
+            <div id="admin-feedback-list" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto;">
+                <span style="font-size:12px; color:var(--text-muted);">Ładowanie zgłoszeń...</span>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL ZNAJOMEGO -->
     <div class="modal-overlay" id="friend-modal">
         <div class="modal-content">
@@ -928,7 +943,6 @@
             pendingRequests: []
         };
 
-        // Zaktualizowany dziennik zmian
         const changelogData = [
             {
                 version: "Alpha 1.0.0",
@@ -1108,19 +1122,23 @@
             const badge = document.getElementById('user-role-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
             const testerBtn = document.getElementById('btn-tester-feedback');
+            const adminFeedbackBtn = document.getElementById('btn-admin-feedback');
             const role = (currentUser.role || 'user').toLowerCase();
 
             badge.className = 'role-badge';
             adminNavBtn.style.display = 'none'; 
             testerBtn.style.display = 'none';
+            adminFeedbackBtn.style.display = 'none';
 
             if (role === 'admin' || role === 'moderator') {
                 badge.classList.add(role === 'admin' ? 'role-admin' : 'role-moderator');
                 badge.innerText = role.toUpperCase();
                 adminNavBtn.style.display = 'block';
                 document.getElementById('admin-panel-title').innerText = role === 'admin' ? "// Panel Administratora" : "// Panel Moderatora";
+                
                 if(role === 'admin') {
                     document.getElementById('admin-role-manager-container').style.display = 'flex';
+                    adminFeedbackBtn.style.display = 'flex'; // Widoczne tylko dla admina w profilu
                     loadAdminUsers(); 
                 } else {
                     document.getElementById('admin-role-manager-container').style.display = 'none';
@@ -1198,6 +1216,7 @@
         }
 
         function openFeedbackModal() { document.getElementById('feedback-modal').style.display = 'flex'; }
+        
         async function sendFeedbackToAdmin() {
             const text = document.getElementById('feedback-text').value;
             if(!text) return;
@@ -1206,6 +1225,35 @@
             document.getElementById('feedback-modal').style.display = 'none';
             document.getElementById('feedback-text').value = '';
         }
+
+        // ODCZYTYWANIE ZGŁOSZEŃ PRZEZ ADMINA
+        async function openAdminFeedbackModal() {
+            document.getElementById('admin-feedback-modal').style.display = 'flex';
+            const list = document.getElementById('admin-feedback-list');
+            list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Ładowanie zgłoszeń z chmury...</span>';
+            try {
+                const snap = await db.collection('feedback').orderBy('time', 'desc').get();
+                if(snap.empty) { 
+                    list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Brak nowych zgłoszeń.</span>'; 
+                    return; 
+                }
+                list.innerHTML = '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    let dateStr = new Date(d.time).toLocaleString('pl-PL');
+                    list.innerHTML += `
+                        <div style="background:#0d0d0f; border:1px solid var(--border-color); padding:12px; border-radius:4px;">
+                            <strong style="color:var(--accent-yellow); font-family:'Share Tech Mono';">${d.user}</strong> 
+                            <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span>
+                            <p style="margin-top:6px; font-size:13px; color:#fff; white-space:pre-wrap;">${d.text}</p>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                list.innerHTML = `<span style="color:#ff4d4d; font-size:12px;">Błąd pobierania: ${e.message}</span>`;
+            }
+        }
+
         function openAppInfoModal() { document.getElementById('app-info-modal').style.display = 'flex'; }
 
         // --- BROUTER ROUTING ---
@@ -1571,7 +1619,7 @@
             showToast('Usunięto zdjęcie.', 'warn');
         }
 
-        // --- STATYSTYKI TABORU & DRILLDOWN (Sortowanie alfabetyczne naturalne - z obsługą cyfr) ---
+        // --- STATYSTYKI TABORU & DRILLDOWN (Niestandardowe sortowanie polskich lokomotyw) ---
         function getCategoryForSeries(seriesStr) {
             let s = seriesStr.toUpperCase().trim();
             if (/^(EN|ED|WE|EW|31WE|45WE|IMPULS|ELF|FLIRT)/.test(s)) return "Elektryczne zespoły trakcyjne";
@@ -1581,14 +1629,16 @@
             return "Lokomotywy elektryczne";
         }
 
+        // 1. Sortowanie tabeli wg żądanej specyfikacji użytkownika
         function updateTaborStats() {
             let tbody = document.getElementById('map-ilostan-tbody'); if (!tbody) return;
+            
             const cats = [
-                { id: "Elektryczne zespoły trakcyjne", title: "Elektryczne zespoły trakcyjne" },
                 { id: "Lokomotywy elektryczne", title: "Lokomotywy elektryczne" },
-                { id: "Lokomotywy parowe", title: "Lokomotywy parowe" },
+                { id: "Elektryczne zespoły trakcyjne", title: "Elektryczne zespoły trakcyjne" },
                 { id: "Lokomotywy spalinowe", title: "Lokomotywy spalinowe" },
-                { id: "Spalinowe zespoły trakcyjne i autobusy szynowe", title: "Spalinowe zespoły trakcyjne i autobusy szynowe" }
+                { id: "Spalinowe zespoły trakcyjne i autobusy szynowe", title: "Spalinowe zespoły trakcyjne i autobusy szynowe" },
+                { id: "Lokomotywy parowe", title: "Lokomotywy parowe" }
             ];
 
             const stats = {};
@@ -1620,6 +1670,19 @@
             document.getElementById('drilldown-photos').style.display = 'none';
         }
 
+        // 2. Własny algorytm sortujący serie alfabetyczno-cyfrowo (według numeru wariantu)
+        function sortPolishLocoSeries(a, b) {
+            let numA = parseInt(a.match(/\d+/)?.[0] || 9999);
+            let numB = parseInt(b.match(/\d+/)?.[0] || 9999);
+            
+            // Jeśli numery cyfrowe są różne, to po nich sortujemy (czyli 07 z EU07 wejdzie przed 22 z ET22)
+            if (numA !== numB) {
+                return numA - numB;
+            }
+            // W przypadku takich samych cyfr (np. EU07 i EP07) decyduje alfabet bazowy polski
+            return a.localeCompare(b, 'pl');
+        }
+
         function showDrilldownSeries(catName, seriesSet) {
             document.getElementById('drilldown-categories').style.display = 'none';
             document.getElementById('drilldown-series').style.display = 'block';
@@ -1633,8 +1696,8 @@
                 seriesMap[s] = (seriesMap[s] || 0) + 1;
             });
 
-            // Gwarancja sortowania naturalnego alfabetycznie dla Polskiego (np. EU07 > EU160 zamiast od długości stringu)
-            let sortedSeries = Object.keys(seriesMap).sort((a, b) => a.localeCompare(b, 'pl', { numeric: true }));
+            // Sortowanie specjalne dla polskich oznaczeń
+            let sortedSeries = Object.keys(seriesMap).sort(sortPolishLocoSeries);
 
             sortedSeries.forEach(sName => {
                 let card = document.createElement('div'); card.className = 'drilldown-series-card';
@@ -1655,7 +1718,7 @@
             let photosCont = document.getElementById('drilldown-photos-container'); photosCont.innerHTML = '';
             let targetPhotos = userData.photos.filter(p => p.series.toUpperCase().trim() === seriesName);
             
-            // Dokładne sortowanie po numerze pociągu (tak by numer 9 nie był przez przypadek wyżej niż 123)
+            // Wewnątrz danej serii sortujemy już numery inwentarzowe zwykłą metodą numeryczną
             targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl', { numeric: true }));
 
             targetPhotos.forEach(p => {
@@ -1882,6 +1945,18 @@
             }
         }
 
+        // 4. Usuwanie znajomych
+        function removeFriend(uid, event) {
+            // Zatrzymujemy kliknięcie, aby nie otworzyła się w tle mapa znajomego
+            event.stopPropagation();
+            if (confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
+                userData.friends = userData.friends.filter(f => f.uid !== uid);
+                saveUserDataToStorage();
+                renderFriendsUI();
+                showToast("Pomyślnie usunięto ze znajomych.", "warn");
+            }
+        }
+
         function renderFriendsUI() {
             let fContainer = document.getElementById('friends-list-container');
             if (userData.friends.length === 0) { fContainer.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak znajomych.</span>`; return; }
@@ -1890,9 +1965,14 @@
                 let card = document.createElement('div'); card.className = 'friend-card'; card.style.cursor = 'pointer';
                 card.onclick = () => fetchAndOpenFriend(fr.uid);
                 card.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;"><img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%;">
-                        <div><strong style="color:var(--accent-cyan);">${fr.username}</strong><br><span style="font-size:10px; color:var(--text-muted);">Kliknij mapę</span></div></div>
-                    <span style="color:var(--accent-cyan)">&raquo;</span>`;
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%;">
+                        <div><strong style="color:var(--accent-cyan);">${fr.username}</strong><br><span style="font-size:10px; color:var(--text-muted);">Kliknij by otworzyć mapę</span></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="color:var(--accent-cyan)">&raquo;</span>
+                        <button class="btn-danger" onclick="removeFriend('${fr.uid}', event)">Usuń</button>
+                    </div>`;
                 fContainer.appendChild(card);
             });
         }
