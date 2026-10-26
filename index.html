@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.0</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -216,7 +216,7 @@
         .copy-icon { cursor: pointer; font-size: 14px; transition: 0.2s; }
         .copy-icon:hover { color: var(--accent-yellow); transform: scale(1.1); }
 
-        /* TOASTS */
+        /* TOASTS & FLOATING BUTTON */
         #toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
         .toast-msg {
             background: #141824; color: #fff; border: 1px solid var(--accent-cyan); border-left: 4px solid var(--accent-cyan);
@@ -226,6 +226,9 @@
         .toast-msg.warn { border-color: var(--accent-orange); border-left-color: var(--accent-orange); }
         .toast-msg.error { border-color: #ff4d4d; border-left-color: #ff4d4d; }
         .toast-msg.success { border-color: #00b32c; border-left-color: #00b32c; }
+
+        .info-floating-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-cyan); color: #000; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-family: 'Share Tech Mono', monospace; font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 158, 0, 0.4); z-index: 900; border: none; transition: 0.2s; }
+        .info-floating-btn:hover { transform: scale(1.1); background: var(--accent-yellow); }
 
         /* AUTH HUB */
         .auth-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
@@ -334,12 +337,13 @@
 <body>
 
     <div id="toast-container"></div>
+    <button class="info-floating-btn" onclick="openAppInfoModal()">i</button>
 
     <!-- NAVBAR -->
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">v4.5 Cloud</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.0</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -374,6 +378,7 @@
                 <button class="dropdown-item" onclick="switchView('profil')">&#9881; Zarządzaj profilem i bazą</button>
                 <button class="dropdown-item" onclick="switchView('znajomi')">&#128101; Lista Znajomych</button>
                 <button class="dropdown-item" onclick="switchView('changelog')">&#128221; Dziennik zmian</button>
+                <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Tester)</button>
                 <button class="dropdown-item danger" onclick="handleLogout()">&#9211; Wyloguj się</button>
             </div>
         </div>
@@ -391,7 +396,7 @@
                 <div id="register-form-box">
                     <form class="auth-form" onsubmit="handleAuth(event, 'register')">
                         <div class="form-group">
-                            <label>// Nazwa Użytkownika / Nick</label>
+                            <label>// Nazwa Użytkownika / Nick (Unikalny)</label>
                             <input type="text" id="reg-username" required placeholder="np. Mikmik_Spotter">
                         </div>
                         <div class="form-group">
@@ -590,12 +595,14 @@
                     <div class="sketch-row">
                         <div class="form-group">
                             <label>Przewoźnik:</label>
-                            <input type="text" id="sketch-carrier" list="carriers-list" placeholder="np. PKP Intercity, Polregio">
-                            <datalist id="carriers-list">
-                                <option value="PKP Intercity S.A."></option><option value="PKP Cargo S.A."></option>
-                                <option value="Polregio S.A."></option><option value="Koleje Śląskie"></option>
-                                <option value="Koleje Mazowieckie"></option><option value="Koleje Dolnośląskie"></option>
-                            </datalist>
+                            <select id="sketch-carrier-select">
+                                <option value="PKP Intercity S.A.">PKP Intercity S.A.</option>
+                                <option value="PKP Cargo S.A.">PKP Cargo S.A.</option>
+                                <option value="Polregio S.A.">Polregio S.A.</option>
+                                <option value="Koleje Śląskie">Koleje Śląskie</option>
+                                <option value="Koleje Mazowieckie">Koleje Mazowieckie</option>
+                                <option value="Koleje Dolnośląskie">Koleje Dolnośląskie</option>
+                            </select>
                         </div>
                         <div class="form-group"><label>Malowanie:</label><input type="text" id="sketch-painting" placeholder="np. Fabryczne, Historyczne"></div>
                     </div>
@@ -647,7 +654,7 @@
 
         <!-- ZAKŁADKA 4: ZNAJOMI I SPOŁECZNOŚĆ -->
         <section id="view-znajomi-section" style="display:none;">
-            <h2>// Społeczność Kolejowa</h2>
+            <h2>// Społeczność Kolejowa (Akceptacja Chmurowa)</h2>
             <div class="update-grid">
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     <div class="update-box">
@@ -662,7 +669,7 @@
                         <div id="friend-search-results" class="results-list" style="display:none;"></div>
                     </div>
                     <div class="update-box">
-                        <h3>Zaproszenia</h3>
+                        <h3>Oczekujące Zaproszenia</h3>
                         <div id="pending-requests-list" style="display:flex; flex-direction:column; gap:8px;">
                             <span style="font-size:12px; color:var(--text-muted);">Brak oczekujących zaproszeń.</span>
                         </div>
@@ -670,7 +677,7 @@
                 </div>
 
                 <div class="update-box">
-                    <h3>Znajomi</h3>
+                    <h3>Lista Znajomych</h3>
                     <div id="friends-list-container" style="display:flex; flex-direction:column; gap:10px; max-height: 450px; overflow-y:auto;">
                         <span style="font-size:12px; color:var(--text-muted);">Nie masz jeszcze znajomych.</span>
                     </div>
@@ -690,10 +697,10 @@
             <div class="update-grid">
                 <div class="update-box">
                     <h3>Edycja Profilu</h3>
-                    <div class="form-group"><label>Nick:</label><input type="text" id="profile-edit-name"></div>
+                    <div class="form-group"><label>Nick:</label><input type="text" id="profile-edit-name" disabled title="Nicku nie można zmieniać po rejestracji"></div>
                     <div class="form-group"><label>URL Awatara:</label><input type="url" id="profile-edit-avatar" placeholder="https://..."></div>
                     <div class="form-group"><label>Kod Znajomego:</label><input type="text" id="profile-friend-code" readonly style="color:var(--accent-cyan); font-weight:bold; cursor:not-allowed;"></div>
-                    <button class="btn-small" onclick="saveProfileChanges()">Zapisz w Chmurze</button>
+                    <button class="btn-small" onclick="saveProfileChanges()">Zapisz Awatar w Chmurze</button>
                 </div>
                 <div class="update-box">
                     <h3>Kopia Zapasowa JSON</h3>
@@ -709,10 +716,49 @@
 
         <!-- ZAKŁADKA 7: PANEL ZARZĄDZANIA (ADMIN & MODERATOR) -->
         <section id="view-admin-section" style="display:none; border-color: var(--role-admin);">
-            <h2 style="color: var(--role-admin);">// Panel Zarządzania Systemem</h2>
+            <h2 style="color: var(--role-admin);" id="admin-panel-title">// Panel Zarządzania Systemem</h2>
             <div class="update-grid">
-                <div class="update-box" style="grid-column: 1 / -1;">
-                    <h3>Zarejestrowani Użytkownicy & Przydział Ról</h3>
+                
+                <!-- BANY -->
+                <div class="update-box">
+                    <h3>Banowanie Kont (UID / Nick)</h3>
+                    <div class="form-group">
+                        <label>Dokładny Nick użytkownika:</label>
+                        <div class="row-flex">
+                            <input type="text" id="ban-username-input" style="flex:1;" placeholder="Wpisz nick spottera">
+                            <select id="ban-time-select" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px;">
+                                <option value="1">1 Godzina</option>
+                                <option value="24">24 Godziny</option>
+                                <option value="168">7 Dni</option>
+                                <option value="999999">Perm Ban</option>
+                            </select>
+                            <button class="btn-danger" onclick="executeBan()">ZBANUJ</button>
+                        </div>
+                    </div>
+                    <p style="font-size:10px; color:var(--text-muted);">Zbanowany gracz zostanie natychmiast wylogowany z systemu chmurowego.</p>
+                </div>
+                
+                <!-- DANE GLOBALNE -->
+                <div class="update-box">
+                    <h3>Dodaj Globalne Dane (Przewoźnicy / Serie)</h3>
+                    <div class="form-group">
+                        <label>Typ danych do bazy:</label>
+                        <select id="mod-add-type" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px;">
+                            <option value="carriers">Nowy Przewoźnik</option>
+                            <option value="series">Nowa Seria Taboru</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Wartość:</label>
+                        <div class="row-flex">
+                            <input type="text" id="mod-add-value" style="flex:1;" placeholder="np. Koleje Małopolskie">
+                            <button class="btn-small" onclick="addGlobalData()">Dodaj</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
+                    <h3>Zarejestrowani Użytkownicy & Przydział Ról (Tylko Admin)</h3>
                     <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 450px; overflow-y:auto;">
                         <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
                     </div>
@@ -720,6 +766,36 @@
             </div>
         </section>
 
+    </div>
+
+    <!-- MODAL APP INFO -->
+    <div class="modal-overlay" id="app-info-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
+            <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
+            <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
+                <strong>Spis Kolejowy Alpha 1.0.0</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <span style="color:var(--accent-yellow);">Funkcje:</span><br>
+                • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
+                • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
+                • Obserwuj profile swoich znajomych.<br>
+                • Zbieraj automatyczne statystyki i rangi.<br><br>
+                <i style="color:var(--text-muted);">Uwaga: Aplikacja w fazie Alpha. Wszelkie błędy zgłaszaj Administracji.</i>
+            </p>
+        </div>
+    </div>
+
+    <!-- MODAL ZGŁOSZEŃ TESTERA -->
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('feedback-modal').style.display='none'">&times;</button>
+            <h2 style="color:var(--role-tester); font-family:'Share Tech Mono';">// Zgłoś Błąd (Panel Testera)</h2>
+            <div class="form-group">
+                <label>Treść zgłoszenia (bug, sugestia):</label>
+                <textarea id="feedback-text" rows="5"></textarea>
+            </div>
+            <button class="btn-small" onclick="sendFeedbackToAdmin()">Wyślij do Administracji</button>
+        </div>
     </div>
 
     <!-- MODAL ZNAJOMEGO -->
@@ -836,14 +912,25 @@
 
         const changelogData = [
             {
+                version: "Alpha 1.0.0",
+                title: "Globalna Moderacja, Unikalność i Reorganizacja Z systemu Alpha",
+                date: "Dzisiaj",
+                added: [
+                    "Blokada tworzenia kont z takim samym nickiem",
+                    "Całkowicie przepisany system znajomych (akceptacja/odrzucanie po stronie serwera)",
+                    "Alfabetyczne sortowanie taboru za pomocą polskiego Locale",
+                    "Panel Informacyjny [ i ] o działaniu strony",
+                    "Zarządzanie globalnymi listami z poziomu panelu Mod/Admin",
+                    "Zawieszenia/Bany w czasie rzeczywistym"
+                ]
+            },
+            {
                 version: "v4.5.0",
                 title: "Integracja z Firebase i Nowe Role",
-                date: "Dzisiaj",
+                date: "Ostatnio",
                 added: [
                     "Pełna synchronizacja bazy taboru i tras w czasie rzeczywistym z Google Firebase",
                     "Wprowadzenie systemu ról: Administrator, Moderator oraz Beta Tester",
-                    "Plakietki rang (Badges) w profilu spottera oraz panelu nawigacji",
-                    "Panel Zarządzania Użytkownikami dla Administratorów i Moderatorów",
                     "Przywrócono pełną bazę trasowania BRouter oraz kompresję Canvas"
                 ]
             }
@@ -851,7 +938,7 @@
 
         let uploadedImageDataUrl = "";
 
-        // --- AUTH OBSŁUGA Z FIREBASE ---
+        // --- AUTH OBSŁUGA Z FIREBASE (UNIKALNOŚĆ NICKU - ALPHA) ---
         function switchAuthTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if (tab === 'register') {
@@ -874,13 +961,23 @@
 
         async function handleAuth(event, type) {
             event.preventDefault();
+            const email = document.getElementById(type==='register' ? 'reg-email' : 'login-email').value;
+            const password = document.getElementById(type==='register' ? 'reg-password' : 'login-password').value;
+            const btn = document.getElementById(type==='register' ? 'btn-reg-submit' : 'btn-login-submit');
+            btn.innerText = "Przetwarzanie...";
+            btn.disabled = true;
+
             if (type === 'register') {
-                const email = document.getElementById('reg-email').value;
-                const password = document.getElementById('reg-password').value;
-                const username = document.getElementById('reg-username').value;
-                const btn = document.getElementById('btn-reg-submit');
-                btn.innerText = "Tworzenie w chmurze...";
-                btn.disabled = true;
+                const username = document.getElementById('reg-username').value.trim();
+                
+                // SPRAWDZENIE UNIKALNOŚCI NICKU W FIRESTORE (Alpha)
+                const nickCheck = await db.collection('users').where('username', '==', username).get();
+                if (!nickCheck.empty) {
+                    showToast("Ten Nick jest już zajęty! Wybierz inny.", "error");
+                    btn.innerText = "Utwórz Nowe Konto w Chmurze »";
+                    btn.disabled = false;
+                    return;
+                }
 
                 try {
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
@@ -893,7 +990,8 @@
                         friendCode: fCode,
                         avatar: "https://via.placeholder.com/38/ff9e00/000000?text=SK",
                         role: "user",
-                        userData: { visitedStations: [], rides: [], photos: [], friends: [], pendingRequests: [] },
+                        pendingRequests: [],
+                        userData: { visitedStations: [], rides: [], photos: [], friends: [] },
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
@@ -904,12 +1002,6 @@
                     btn.disabled = false;
                 }
             } else {
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                const btn = document.getElementById('btn-login-submit');
-                btn.innerText = "Logowanie...";
-                btn.disabled = true;
-
                 try {
                     await auth.signInWithEmailAndPassword(email, password);
                     showToast("Zalogowano pomyślnie!", "success");
@@ -927,12 +1019,20 @@
             });
         }
 
-        // Listener stanu logowania na żywo z chmury
+        // Listener stanu logowania na żywo z chmury + Blokada BAN (Alpha)
         auth.onAuthStateChanged((user) => {
             if (user) {
                 db.collection('users').doc(user.uid).onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
+                        
+                        // Zabezpieczenie na Bana (Alpha)
+                        if (data.bannedUntil && data.bannedUntil > Date.now()) {
+                            auth.signOut();
+                            alert("To konto zostało zawieszone przez Moderatora do: " + new Date(data.bannedUntil).toLocaleString());
+                            return;
+                        }
+
                         currentUser = {
                             uid: user.uid,
                             email: user.email,
@@ -941,8 +1041,10 @@
                             friendCode: data.friendCode || generateFriendCode(),
                             role: data.role || "user"
                         };
-                        userData = data.userData || { visitedStations: [], rides: [], photos: [], friends: [], pendingRequests: [] };
+                        userData = data.userData || { visitedStations: [], rides: [], photos: [], friends: [] };
+                        loadGlobalData();
                         initAppSession();
+                        checkPendingRequests(data.pendingRequests || []);
                     }
                 });
             } else {
@@ -982,36 +1084,40 @@
             document.getElementById('nav-user-avatar').src = currentUser.avatar;
             document.getElementById('nav-friend-code').innerText = currentUser.friendCode;
             document.getElementById('profile-friend-code').value = currentUser.friendCode;
+            document.getElementById('profile-edit-name').value = currentUser.username;
 
-            // Rangi i role
+            // Rangi i role (Alpha - Panel Zarządzania i Zgłaszania Błędów)
             const badge = document.getElementById('user-role-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
+            const testerBtn = document.getElementById('btn-tester-feedback');
             const role = (currentUser.role || 'user').toLowerCase();
 
             badge.className = 'role-badge';
-            if (role === 'admin') {
-                badge.classList.add('role-admin');
-                badge.innerText = 'ADMIN';
+            adminNavBtn.style.display = 'none'; 
+            testerBtn.style.display = 'none';
+
+            if (role === 'admin' || role === 'moderator') {
+                badge.classList.add(role === 'admin' ? 'role-admin' : 'role-moderator');
+                badge.innerText = role.toUpperCase();
                 adminNavBtn.style.display = 'block';
-                loadAdminUsers();
-            } else if (role === 'moderator') {
-                badge.classList.add('role-moderator');
-                badge.innerText = 'MODERATOR';
-                adminNavBtn.style.display = 'block';
-                loadAdminUsers();
+                document.getElementById('admin-panel-title').innerText = role === 'admin' ? "// Panel Administratora" : "// Panel Moderatora";
+                if(role === 'admin') {
+                    document.getElementById('admin-role-manager-container').style.display = 'flex';
+                    loadAdminUsers(); 
+                } else {
+                    document.getElementById('admin-role-manager-container').style.display = 'none';
+                }
             } else if (role === 'beta tester' || role === 'tester') {
                 badge.classList.add('role-tester');
                 badge.innerText = 'BETA TESTER';
-                adminNavBtn.style.display = 'none';
+                testerBtn.style.display = 'block';
             } else {
                 badge.classList.add('role-user');
                 badge.innerText = 'USER';
-                adminNavBtn.style.display = 'none';
             }
 
             initMap();
             populatePhotoStations();
-            updateNotificationBadge();
             renderFriendsUI();
             updateVisitedStationsUI();
             updateRidesUI();
@@ -1020,6 +1126,69 @@
 
             setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData); }, 300);
         }
+
+        // --- GLOBALNE DANE (Alpha) ---
+        function loadGlobalData() {
+            db.collection('globalData').doc('lists').onSnapshot(doc => {
+                if(doc.exists) {
+                    const data = doc.data();
+                    if(data.carriers) {
+                        const dl = document.getElementById('sketch-carrier-select');
+                        if(dl) {
+                            dl.innerHTML = '';
+                            data.carriers.forEach(c => dl.innerHTML += `<option value="${c}">${c}</option>`);
+                        }
+                    }
+                }
+            });
+        }
+
+        async function addGlobalData() {
+            const type = document.getElementById('mod-add-type').value;
+            const val = document.getElementById('mod-add-value').value.trim();
+            if(!val) return;
+            
+            try {
+                await db.collection('globalData').doc('lists').set({
+                    [type]: firebase.firestore.FieldValue.arrayUnion(val)
+                }, { merge: true });
+                showToast("Dane globalne dodane pomyślnie!", "success");
+                document.getElementById('mod-add-value').value = '';
+            } catch(e) { showToast("Błąd: " + e.message, "error"); }
+        }
+
+        // --- ZABEZPIECZENIA I ADMINISTRACJA (Alpha) ---
+        async function executeBan() {
+            if(currentUser.role !== 'admin' && currentUser.role !== 'moderator') return;
+            const targetUser = document.getElementById('ban-username-input').value.trim();
+            const hours = parseInt(document.getElementById('ban-time-select').value);
+            
+            const snap = await db.collection('users').where('username', '==', targetUser).get();
+            if(snap.empty) { showToast("Nie ma takiego gracza.", "warn"); return; }
+            
+            const targetDoc = snap.docs[0];
+            const targetData = targetDoc.data();
+            
+            if(currentUser.role === 'moderator' && (targetData.role === 'admin' || targetData.role === 'moderator')) {
+                showToast("Brak uprawnień do zbanowania Administracji!", "error"); return;
+            }
+
+            const banTime = Date.now() + (hours * 60 * 60 * 1000);
+            await db.collection('users').doc(targetDoc.id).update({ bannedUntil: banTime });
+            showToast(`Użytkownik ${targetUser} został zbanowany na ${hours} godzin!`, "success");
+            document.getElementById('ban-username-input').value = '';
+        }
+
+        function openFeedbackModal() { document.getElementById('feedback-modal').style.display = 'flex'; }
+        async function sendFeedbackToAdmin() {
+            const text = document.getElementById('feedback-text').value;
+            if(!text) return;
+            await db.collection('feedback').add({ user: currentUser.username, text: text, time: Date.now() });
+            showToast("Zgłoszenie wysłane. Dziękujemy!", "success");
+            document.getElementById('feedback-modal').style.display = 'none';
+            document.getElementById('feedback-text').value = '';
+        }
+        function openAppInfoModal() { document.getElementById('app-info-modal').style.display = 'flex'; }
 
         // --- BROUTER ROUTING ---
         async function fetchPerfectRoute(startId, endId, lineCode) {
@@ -1195,7 +1364,7 @@
                 document.getElementById('profile-edit-name').value = currentUser.username;
                 document.getElementById('profile-edit-avatar').value = currentUser.avatar;
             }
-            if (viewName === 'admin') loadAdminUsers();
+            if (viewName === 'admin' && currentUser.role === 'admin') loadAdminUsers();
         }
 
         // --- PANEL ZARZĄDZANIA (ROLE) ---
@@ -1334,7 +1503,7 @@
             let selectSeries = document.getElementById('sketch-series').value;
             let series = selectSeries === 'CUSTOM' ? document.getElementById('sketch-custom-series').value.trim() : selectSeries;
             let number = document.getElementById('sketch-number').value.trim();
-            let carrier = document.getElementById('sketch-carrier').value.trim() || 'Brak';
+            let carrier = document.getElementById('sketch-carrier-select').value.trim() || 'Brak';
             let painting = document.getElementById('sketch-painting').value.trim() || 'Standardowe';
             let desc = document.getElementById('sketch-desc').value.trim();
             let date = document.getElementById('sketch-date').value || 'Brak daty';
@@ -1351,7 +1520,6 @@
             updatePhotosUI();
 
             document.getElementById('sketch-number').value = '';
-            document.getElementById('sketch-carrier').value = '';
             document.getElementById('sketch-painting').value = '';
             document.getElementById('sketch-desc').value = '';
             uploadedImageDataUrl = '';
@@ -1385,7 +1553,7 @@
             showToast('Usunięto zdjęcie.', 'warn');
         }
 
-        // --- STATYSTYKI TABORU & DRILLDOWN ---
+        // --- STATYSTYKI TABORU & DRILLDOWN (Sortowanie Alpha 'pl') ---
         function getCategoryForSeries(seriesStr) {
             let s = seriesStr.toUpperCase().trim();
             if (/^(EN|ED|WE|EW|31WE|45WE|IMPULS|ELF|FLIRT)/.test(s)) return "Elektryczne zespoły trakcyjne";
@@ -1423,7 +1591,7 @@
                     <td style="text-align:center;">${sCount}</td>
                     <td style="text-align:center;">${vCount}</td>
                 `;
-                if(vCount > 0) tr.onclick = () => showDrilldownSeries(c.id);
+                if(vCount > 0) tr.onclick = () => showDrilldownSeries(c.id, stats[c.id].series);
                 tbody.appendChild(tr);
             });
         }
@@ -1434,21 +1602,23 @@
             document.getElementById('drilldown-photos').style.display = 'none';
         }
 
-        function showDrilldownSeries(catName) {
+        function showDrilldownSeries(catName, seriesSet) {
             document.getElementById('drilldown-categories').style.display = 'none';
             document.getElementById('drilldown-series').style.display = 'block';
             document.getElementById('drilldown-photos').style.display = 'none';
             document.getElementById('drilldown-series-title').innerText = `Kategoria: ${catName}`;
             let seriesCont = document.getElementById('drilldown-series-container'); seriesCont.innerHTML = '';
 
-            let filteredPhotos = userData.photos.filter(p => getCategoryForSeries(p.series) === catName);
             let seriesMap = {};
-            filteredPhotos.forEach(p => {
+            userData.photos.filter(p => getCategoryForSeries(p.series) === catName).forEach(p => {
                 let s = p.series.toUpperCase().trim();
                 seriesMap[s] = (seriesMap[s] || 0) + 1;
             });
 
-            Object.keys(seriesMap).sort().forEach(sName => {
+            // Alpha - Alfabetyczne sortowanie z locale 'pl'
+            let sortedSeries = Object.keys(seriesMap).sort((a, b) => a.localeCompare(b, 'pl'));
+
+            sortedSeries.forEach(sName => {
                 let card = document.createElement('div'); card.className = 'drilldown-series-card';
                 card.onclick = () => showDrilldownPhotos(catName, sName);
                 card.innerHTML = `<strong style="color:var(--accent-yellow); font-size:16px;">${sName}</strong><br><span style="font-size:10px; color:var(--text-muted);">Pojazdów: ${seriesMap[sName]}</span>`;
@@ -1466,7 +1636,9 @@
             
             let photosCont = document.getElementById('drilldown-photos-container'); photosCont.innerHTML = '';
             let targetPhotos = userData.photos.filter(p => p.series.toUpperCase().trim() === seriesName);
-            targetPhotos.sort((a,b) => a.number.localeCompare(b.number));
+            
+            // Alpha - Alfabetyczne sortowanie numerów z locale 'pl'
+            targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl'));
 
             targetPhotos.forEach(p => {
                 let div = document.createElement('div'); div.className = 'photo-card'; div.style.marginBottom = "0";
@@ -1587,7 +1759,7 @@
             sorted.forEach(st => { sel.innerHTML += `<option value="${st.id}">${st.name}</option>`; });
         }
 
-        // --- ZNAJOMI ---
+        // --- ZNAJOMI (SYSTEM CHMUROWY Alpha) ---
         function formatFriendCodeInput(el) {
             let val = el.value.replace(/[^0-9]/g, '');
             if(val.length > 4) val = val.slice(0,4) + '-' + val.slice(4);
@@ -1595,31 +1767,101 @@
             el.value = val;
         }
 
-        function searchPotentialFriends() {
+        async function searchPotentialFriends() {
             let query = document.getElementById('friend-search-input').value.trim();
             let resBox = document.getElementById('friend-search-results'); resBox.innerHTML = '';
             if (!query) { resBox.style.display = 'none'; return; }
 
-            db.collection('users').where('friendCode', '==', query).get().then(snapshot => {
-                if (snapshot.empty) { resBox.style.display = 'none'; showToast('Nie znaleziono spottera.', 'warn'); return; }
-                resBox.style.display = 'flex';
-                snapshot.forEach(docSnap => {
-                    const u = docSnap.data();
-                    if(u.friendCode === currentUser.friendCode) return;
-                    let isFriend = userData.friends.some(f => f.friendCode === u.friendCode);
-                    let item = document.createElement('div');
-                    item.className = 'result-item'; item.style.flexDirection = 'row'; item.style.justifyContent = 'space-between'; item.style.alignItems = 'center';
-                    item.innerHTML = `<span><strong>${u.username}</strong></span> ${isFriend ? '<span style="color:var(--green-traveled)">[Znajomy]</span>' : `<button class="btn-small" onclick="addFriendDirectly('${u.username}', '${u.friendCode}', '${u.avatar}')">Dodaj</button>`}`;
-                    resBox.appendChild(item);
-                });
+            const snap = await db.collection('users').where('friendCode', '==', query).get();
+            if (snap.empty) { resBox.style.display = 'none'; showToast('Nie znaleziono spottera.', 'warn'); return; }
+            
+            resBox.style.display = 'flex';
+            snap.forEach(docSnap => {
+                const u = docSnap.data();
+                if(u.friendCode === currentUser.friendCode) return;
+                
+                let isFriend = userData.friends.some(f => f.friendCode === u.friendCode);
+                let item = document.createElement('div');
+                item.className = 'result-item'; 
+                item.style.flexDirection = 'row'; 
+                item.style.justifyContent = 'space-between'; 
+                item.style.alignItems = 'center';
+
+                let actionBtn = isFriend 
+                    ? '<span style="color:var(--green-traveled)">[Znajomy]</span>' 
+                    : `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
+                
+                item.innerHTML = `<span><strong>${u.username}</strong></span> ${actionBtn}`;
+                resBox.appendChild(item);
             });
         }
 
-        function addFriendDirectly(name, fCode, avatar) {
-            userData.friends.push({ username: name, friendCode: fCode, avatar: avatar || "https://via.placeholder.com/38/ff9e00/000000?text=SK" });
-            saveUserDataToStorage(); renderFriendsUI();
-            showToast(`Dodano ${name} do znajomych!`, 'success');
-            document.getElementById('friend-search-results').style.display = 'none';
+        async function sendFriendRequest(targetUid, targetName) {
+            try {
+                await db.collection('users').doc(targetUid).update({
+                    pendingRequests: firebase.firestore.FieldValue.arrayUnion({
+                        uid: currentUser.uid, 
+                        username: currentUser.username, 
+                        avatar: currentUser.avatar, 
+                        code: currentUser.friendCode
+                    })
+                });
+                showToast(`Wysłano zaproszenie do ${targetName}!`, 'success');
+                document.getElementById('friend-search-results').style.display = 'none';
+            } catch(e) { 
+                showToast('Błąd wysyłania: ' + e.message, 'error'); 
+            }
+        }
+
+        function checkPendingRequests(reqs) {
+            const list = document.getElementById('pending-requests-list');
+            const badge = document.getElementById('notif-badge');
+            
+            if(!reqs || reqs.length === 0) { 
+                list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Brak zaproszeń.</span>'; 
+                badge.style.display = 'none'; 
+                return; 
+            }
+            
+            badge.style.display = 'block'; 
+            badge.innerText = reqs.length;
+            list.innerHTML = '';
+            
+            reqs.forEach(r => {
+                list.innerHTML += `
+                    <div class="friend-card" style="margin-bottom:5px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <img src="${r.avatar}" style="width:24px; border-radius:50%;"> 
+                            <b>${r.username}</b>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-success" onclick="resolveRequest('${r.uid}', '${r.username}', '${r.code}', '${r.avatar}', true)">Akceptuj</button>
+                            <button class="btn-danger" onclick="resolveRequest('${r.uid}', '', '', '', false)">Odrzuć</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function resolveRequest(reqUid, reqName, reqCode, reqAvatar, accept) {
+            try {
+                const myRef = db.collection('users').doc(currentUser.uid);
+                const myDoc = await myRef.get();
+                let myReqs = myDoc.data().pendingRequests || [];
+                myReqs = myReqs.filter(r => r.uid !== reqUid);
+
+                if(accept) {
+                    userData.friends.push({ uid: reqUid, username: reqName, friendCode: reqCode, avatar: reqAvatar });
+                    saveUserDataToStorage();
+                    renderFriendsUI();
+                    showToast('Dodano do znajomych!', 'success');
+                } else { 
+                    showToast('Odrzucono zaproszenie.'); 
+                }
+                
+                await myRef.update({ pendingRequests: myReqs });
+            } catch(e) { 
+                showToast('Błąd akceptacji.', 'error'); 
+            }
         }
 
         function renderFriendsUI() {
@@ -1628,7 +1870,7 @@
             fContainer.innerHTML = '';
             userData.friends.forEach((fr) => {
                 let card = document.createElement('div'); card.className = 'friend-card'; card.style.cursor = 'pointer';
-                card.onclick = () => openFriendModal(fr);
+                card.onclick = () => fetchAndOpenFriend(fr.uid);
                 card.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px;"><img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%;">
                         <div><strong style="color:var(--accent-cyan);">${fr.username}</strong><br><span style="font-size:10px; color:var(--text-muted);">Kliknij mapę</span></div></div>
@@ -1637,39 +1879,52 @@
             });
         }
 
-        function openFriendModal(friend) {
-            document.getElementById('modal-friend-name').innerText = `// Profil Spottera: ${friend.username}`;
-            document.getElementById('friend-modal').style.display = 'flex';
-            if (!friendMapInitialized) {
-                friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
-                configurePolandMapBase(friendMap);
-                friendDynamicLayer = L.layerGroup().addTo(friendMap);
-                friendMapInitialized = true;
+        async function fetchAndOpenFriend(uid) {
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if(doc.exists) {
+                    const fData = doc.data().userData || {};
+                    document.getElementById('modal-friend-name').innerText = "// " + doc.data().username;
+                    document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
+                    document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
+                    document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
+                    document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
+                    
+                    document.getElementById('friend-modal').style.display = 'flex';
+                    
+                    if (!friendMapInitialized) {
+                        friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
+                        configurePolandMapBase(friendMap);
+                        friendDynamicLayer = L.layerGroup().addTo(friendMap);
+                        friendMapInitialized = true;
+                    }
+                    setTimeout(() => { 
+                        friendMap.invalidateSize(); 
+                        renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
+                    }, 200);
+                }
+            } catch(e) {
+                showToast("Błąd pobierania danych znajomego", "error");
             }
-            setTimeout(() => { friendMap.invalidateSize(); }, 200);
         }
 
         function closeFriendModal() { document.getElementById('friend-modal').style.display = 'none'; }
-        function updateNotificationBadge() { document.getElementById('notif-badge').style.display = 'none'; }
 
         // --- PROFIL & JSON ---
         function saveProfileChanges() {
-            const newName = document.getElementById('profile-edit-name').value.trim();
             const newAvatar = document.getElementById('profile-edit-avatar').value.trim();
-            currentUser.username = newName || currentUser.username;
             currentUser.avatar = newAvatar || currentUser.avatar;
 
             db.collection('users').doc(currentUser.uid).update({
-                username: currentUser.username,
                 avatar: currentUser.avatar
             }).then(() => {
+                document.getElementById('nav-user-avatar').src = currentUser.avatar;
                 showToast("Zapisano zmiany profilu w chmurze!", "success");
-                switchView('mapa');
             });
         }
 
         function exportUserDatabaseJSON() {
-            const payload = { version: "v4.5.0", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.0", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
