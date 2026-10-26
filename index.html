@@ -948,6 +948,8 @@
         let uploadedImageDataUrl = "";
 
         // --- AUTH OBSŁUGA Z FIREBASE (UNIKALNOŚĆ NICKU - ALPHA) ---
+        let userDocUnsubscribe = null;
+
         function switchAuthTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if (tab === 'register') {
@@ -1030,8 +1032,15 @@
 
         // Listener stanu logowania na żywo z chmury + Blokada BAN (Alpha)
         auth.onAuthStateChanged((user) => {
+            // ZABEZPIECZENIE: Zatrzymujemy nasłuchiwanie poprzedniego konta przed nową akcją
+            if (userDocUnsubscribe) {
+                userDocUnsubscribe();
+                userDocUnsubscribe = null;
+            }
+
             if (user) {
-                db.collection('users').doc(user.uid).onSnapshot((doc) => {
+                // PRZYPISANIE nasłuchiwacza do zmiennej, aby móc go później wyłączyć
+                userDocUnsubscribe = db.collection('users').doc(user.uid).onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
                         
