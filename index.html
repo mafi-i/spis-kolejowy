@@ -2297,7 +2297,7 @@
                 card.className = 'friend-card'; 
                 
                 card.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="fetchAndOpenFriend('${fr.uid}')">
+                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${fr.uid}')"> <!-- POPRAWIONO FUNKCJĘ TUTAJ -->
                         <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%; border: 1px solid var(--accent-cyan);">
                         <div>
                             <strong style="color:var(--accent-cyan);">${fr.username}</strong><br>
@@ -2332,35 +2332,6 @@
             } catch(e) {
                 showToast("Błąd usuwania znajomego", "error");
                 console.error(e);
-            }
-        }
-
-        async function fetchAndOpenFriend(uid) {
-            try {
-                const doc = await db.collection('users').doc(uid).get();
-                if(doc.exists) {
-                    const fData = doc.data().userData || {};
-                    document.getElementById('modal-friend-name').innerText = "// PROFIL: " + doc.data().username;
-                    document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
-                    document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
-                    document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
-                    document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
-                    
-                    document.getElementById('friend-modal').style.display = 'flex';
-                    
-                    if (!friendMapInitialized) {
-                        friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
-                        configurePolandMapBase(friendMap);
-                        friendDynamicLayer = L.layerGroup().addTo(friendMap);
-                        friendMapInitialized = true;
-                    }
-                    setTimeout(() => { 
-                        friendMap.invalidateSize(); 
-                        renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
-                    }, 200);
-                }
-            } catch(e) {
-                showToast("Błąd pobierania danych znajomego", "error");
             }
         }
 
