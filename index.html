@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.3</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.5</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -299,7 +299,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.3</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.5</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -497,22 +497,28 @@
                     
                     <div class="sketch-row">
                         <div class="form-group" style="flex: 1.2;">
-                            <label>Kategoria pojazdu:</label>
-                            <select id="sketch-category">
+                            <label>Seria / Model (Kategoria):</label>
+                            <select id="sketch-series" onchange="toggleCustomSeriesInput(this)">
+                                <!-- Opcje ładowane z chmury, podzielone martwymi polami (disabled) -->
+                                <option value="">[ Wybierz model z listy ]</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0.8;">
+                            <label>Numer boczny:</label>
+                            <input type="text" id="sketch-number" placeholder="np. 045...">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="custom-series-group" style="display:none; background: #1a1a20; padding:10px; border-radius:4px; border: 1px dashed var(--accent-orange);">
+                        <label style="color:var(--accent-orange);">Ręczne wpisywanie modelu (jeśli brak na liście):</label>
+                        <div class="row-flex" style="margin-top:5px;">
+                            <select id="sketch-custom-category" style="flex:1;">
                                 <option value="Lokomotywy elektryczne">Lokomotywy elektryczne</option>
                                 <option value="Lokomotywy spalinowe">Lokomotywy spalinowe</option>
                                 <option value="Elektryczne zespoły trakcyjne">Elektryczne Zespoły Trakcyjne (EZT)</option>
                                 <option value="Spalinowe zespoły trakcyjne i autobusy szynowe">Spalinowe Zespoły Trakcyjne (SZT)</option>
                             </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label>Seria / Model:</label>
-                            <input type="text" id="sketch-series" list="sketch-series-list" placeholder="np. EU07, ED250...">
-                            <datalist id="sketch-series-list"></datalist>
-                        </div>
-                        <div class="form-group" style="flex: 0.8;">
-                            <label>Numer boczny:</label>
-                            <input type="text" id="sketch-number" placeholder="np. 045...">
+                            <input type="text" id="sketch-custom-series" placeholder="np. EU07" style="flex:1;">
                         </div>
                     </div>
 
@@ -712,13 +718,6 @@
             </div>
             
             <div class="update-grid">
-                
-                <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
-                    <h3>Zarejestrowani Użytkownicy & Przydział Ról (Tylko Admin)</h3>
-                    <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
-                        <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
-                    </div>
-                </div>
 
                 <!-- BANY -->
                 <div class="update-box" style="grid-column: 1 / -1;">
@@ -743,9 +742,15 @@
                 <div class="update-box">
                     <h3>1. Dodaj Modele Lokomotyw (Globalne)</h3>
                     <div class="form-group">
+                        <select id="mod-add-series-cat" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px; margin-bottom:5px;">
+                            <option value="Lokomotywy elektryczne">Lokomotywy elektryczne</option>
+                            <option value="Lokomotywy spalinowe">Lokomotywy spalinowe</option>
+                            <option value="Elektryczne zespoły trakcyjne">Elektryczne Zespoły Trakcyjne (EZT)</option>
+                            <option value="Spalinowe zespoły trakcyjne i autobusy szynowe">Spalinowe Zespoły Trakcyjne (SZT)</option>
+                        </select>
                         <div class="row-flex">
                             <input type="text" id="mod-add-series-value" style="flex:1;" placeholder="np. EU07, ED250">
-                            <button class="btn-small" onclick="adminAddGlobalData('series')">Dodaj</button>
+                            <button class="btn-small" onclick="adminAddSeries()">Dodaj</button>
                         </div>
                     </div>
                     <div class="admin-data-list" id="admin-series-list"></div>
@@ -788,11 +793,25 @@
                             </tbody>
                         </table>
                     </div>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
+                    <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;">
                         <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
-                        <button class="btn-success" onclick="adminSaveLine()">Zapisz Linię Kolejową w Chmurze</button>
+                        <button class="btn-success" onclick="adminSaveLine()">Zapisz / Aktualizuj w Chmurze</button>
+                        <button class="btn-danger" style="background:#4a4a5a;" onclick="adminClearLineForm()">Wyczyść Kreator</button>
                     </div>
                     <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
+                </div>
+                
+                <!-- LISTA DODANYCH LINII (MOŻLIWOŚĆ USUWANIA) -->
+                <div class="update-box" style="grid-column: 1 / -1;">
+                    <h3>Zarządzaj Dodanymi Liniami</h3>
+                    <div class="admin-data-list" id="admin-lines-list" style="max-height: 250px;"></div>
+                </div>
+                
+                <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
+                    <h3>Zarejestrowani Użytkownicy & Przydział Ról (Tylko Admin)</h3>
+                    <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
+                        <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
+                    </div>
                 </div>
 
             </div>
@@ -806,7 +825,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.3</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.5</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -972,14 +991,14 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.0.3",
-                title: "Wielka Aktualizacja Administracyjna i Społecznościowa",
+                version: "Alpha 1.0.5",
+                title: "Edycja Formularza i Wygoda Użytkownika",
                 date: "Dzisiaj",
                 added: [
-                    "Kreator Linii Kolejowych: Admin może budować własne relacje (stacje, podg) od zera a system sam dodaje je do chmury",
-                    "Zmieniono dodawanie taboru (uproszczono do 4 kategorii, pole wyboru zamieniono na inteligentne pole wpisywania)",
+                    "Możliwość edycji wcześniej utworzonych Linii Kolejowych oraz resetowania kreatora w locie",
+                    "Zmieniono dodawanie taboru (uproszczono do 4 kategorii, pole wyboru zamieniono na listę z martwymi polami separatorów)",
                     "Wprowadzono panel usuwania (moderacji) zdjęć na publicznych profilach graczy",
-                    "Przebudowano Panel Administratora (osobne listy przewoźników i serii)",
+                    "Przebudowano Panel Administratora (osobne listy przewoźników i serii, lista użytkowników na samym dole ekranu)",
                     "Wdrożono natychmiastowe aktualizacje listy kont i powiadomień"
                 ]
             }
@@ -1238,12 +1257,9 @@
                 document.getElementById('admin-panel-title').innerText = role === 'admin' ? "// Panel Administratora" : "// Panel Moderatora";
                 
                 if(role === 'admin') {
-                    document.getElementById('admin-role-manager-container').style.display = 'flex';
                     adminFeedbackBtn.style.display = 'flex'; 
                     loadAdminUsers(); 
                     listenToAdminFeedback();
-                } else {
-                    document.getElementById('admin-role-manager-container').style.display = 'none';
                 }
             } else if (role === 'beta tester' || role === 'tester') {
                 badge.classList.add('role-tester');
@@ -1283,13 +1299,34 @@
                         merged.forEach(c => dl.innerHTML += `<option value="${c}"></option>`);
                     }
 
-                    const sl = document.getElementById('sketch-series-list');
+                    const sl = document.getElementById('sketch-series');
                     if(sl) {
-                        sl.innerHTML = '';
-                        let sortedSeries = [...cloudSeries].sort((a,b) => a.localeCompare(b, 'pl'));
-                        sortedSeries.forEach(s => {
-                            sl.innerHTML += `<option value="${s}"></option>`;
+                        sl.innerHTML = '<option value="">[ Wybierz model z listy ]</option>';
+                        
+                        const categories = [
+                            "Lokomotywy elektryczne",
+                            "Lokomotywy spalinowe",
+                            "Elektryczne zespoły trakcyjne",
+                            "Spalinowe zespoły trakcyjne i autobusy szynowe"
+                        ];
+
+                        categories.forEach(cat => {
+                            let catSeries = cloudSeries.filter(s => (typeof s === 'object' ? s.category : 'Brak kategorii') === cat);
+                            if(catSeries.length > 0) {
+                                sl.innerHTML += `<option disabled style="background:#111; color:var(--accent-orange); font-weight:bold; text-align:center;">--- ${cat.toUpperCase()} ---</option>`;
+                                catSeries.sort((a,b) => {
+                                    let na = typeof a === 'object' ? a.name : a;
+                                    let nb = typeof b === 'object' ? b.name : b;
+                                    return na.localeCompare(nb, 'pl');
+                                }).forEach(s => {
+                                    let name = typeof s === 'object' ? s.name : s;
+                                    sl.innerHTML += `<option value='{"name":"${name}", "cat":"${cat}"}'>${name}</option>`;
+                                });
+                            }
                         });
+
+                        sl.innerHTML += `<option disabled style="background:#111; color:var(--accent-cyan); font-weight:bold; text-align:center;">--- INNE ---</option>`;
+                        sl.innerHTML += `<option value="CUSTOM">➕ Dodaj ręcznie (Brak na liście)</option>`;
                     }
                     
                     renderAdminLists();
@@ -1309,16 +1346,29 @@
 
             db.collection('globalData').doc('lines').onSnapshot(doc => {
                 if (doc.exists) cloudLines = doc.data().list || [];
+                renderAdminLists();
             });
         }
 
         function renderAdminLists() {
             const seriesList = document.getElementById('admin-series-list');
             const carriersList = document.getElementById('admin-carriers-list');
+            const linesList = document.getElementById('admin-lines-list');
+            
             if(seriesList) {
                 seriesList.innerHTML = '';
-                [...cloudSeries].sort((a,b)=>a.localeCompare(b,'pl')).forEach(s => {
-                    seriesList.innerHTML += `<div class="admin-data-item"><span>${s}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('series', '${s}')">Usuń</button></div>`;
+                const sortedSeries = [...cloudSeries].sort((a,b) => {
+                    let nameA = typeof a === 'object' ? a.name : a;
+                    let nameB = typeof b === 'object' ? b.name : b;
+                    return nameA.localeCompare(nameB, 'pl');
+                });
+                sortedSeries.forEach(s => {
+                    let name = typeof s === 'object' ? s.name : s;
+                    let cat = typeof s === 'object' ? s.category : 'Inne';
+                    seriesList.innerHTML += `<div class="admin-data-item">
+                        <div><strong>${name}</strong> <span style="color:var(--text-muted); font-size:10px;">(${cat})</span></div>
+                        <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveSeries('${name}')">Usuń</button>
+                    </div>`;
                 });
             }
             if(carriersList) {
@@ -1327,14 +1377,64 @@
                     carriersList.innerHTML += `<div class="admin-data-item"><span>${c}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${c}')">Usuń</button></div>`;
                 });
             }
+            if(linesList) {
+                linesList.innerHTML = '';
+                [...cloudLines].sort((a,b) => a.code.localeCompare(b.code, 'pl', {numeric: true})).forEach(l => {
+                    linesList.innerHTML += `<div class="admin-data-item">
+                        <span><strong style="color:var(--accent-cyan);">${l.code}</strong> - ${l.name}</span>
+                        <div style="display:flex; gap: 5px;">
+                            <button class="btn-cyan" style="padding:4px 8px; font-size:10px; color:#000;" onclick="adminEditLine('${l.code}')">Edytuj</button>
+                            <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveLine('${l.code}')">Usuń</button>
+                        </div>
+                    </div>`;
+                });
+            }
+        }
+
+        function toggleCustomSeriesInput(selectEl) {
+            const customGroup = document.getElementById('custom-series-group');
+            if(selectEl.value === 'CUSTOM') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+
+        async function adminAddSeries() {
+            const cat = document.getElementById('mod-add-series-cat').value;
+            const val = document.getElementById('mod-add-series-value').value.trim();
+            if(!val) return;
+
+            if(cloudSeries.some(s => (typeof s === 'object' ? s.name : s).toLowerCase() === val.toLowerCase())) {
+                showToast("Taka seria taboru już istnieje!", "warn"); return;
+            }
+
+            try {
+                await db.collection('globalData').doc('lists').set({
+                    series: firebase.firestore.FieldValue.arrayUnion({ name: val, category: cat })
+                }, { merge: true });
+                showToast("Dodano model do bazy!", "success");
+                document.getElementById('mod-add-series-value').value = '';
+            } catch(e) { showToast("Błąd: " + e.message, "error"); }
+        }
+
+        async function adminRemoveSeries(name) {
+            if(!confirm(`Na pewno usunąć "${name}" z bazy?`)) return;
+            try {
+                const updatedSeries = cloudSeries.filter(s => (typeof s === 'object' ? s.name : s) !== name);
+                await db.collection('globalData').doc('lists').update({
+                    series: updatedSeries
+                });
+                showToast("Usunięto.", "success");
+            } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
         async function adminAddGlobalData(type) {
-            const inputId = type === 'series' ? 'mod-add-series-value' : 'mod-add-carrier-value';
+            const inputId = 'mod-add-carrier-value';
             const val = document.getElementById(inputId).value.trim();
             if(!val) return;
 
-            let existing = type === 'series' ? cloudSeries : cloudCarriers;
+            let existing = cloudCarriers;
             if(existing.map(e => e.toLowerCase()).includes(val.toLowerCase())) {
                 showToast("Taka wartość już istnieje!", "warn"); return;
             }
@@ -1364,7 +1464,7 @@
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
-                    <select class="admin-line-input">
+                    <select class="admin-line-input type-select">
                         <option value="stacja">🔴 Stacja</option>
                         <option value="podg">🔵 Posterunek Odg.</option>
                         <option value="po">⚪ Przystanek</option>
@@ -1372,11 +1472,55 @@
                     </select>
                 </td>
                 <td><input type="text" class="admin-line-input station-name-input" placeholder="Nazwa posterunku"></td>
-                <td><input type="text" class="admin-line-input" placeholder="np. stacja węzłowa"></td>
-                <td><input type="text" class="admin-line-input" placeholder="np. 142, 179"></td>
+                <td><input type="text" class="admin-line-input desc-input" placeholder="np. stacja węzłowa"></td>
+                <td><input type="text" class="admin-line-input branches-input" placeholder="np. 142, 179"></td>
                 <td><button class="btn-danger" onclick="this.closest('tr').remove()">X</button></td>
             `;
             tbody.appendChild(row);
+        }
+
+        function adminClearLineForm() {
+            document.getElementById('admin-line-code').value = '';
+            document.getElementById('admin-line-tbody').innerHTML = '';
+            showToast("Kreator został wyczyszczony.", "info");
+        }
+
+        function adminEditLine(code) {
+            let line = cloudLines.find(l => l.code === code);
+            if (!line) { showToast("Nie znaleziono tej linii w chmurze.", "warn"); return; }
+            
+            document.getElementById('admin-line-code').value = line.code;
+            const tbody = document.getElementById('admin-line-tbody');
+            tbody.innerHTML = '';
+            
+            const allSt = getAllStations();
+            
+            line.stations.forEach(sId => {
+                let st = allSt.find(s => s.id === sId);
+                let stName = st ? st.name : '';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <select class="admin-line-input type-select">
+                            <option value="stacja">🔴 Stacja</option>
+                            <option value="podg">🔵 Posterunek Odg.</option>
+                            <option value="po">⚪ Przystanek</option>
+                            <option value="none">❌ Zlikwidowany</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="admin-line-input station-name-input" placeholder="Nazwa posterunku"></td>
+                    <td><input type="text" class="admin-line-input desc-input" placeholder="np. stacja węzłowa"></td>
+                    <td><input type="text" class="admin-line-input branches-input" placeholder="np. 142, 179"></td>
+                    <td><button class="btn-danger" onclick="this.closest('tr').remove()">X</button></td>
+                `;
+                // Bezpieczne przypisanie wartości z pominięciem HTML
+                row.querySelector('.station-name-input').value = stName;
+                tbody.appendChild(row);
+            });
+            
+            showToast(`Wczytano linię ${line.code} do kreatora.`, "info");
+            document.getElementById('admin-line-code').scrollIntoView({ behavior: 'smooth' });
         }
 
         async function adminSaveLine() {
@@ -1400,7 +1544,6 @@
                 
                 if(!name) name = `Punkt ${index}`;
 
-                // Sprawdzamy czy istnieje
                 let existing = allExistingSt.find(s => s.name.toLowerCase() === name.toLowerCase());
                 if (existing) {
                     lineStationIds.push(existing.id);
@@ -1410,31 +1553,28 @@
                         id: maxId,
                         code: name.substring(0, 3).toUpperCase(),
                         name: name,
-                        lat: 52.0, // Default środek polski jeśli brak GPS
+                        lat: 52.0,
                         lng: 19.0
                     };
                     newStationsToAdd.push(newSt);
-                    allExistingSt.push(newSt); // local cache
+                    allExistingSt.push(newSt); 
                     lineStationIds.push(maxId);
                 }
             });
 
             try {
-                // 1. Dodaj nowe stacje do chmury
                 if (newStationsToAdd.length > 0) {
                     await db.collection('globalData').doc('stations').set({
                         list: firebase.firestore.FieldValue.arrayUnion(...newStationsToAdd)
                     }, { merge: true });
                 }
 
-                // 2. Dodaj Linię Kolejową
                 let newLine = {
                     code: code,
                     name: `Relacja (Admin) - ${code}`,
                     stations: lineStationIds
                 };
 
-                // Zastępowanie jeśli istnieje, lub dodanie
                 let updatedLines = cloudLines.filter(l => l.code !== code);
                 updatedLines.push(newLine);
 
@@ -1442,11 +1582,23 @@
                     list: updatedLines
                 }, { merge: true });
 
-                showToast(`Zapisano linię ${code} wraz z nowymi stacjami!`, "success");
-                document.getElementById('admin-line-code').value = '';
-                document.getElementById('admin-line-tbody').innerHTML = '';
+                showToast(`Zapisano / zaktualizowano linię ${code} wraz z nowymi stacjami!`, "success");
+                adminClearLineForm();
             } catch(e) {
                 showToast("Błąd zapisu linii: " + e.message, "error");
+            }
+        }
+
+        async function adminRemoveLine(code) {
+            if(!confirm(`Na pewno usunąć linię ${code} z chmury? (Stacje pozostaną w bazie)`)) return;
+            try {
+                let updatedLines = cloudLines.filter(l => l.code !== code);
+                await db.collection('globalData').doc('lines').update({
+                    list: updatedLines
+                });
+                showToast(`Usunięto linię ${code}.`, "success");
+            } catch (e) {
+                showToast("Błąd: " + e.message, "error");
             }
         }
 
@@ -1552,7 +1704,6 @@
                 await db.collection('users').doc(targetUid).update({ 'userData': targetUserData });
                 showToast("Usunięto zdjęcie w trybie moderatora.", "success");
                 
-                // Refresh the profile gallery
                 openProfile(targetUid);
             } catch(e) {
                 showToast("Błąd usuwania zdjęcia: " + e.message, "error");
@@ -2136,8 +2287,26 @@
         }
 
         function addLocoPhotoFromSketch() {
-            let category = document.getElementById('sketch-category').value;
-            let series = document.getElementById('sketch-series').value.trim();
+            let selectSeries = document.getElementById('sketch-series').value;
+            if(!selectSeries) { showToast('Wybierz serię/model z listy!', 'warn'); return; }
+
+            let category = '';
+            let series = '';
+
+            if (selectSeries === 'CUSTOM') {
+                category = document.getElementById('sketch-custom-category').value;
+                series = document.getElementById('sketch-custom-series').value.trim();
+            } else {
+                try {
+                    let parsed = JSON.parse(selectSeries);
+                    category = parsed.cat;
+                    series = parsed.name;
+                } catch(e) {
+                    series = selectSeries;
+                    category = 'Inne';
+                }
+            }
+
             let number = document.getElementById('sketch-number').value.trim();
             let carrier = document.getElementById('sketch-carrier-select').value.trim() || 'Brak';
             
@@ -2177,7 +2346,6 @@
             document.getElementById('sketch-upload-placeholder').style.display = 'block';
             showToast(`Zapisano ${series}-${number} w Chmurze!`, 'success');
             
-            // Wysyłanie powiadomienia do znajomych
             if (visibility === 'public') {
                 notifyFriends(`Dodał(a) nowe zdjęcie taboru: ${series} ${number}`, 'photo');
             }
@@ -2675,7 +2843,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.3", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.5", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
