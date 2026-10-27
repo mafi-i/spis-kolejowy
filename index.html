@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.1</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.2</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -292,7 +292,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.1</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.2</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -487,30 +487,26 @@
             <h2>// Spis Zdjęć - Formularz taboru (Kompresja Canvas + Geotagowanie)</h2>
             <div class="sketch-container">
                 <div class="sketch-left-col">
+                    
                     <div class="sketch-row">
-                        <div class="form-group">
-                            <label>Typ lokomotywy / EZT:</label>
-                            <select id="sketch-series" onchange="toggleCustomSeriesInput(this)">
-                                
-                                    <option value="15D">15D</option><option value="31WE">31WE</option><option value="45WE">45WE</option>
-                                    <option value="6Dg">6Dg</option><option value="BR232">BR232</option><option value="Dragon">Dragon</option>
-                                    <option value="ED161">ED161</option><option value="ED250">ED250</option><option value="Elf">Elf</option>
-                                    <option value="EN57">EN57</option><option value="EP07">EP07</option><option value="EP08">EP08</option>
-                                    <option value="EP09">EP09</option><option value="ET22">ET22</option><option value="ET41">ET41</option>
-                                    <option value="EU07">EU07</option><option value="EU160">EU160</option><option value="EU200">EU200</option>
-                                    <option value="Flirt">Flirt</option><option value="Impuls">Impuls</option><option value="SM42">SM42</option>
-                                    <option value="ST43">ST43</option><option value="ST44">ST44</option><option value="SU160">SU160</option>
-                                    <option value="SU42">SU42</option><option value="Traxx">Traxx</option><option value="Vectron">Vectron</option>
-        
-                                <option value="CUSTOM">[ Wpisz własny typ... ]</option>
+                        <div class="form-group" style="flex: 1.2;">
+                            <label>Kategoria pojazdu:</label>
+                            <select id="sketch-category">
+                                <option value="Lokomotywy elektryczne">Lokomotywy elektryczne</option>
+                                <option value="Lokomotywy spalinowe">Lokomotywy spalinowe</option>
+                                <option value="Elektryczne zespoły trakcyjne">Elektryczne Zespoły Trakcyjne (EZT)</option>
+                                <option value="Spalinowe zespoły trakcyjne i autobusy szynowe">Spalinowe Zespoły Trakcyjne (SZT)</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Numer boczny:</label><input type="text" id="sketch-number" placeholder="np. 045, 321..."></div>
-                    </div>
-
-                    <div class="form-group" id="custom-series-group" style="display:none;">
-                        <label>Własna seria / typ:</label>
-                        <input type="text" id="sketch-custom-series" placeholder="np. ET25 Dragon">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Seria / Model:</label>
+                            <input type="text" id="sketch-series" list="sketch-series-list" placeholder="np. EU07, ED250...">
+                            <datalist id="sketch-series-list"></datalist>
+                        </div>
+                        <div class="form-group" style="flex: 0.8;">
+                            <label>Numer boczny:</label>
+                            <input type="text" id="sketch-number" placeholder="np. 045...">
+                        </div>
                     </div>
 
                     <div class="sketch-row">
@@ -634,10 +630,22 @@
                     </div>
                 </div>
 
-                <div class="update-box">
-                    <h3>Lista Znajomych</h3>
-                    <div id="friends-list-container" style="display:flex; flex-direction:column; gap:10px; max-height: 450px; overflow-y:auto;">
-                        <span style="font-size:12px; color:var(--text-muted);">Nie masz jeszcze znajomych.</span>
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    <div class="update-box">
+                        <h3>Lista Znajomych</h3>
+                        <div id="friends-list-container" style="display:flex; flex-direction:column; gap:10px; max-height: 250px; overflow-y:auto;">
+                            <span style="font-size:12px; color:var(--text-muted);">Nie masz jeszcze znajomych.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="update-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 8px;">
+                            <h3 style="border:none; padding:0; margin:0;">Aktywność Znajomych (Powiadomienia)</h3>
+                            <button class="btn-small" style="padding:4px 8px; font-size:10px;" onclick="clearNotifications()">Odczytane ✓</button>
+                        </div>
+                        <div id="notifications-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
+                            <span style="font-size:12px; color:var(--text-muted);">Brak nowych powiadomień.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -746,7 +754,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.1</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.2</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -826,6 +834,21 @@
         let mainDynamicLayer = null, friendDynamicLayer = null;
         let selectedPhotoLatLng = null;
 
+        // POWIADOMIENIA BADGE
+        let unreadRequests = 0;
+        let unreadNotifications = 0;
+
+        function updateGlobalBadge() {
+            const badge = document.getElementById('notif-badge');
+            const total = unreadRequests + unreadNotifications;
+            if (total > 0) {
+                badge.style.display = 'block';
+                badge.innerText = total;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
         const mockStations = [
             { id: 1, code: "WS", name: "Warszawa Centralna", lat: 52.2289, lng: 21.0022 },
             { id: 2, code: "GM", name: "Grodzisk Mazowiecki", lat: 52.1114, lng: 20.6258 },
@@ -897,26 +920,15 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.0.1",
-                title: "Nowy Widok Profilu, Wyższa Rozdzielczość i Prywatność",
+                version: "Alpha 1.0.2",
+                title: "Optymalizacja List Pojazdów i Powiadomienia Live",
                 date: "Dzisiaj",
                 added: [
-                    "Znacznie ulepszono jakość i rozdzielczość wgrywanych zdjęć do chmury",
-                    "Kompletnie nowy wygląd profilu gracza z bannerem i galerią",
-                    "Kliknięcie profilówki w menu od razu przenosi do własnego profilu",
-                    "Możliwość zatajania wybranych zdjęć z profilu publicznego (widoczne tylko w Ilostanie)",
-                    "Opcja wyboru sprzętu fotograficznego i własnego malowania (okleiny)",
-                    "Naprawiono błąd nakładania się przycisków +/- z mapy na górne menu"
-                ]
-            },
-            {
-                version: "Alpha 1.0.0",
-                title: "Globalna Moderacja, Unikalność i Reorganizacja",
-                date: "26.10.2026",
-                added: [
-                    "Wyszukiwarka i duża pre-definiowana baza przewoźników z UTK",
-                    "Blokada duplikatów przy dodawaniu globalnych danych",
-                    "Złożony mechanizm sortujący tabele (alfabetyczno-cyfrowy pod polski tabor)"
+                    "Zmiana dodawania modeli - usunięto podział z chmury, 4 sztywne główne sekcje oraz własnoręczne wpisywanie wsparte podpowiedziami z Firebase",
+                    "Powiadomienia od znajomych na żywo gdy dodadzą nowy odcinek trasy lub nową fotografię (w zakładce społeczność)",
+                    "Kliknięcie profilu znajomego w liście wyświetli teraz pełny widok profilowy z jego własną galerią, zamiast mapy",
+                    "Funkcja natychmiastowego kasowania zawartości awatara oraz tła baneru (ikony kosza)",
+                    "Lista zarządzania automatycznie nasłuchuje wykreśleń usuniętych kont z głównego uwierzytelnienia"
                 ]
             }
         ];
@@ -996,6 +1008,7 @@
                         banner: "",
                         role: "user",
                         pendingRequests: [],
+                        notifications: [],
                         userData: { visitedStations: [], rides: [], photos: [], friends: [] },
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
@@ -1054,6 +1067,7 @@
                         loadGlobalData();
                         initAppSession();
                         checkPendingRequests(data.pendingRequests || []);
+                        renderNotifications(data.notifications || []);
                     }
                 });
             } else {
@@ -1078,6 +1092,62 @@
             db.collection('users').doc(currentUser.uid).update({
                 userData: userData
             }).catch(e => console.warn("Błąd synchronizacji chmury:", e));
+        }
+
+        async function notifyFriends(msg, type) {
+            if (!userData.friends || userData.friends.length === 0) return;
+            const notif = {
+                uid: currentUser.uid,
+                username: currentUser.username,
+                avatar: currentUser.avatar,
+                msg: msg,
+                type: type,
+                time: Date.now()
+            };
+            
+            const batch = db.batch();
+            userData.friends.forEach(f => {
+                const fRef = db.collection('users').doc(f.uid);
+                batch.update(fRef, {
+                    notifications: firebase.firestore.FieldValue.arrayUnion(notif)
+                });
+            });
+            await batch.commit().catch(e => console.warn('Błąd wysyłania powiadomienia:', e));
+        }
+
+        function renderNotifications(notifs) {
+            const list = document.getElementById('notifications-list');
+            if (!notifs || notifs.length === 0) {
+                list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Brak nowych powiadomień.</span>';
+                unreadNotifications = 0;
+                updateGlobalBadge();
+                return;
+            }
+            
+            notifs.sort((a,b) => b.time - a.time);
+            unreadNotifications = notifs.length;
+            updateGlobalBadge();
+            
+            list.innerHTML = '';
+            notifs.forEach(n => {
+                let dateStr = new Date(n.time).toLocaleString('pl-PL');
+                let icon = n.type === 'photo' ? '📷' : '🚂';
+                list.innerHTML += `
+                    <div class="result-item" style="flex-direction:row; gap:10px; align-items:center; cursor:pointer;" onclick="openProfile('${n.uid}')">
+                        <img src="${n.avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--accent-cyan);">
+                        <div>
+                            <strong style="color:var(--accent-yellow);">${n.username}</strong> <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span><br>
+                            <span style="color:#fff; font-size:12px;">${icon} ${n.msg}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function clearNotifications() {
+            if(!currentUser) return;
+            await db.collection('users').doc(currentUser.uid).update({ notifications: [] });
+            showToast("Oznaczono powiadomienia jako przeczytane.");
         }
 
         function initAppSession() {
@@ -1158,27 +1228,12 @@
                         merged.forEach(c => dl.innerHTML += `<option value="${c}"></option>`);
                     }
 
-                    const sl = document.getElementById('sketch-series');
+                    const sl = document.getElementById('sketch-series-list');
                     if(sl && cloudSeries.length > 0) {
-                        // Znajdź lub utwórz wspólną grupę dla wszystkich pojazdów jeśli chcesz, 
-                        // lub po prostu dodaj nowe serie jako opcje przed opcją "CUSTOM".
-                        // Aby uniknąć duplikatów i grup, wstawimy je bezpośrednio lub do grupy 'EZT / Zespoły'
-                        // dla uproszczenia (ale z posortowaniem razem z resztą byłoby idealnie).
-                        // O wiele lepsze podejście: dodać wszystkie w jedno miejsce. 
-                        // Modyfikujemy to tak, by dodać po prostu opcje.
-                        
-                        let customOption = sl.querySelector('option[value="CUSTOM"]');
-                        
-                        // Zbieramy istniejące
-                        let existingVals = Array.from(sl.options).map(o => o.value);
-                        
-                        cloudSeries.forEach(s => {
-                            if (!existingVals.includes(s)) {
-                                let opt = document.createElement('option');
-                                opt.value = s;
-                                opt.textContent = s;
-                                sl.insertBefore(opt, customOption);
-                            }
+                        sl.innerHTML = '';
+                        let sortedSeries = [...cloudSeries].sort((a,b) => a.localeCompare(b, 'pl'));
+                        sortedSeries.forEach(s => {
+                            sl.innerHTML += `<option value="${s}"></option>`;
                         });
                     }
                 } else {
@@ -1202,7 +1257,11 @@
                     showToast("Taki przewoźnik już istnieje w bazie!", "warn"); return;
                 }
             } else if (type === 'series') {
-                let existingOptions = Array.from(document.getElementById('sketch-series').options).map(o => o.value.toLowerCase());
+                let existingOptions = [];
+                const sl = document.getElementById('sketch-series-list');
+                if (sl) {
+                    existingOptions = Array.from(sl.options).map(o => o.value.toLowerCase());
+                }
                 if (existingOptions.includes(val.toLowerCase())) {
                     showToast("Taka seria taboru już istnieje!", "warn"); return;
                 }
@@ -1857,10 +1916,6 @@
             }
         }
 
-        function toggleCustomSeriesInput(selectEl) {
-            document.getElementById('custom-series-group').style.display = selectEl.value === 'CUSTOM' ? 'flex' : 'none';
-        }
-
         function togglePaintingInput(selectEl) {
             const customInput = document.getElementById('sketch-painting-custom');
             if(selectEl.value === 'Okleina' || selectEl.value === 'Inne') {
@@ -1871,8 +1926,8 @@
         }
 
         function addLocoPhotoFromSketch() {
-            let selectSeries = document.getElementById('sketch-series').value;
-            let series = selectSeries === 'CUSTOM' ? document.getElementById('sketch-custom-series').value.trim() : selectSeries;
+            let category = document.getElementById('sketch-category').value;
+            let series = document.getElementById('sketch-series').value.trim();
             let number = document.getElementById('sketch-number').value.trim();
             let carrier = document.getElementById('sketch-carrier-select').value.trim() || 'Brak';
             
@@ -1895,7 +1950,7 @@
             const finalLng = selectedPhotoLatLng ? selectedPhotoLatLng.lng : 21.0022;
 
             let newPhoto = { 
-                series, number, carrier, painting, date, url: uploadedImageDataUrl || 'https://via.placeholder.com/400x250/151518/ff9e00?text=Tabor', 
+                category, series, number, carrier, painting, date, url: uploadedImageDataUrl || 'https://via.placeholder.com/400x250/151518/ff9e00?text=Tabor', 
                 desc, lat: finalLat, lng: finalLng,
                 visibility: visibility, device: device
             };
@@ -1911,6 +1966,11 @@
             document.getElementById('sketch-preview-img').style.display = 'none';
             document.getElementById('sketch-upload-placeholder').style.display = 'block';
             showToast(`Zapisano ${series}-${number} w Chmurze!`, 'success');
+            
+            // Wysyłanie powiadomienia do znajomych
+            if (visibility === 'public') {
+                notifyFriends(`Dodał(a) nowe zdjęcie taboru: ${series} ${number}`, 'photo');
+            }
         }
 
         function updatePhotosUI() {
@@ -1964,7 +2024,7 @@
             cats.forEach(c => { stats[c.id] = { series: new Set(), count: 0 }; });
 
             userData.photos.forEach(p => {
-                let cat = getCategoryForSeries(p.series);
+                let cat = p.category || getCategoryForSeries(p.series);
                 if (stats[cat]) { stats[cat].series.add(p.series.toUpperCase().trim()); stats[cat].count++; }
             });
 
@@ -2004,7 +2064,7 @@
             let seriesCont = document.getElementById('drilldown-series-container'); seriesCont.innerHTML = '';
 
             let seriesMap = {};
-            userData.photos.filter(p => getCategoryForSeries(p.series) === catName).forEach(p => {
+            userData.photos.filter(p => (p.category || getCategoryForSeries(p.series)) === catName).forEach(p => {
                 let s = p.series.toUpperCase().trim();
                 seriesMap[s] = (seriesMap[s] || 0) + 1;
             });
@@ -2087,6 +2147,9 @@
             userData.rides.push(newRide);
             saveUserDataToStorage(); updateRidesUI();
             showToast(`Dodano przejazd (${routeResult.distance} km)!`, 'success');
+            
+            // Powiadomienie znajomych
+            notifyFriends(`Dodał(a) nowy odcinek trasy: ${activeSelectedLine.code}`, 'ride');
 
             btn.innerText = "[ Dodaj Przejazd po Torach » ]"; btn.disabled = false;
         }
@@ -2255,18 +2318,18 @@
 
         function checkPendingRequests(reqs) {
             const list = document.getElementById('pending-requests-list');
-            const badge = document.getElementById('notif-badge');
             
             if(!reqs || reqs.length === 0) { 
                 list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Brak zaproszeń.</span>'; 
-                badge.style.display = 'none'; 
+                unreadRequests = 0;
+                updateGlobalBadge(); 
                 return; 
             }
             
-            badge.style.display = 'block'; 
-            badge.innerText = reqs.length;
-            list.innerHTML = '';
+            unreadRequests = reqs.length;
+            updateGlobalBadge(); 
             
+            list.innerHTML = '';
             reqs.forEach(r => {
                 list.innerHTML += `
                     <div class="friend-card" style="margin-bottom:5px;">
@@ -2345,7 +2408,7 @@
                 
                 card.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${fr.uid}')">
-                        <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%; border: 1px solid var(--accent-cyan);">
+                        <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border: 1px solid var(--accent-cyan);">
                         <div>
                             <strong style="color:var(--accent-cyan);">${fr.username}</strong><br>
                             <span style="font-size:10px; color:var(--text-muted);">Kliknij, by otworzyć profil &raquo;</span>
@@ -2385,40 +2448,11 @@
             }
         }
 
-        async function fetchAndOpenFriend(uid) {
-            try {
-                const doc = await db.collection('users').doc(uid).get();
-                if(doc.exists) {
-                    const fData = doc.data().userData || {};
-                    document.getElementById('modal-friend-name').innerText = "// PROFIL: " + doc.data().username;
-                    document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
-                    document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
-                    document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
-                    document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
-                    
-                    document.getElementById('friend-modal').style.display = 'flex';
-                    
-                    if (!friendMapInitialized) {
-                        friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
-                        configurePolandMapBase(friendMap);
-                        friendDynamicLayer = L.layerGroup().addTo(friendMap);
-                        friendMapInitialized = true;
-                    }
-                    setTimeout(() => { 
-                        friendMap.invalidateSize(); 
-                        renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
-                    }, 200);
-                }
-            } catch(e) {
-                showToast("Błąd pobierania danych znajomego", "error");
-            }
-        }
-
         function closeFriendModal() { document.getElementById('friend-modal').style.display = 'none'; }
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.2", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
