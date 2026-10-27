@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.8</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.8.1</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -299,7 +299,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.8</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.8.1</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -464,12 +464,6 @@
                         </div>
                         <button class="btn-small" id="btn-add-ride" style="margin-top:8px;" onclick="addTraveledSegment()">[ Dodaj Przejazd po Torach » ]</button>
                     </div>
-                    <div class="form-group" style="margin-top:15px;">
-                        <label>Twoje przejechane odcinki:</label>
-                        <div id="user-rides-list" style="display:flex; flex-direction:column; gap:6px; max-height: 200px; overflow-y:auto;">
-                            <span style="font-size:12px; color:var(--text-muted);">Brak przejazdów.</span>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="update-box">
@@ -486,6 +480,14 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- NOWE: Wyróżniona sekcja do usuwania własnych tras -->
+                <div class="update-box" style="grid-column: 1 / -1;">
+                    <h3>Twoje Przejechane Odcinki (Zarządzanie)</h3>
+                    <div id="user-rides-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
+                        <span style="font-size:12px; color:var(--text-muted);">Brak przejazdów. Dodaj je powyżej.</span>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -499,7 +501,6 @@
                         <div class="form-group" style="flex: 1.2;">
                             <label>Seria / Model (Kategoria):</label>
                             <select id="sketch-series" onchange="toggleCustomSeriesInput(this)">
-                                <!-- Opcje ładowane z chmury, podzielone martwymi polami (disabled) -->
                                 <option value="">[ Wybierz model z listy ]</option>
                             </select>
                         </div>
@@ -529,7 +530,6 @@
                             <datalist id="sketch-carrier-list"></datalist>
                         </div>
                         
-                        <!-- MALOWANIE Z UKRYTYM POLEM -->
                         <div class="form-group">
                             <label>Malowanie:</label>
                             <select id="sketch-painting-select" onchange="togglePaintingInput(this)">
@@ -552,7 +552,6 @@
                         </div>
                     </div>
                     
-                    <!-- KWADRATOWE CHECKBOXY DLA RADIO (Styl Custom) -->
                     <div style="display:flex; flex-direction:column; gap:12px; padding:10px; background:rgba(255, 158, 0, 0.05); border:1px solid var(--accent-orange); border-radius:4px;">
                         <div class="form-group" style="margin:0;">
                             <label style="color:var(--accent-cyan); font-weight:bold;">Widoczność zdjęcia:</label>
@@ -771,7 +770,7 @@
                     <div class="admin-data-list" id="admin-carriers-list"></div>
                 </div>
 
-                <!-- KREATOR LINII I STACJI (zintegrowany z 1.0.8) -->
+                <!-- KREATOR LINII I STACJI -->
                 <div class="update-box" style="grid-column: 1 / -1;">
                     <h3>3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
                     
@@ -843,7 +842,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.8</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.8.1</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -911,11 +910,27 @@
             });
         }
         
+        // ZAAWANSOWANE SORTOWANIE MODELI TABORU (MIESZANE ALFABETYCZNO-CYFROWE)
         function sortPolishLocoSeries(a, b) {
-            let numA = parseInt(a.match(/\d+/)?.[0] || 9999);
-            let numB = parseInt(b.match(/\d+/)?.[0] || 9999);
-            if (numA !== numB) return numA - numB;
-            return a.localeCompare(b, 'pl');
+            let s1 = String(a).toUpperCase().trim();
+            let s2 = String(b).toUpperCase().trim();
+            
+            let parseSeries = (str) => {
+                let match = str.match(/^([A-Z]+)?\-?(\d+)?(.*)$/);
+                return {
+                    prefix: match && match[1] ? match[1] : str,
+                    number: match && match[2] ? parseInt(match[2], 10) : null,
+                    suffix: match && match[3] ? match[3] : ''
+                };
+            };
+            
+            let p1 = parseSeries(s1);
+            let p2 = parseSeries(s2);
+            
+            if (p1.prefix !== p2.prefix) return p1.prefix.localeCompare(p2.prefix, 'pl');
+            if (p1.number !== null && p2.number !== null && p1.number !== p2.number) return p1.number - p2.number;
+            
+            return s1.localeCompare(s2, 'pl');
         }
 
         // --- KONFIGURACJA FIREBASE ---
@@ -1031,25 +1046,15 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.0.8",
-                title: "Trasy, Timeouty, i Lepsza Hierarchia Chmury",
+                version: "Alpha 1.0.8.1",
+                title: "Optymalizacja List i Naprawa Wczytywania tras",
                 date: "Dzisiaj",
                 added: [
-                    "W pełni zabezpieczono przycisk generowania trasy - automatyczny timeout w wypadku awarii zewnętrznego serwera",
-                    "Poprawiono synchronizację linii z chmury. Własnoręcznie dodane linie przez administrację oznaczają się teraz z absolutnym priorytetem",
-                    "Aplikacja w pełni korzysta z widoku zarządania własnymi trasami z opcją wygodnego usuwania",
-                    "Możliwość edycji wcześniej utworzonych Linii Kolejowych w Kreatorze"
-                ]
-            },
-            {
-                version: "Alpha 1.0.6",
-                title: "Mapa dla Kreatora i Rangi Użytkowników",
-                date: "Wcześniej",
-                added: [
-                    "Wprowadzono minimapę do Kreatora Linii, dzięki czemu administratorzy mogą ustalać i modyfikować pozycję nowo dodanych stacji",
-                    "Zoptymalizowano dodawanie i resetowanie linii (połączenie początkowej z końcową)",
-                    "Odświeżono wizualnie profil użytkownika — ranga gracza teraz wyraźnie widoczna przy jego nazwie",
-                    "Bezpieczne wczytywanie zawartości tabel minimalizujące podatność na xss (Wprowadzono moduły escapeHTML)"
+                    "Kompleksowe rozwiązanie problemu zawieszającego się przycisku 'Trasowanie...' dzięki asynchronicznym blokom try-finally",
+                    "Widok własnych przejazdów został lepiej wyeksponowany w nowym oknie ułatwiającym usuwanie błędnych wpisów",
+                    "Kreator map podczas edycji wczytuje i wyświetla absolutnie wszystkie stacje przypisane do danego szlaku (nawet te bez dodanych koordynatów)",
+                    "Wprowadzono logiczne sortowanie Modeli Taboru uwzględniające człony literowe, po których następuje sortowanie liczbowe",
+                    "Priorytet Admina: Linie zapisane ręcznie w kreatorze permanentnie nadpisują wbudowane, systemowe szablony tras (LK)"
                 ]
             }
         ];
@@ -1083,6 +1088,7 @@
 
         function getAllLines() { 
             let map = new Map();
+            // Priorytet nakładania: mockLines nałożone najpierw, potem nadpisane cloudLines. Kod to gwarantuje.
             mockLines.forEach(l => map.set(l.code, l));
             cloudLines.forEach(l => map.set(l.code, l)); 
             return Array.from(map.values());
@@ -1139,7 +1145,7 @@
 
                     await db.collection('users').doc(user.uid).set({
                         email: email,
-                        username: username, // Sanityzacja nastąpi przy odczycie
+                        username: username,
                         friendCode: fCode,
                         avatar: "https://via.placeholder.com/150/ff9e00/000000?text=SK",
                         banner: "",
@@ -1347,7 +1353,7 @@
             setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData); }, 300);
         }
 
-        // --- GLOBALNE DANE (Alpha) ---
+        // --- GLOBALNE DANE ---
         function loadGlobalData() {
             db.collection('globalData').doc('lists').onSnapshot(doc => {
                 if(doc.exists) {
@@ -1381,7 +1387,7 @@
                                 catSeries.sort((a,b) => {
                                     let na = typeof a === 'object' ? a.name : a;
                                     let nb = typeof b === 'object' ? b.name : b;
-                                    return sortPolishLocoSeries(na, nb);
+                                    return sortPolishLocoSeries(na, nb); // Sortowanie literowo cyfrowe (np. EU07 > EU160)
                                 }).forEach(s => {
                                     let name = typeof s === 'object' ? s.name : s;
                                     let safeName = escapeHTML(name);
@@ -1528,7 +1534,7 @@
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
-        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) z 1.0.8 ---
+        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) ---
         function adminAddLineRow(existingLat = '', existingLng = '', stName = '', type = 'stacja', desc = '', branches = '') {
             const tbody = document.getElementById('admin-line-tbody');
             const rowId = adminRowCounter++;
@@ -1661,23 +1667,25 @@
         }
 
         function adminEditLine(code) {
-            let line = cloudLines.find(l => l.code === code);
-            if (!line) { showToast("Nie znaleziono tej linii w chmurze.", "warn"); return; }
+            // Wyszukaj linię uwzględniając priorytet w getAllLines() by zassało poprawnie wszystkie jej punkty
+            let line = getAllLines().find(l => l.code === code);
+            if (!line) { showToast("Nie znaleziono tej linii.", "warn"); return; }
             
             document.getElementById('admin-line-code').value = line.code;
             
-            let lineNameParts = line.name.split(' – ');
+            let lineNameParts = (line.name || '').split(' – ');
             document.getElementById('admin-line-start').value = lineNameParts[0] || '';
             document.getElementById('admin-line-end').value = lineNameParts.length > 1 ? lineNameParts[1] : '';
 
             const tbody = document.getElementById('admin-line-tbody');
             tbody.innerHTML = '';
+            activeAdminRowIndex = -1;
             
             const allSt = getAllStations();
             
             line.stations.forEach((sId, index) => {
                 let st = allSt.find(s => s.id === sId);
-                let stName = st ? st.name : '';
+                let stName = st ? st.name : 'Nieznana stacja';
                 let stLat = st && st.lat ? st.lat : '';
                 let stLng = st && st.lng ? st.lng : '';
                 
@@ -1906,7 +1914,7 @@
         // --- POWIĘKSZANIE ZDJĘĆ ---
         function zoomImage(url) {
             if(!url) return;
-            document.getElementById('zoomed-image-view').src = url; // Nie eskejpuje src ze względu na logikę Canvas (DataURL)
+            document.getElementById('zoomed-image-view').src = url; 
             document.getElementById('image-zoom-modal').style.display = 'flex';
         }
         function closeZoomModal() {
@@ -1915,7 +1923,7 @@
 
         function openAppInfoModal() { document.getElementById('app-info-modal').style.display = 'flex'; }
 
-        // --- BROUTER ROUTING (Z TIMEOUTEM Z WERSJI 1.0.8) ---
+        // --- BROUTER ROUTING Z ULEPSZONYM ZABEZPIECZENIEM (TIMEOUT & TRY-FINALLY) ---
         async function fetchPerfectRoute(startId, endId, lineCode) {
             const allLines = getAllLines();
             const allStations = getAllStations();
@@ -2105,7 +2113,7 @@
             }
         }
 
-        // --- ZARZĄDZANIE PROFILEM ZEWNĘTRZNYM (NOWY WIDOK) ---
+        // --- ZARZĄDZANIE PROFILEM ZEWNĘTRZNYM ---
         async function openProfile(uid) {
             try {
                 let pData = null;
@@ -2205,7 +2213,6 @@
                     }
                 }
 
-                // Generowanie galerii z zabezpieczeniem (XSS)
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
@@ -2725,6 +2732,7 @@
             document.getElementById('segment-selector-box').style.display = 'block';
         }
 
+        // POPRAWA PRZYCISKU TRASOWANIA - DODANO BLOK TRY...FINALLY
         async function addTraveledSegment() {
             if (!activeSelectedLine) return;
             let startId = parseInt(document.getElementById('select-start-station').value);
@@ -2734,25 +2742,30 @@
             let btn = document.getElementById('btn-add-ride');
             btn.innerText = "[ Trasowanie... ]"; btn.disabled = true;
 
-            const date = document.getElementById('ride-date').value || 'Brak daty';
-            const transport = document.getElementById('ride-transport').value;
-            const routeResult = await fetchPerfectRoute(startId, endId, activeSelectedLine.code);
+            try {
+                const date = document.getElementById('ride-date').value || 'Brak daty';
+                const transport = document.getElementById('ride-transport').value;
+                const routeResult = await fetchPerfectRoute(startId, endId, activeSelectedLine.code);
 
-            const newRide = { line: activeSelectedLine.code, startId, endId, date, transport, geoTrack: routeResult.track, distanceKm: routeResult.distance };
-            userData.rides.push(newRide);
-            saveUserDataToStorage(); updateRidesUI();
-            showToast(`Dodano przejazd (${routeResult.distance} km)!`, 'success');
-            
-            // Powiadomienie znajomych
-            notifyFriends(`Dodał(a) nowy odcinek trasy: ${activeSelectedLine.code}`, 'ride');
-
-            btn.innerText = "[ Dodaj Przejazd po Torach » ]"; btn.disabled = false;
+                const newRide = { line: activeSelectedLine.code, startId, endId, date, transport, geoTrack: routeResult.track, distanceKm: routeResult.distance };
+                userData.rides.push(newRide);
+                saveUserDataToStorage(); updateRidesUI();
+                showToast(`Dodano przejazd (${routeResult.distance} km)!`, 'success');
+                
+                // Powiadomienie znajomych
+                notifyFriends(`Dodał(a) nowy odcinek trasy: ${activeSelectedLine.code}`, 'ride');
+            } catch (e) {
+                showToast("Błąd przy pobieraniu trasy: " + e.message, "error");
+            } finally {
+                btn.innerText = "[ Dodaj Przejazd po Torach » ]"; 
+                btn.disabled = false;
+            }
         }
 
         function updateRidesUI() {
             let container = document.getElementById('user-rides-list');
             refreshStatsAndRank();
-            if (userData.rides.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak przejazdów.</span>`; return; }
+            if (userData.rides.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak przejazdów. Dodaj je powyżej.</span>`; return; }
             container.innerHTML = '';
             
             const allSt = getAllStations();
@@ -2788,7 +2801,7 @@
         function updateVisitedStationsUI() {
             let container = document.getElementById('user-visited-stations');
             refreshStatsAndRank();
-            if (userData.visitedStations.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak stacji.</span>`; return; }
+            if (userData.visitedStations.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak odwiedzonych stacji.</span>`; return; }
             container.innerHTML = '';
             
             const allSt = getAllStations();
@@ -3028,16 +3041,13 @@
         }
 
         async function removeFriend(friendUid, friendName) {
-            // Potwierdzenie przed usunięciem (zabezpieczenie)
             if(!confirm(`Czy na pewno chcesz usunąć gracza ${friendName} ze znajomych?`)) return;
 
             try {
-                // 1. Usuń u siebie
                 userData.friends = userData.friends.filter(f => f.uid !== friendUid);
                 saveUserDataToStorage();
                 renderFriendsUI();
 
-                // 2. Usuń siebie u znajomego (dwustronne usuwanie)
                 const friendRef = db.collection('users').doc(friendUid);
                 const friendDoc = await friendRef.get();
                 if(friendDoc.exists) {
@@ -3059,7 +3069,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.8", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.8.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
@@ -3098,7 +3108,6 @@
             const container = document.getElementById("toast-container");
             const toast = document.createElement("div");
             toast.className = `toast-msg ${type}`;
-            // Zabezpieczenie przed XSS w wyskakujących okienkach
             toast.innerText = message;
             container.appendChild(toast);
             setTimeout(() => { toast.remove(); }, 3500);
