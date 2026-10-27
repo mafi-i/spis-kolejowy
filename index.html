@@ -1603,26 +1603,9 @@
             const targetUid = currentlyViewedProfile.uid;
             
             if(userData.friends.some(f => f.uid === targetUid)) {
-                if(confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
-                    userData.friends = userData.friends.filter(f => f.uid !== targetUid);
-                    saveUserDataToStorage();
-                    renderFriendsUI();
-                    showToast("Usunięto ze znajomych.", "warn");
-                    openProfile(targetUid);
-                }
+                removeFriend(targetUid, currentlyViewedProfile.username).then(() => openProfile(targetUid));
             } else {
-                db.collection('users').doc(targetUid).update({
-                    pendingRequests: firebase.firestore.FieldValue.arrayUnion({
-                        uid: currentUser.uid, 
-                        username: currentUser.username, 
-                        avatar: currentUser.avatar, 
-                        code: currentUser.friendCode
-                    })
-                }).then(() => {
-                    showToast("Wysłano zaproszenie do " + currentlyViewedProfile.username, "success");
-                }).catch(e => {
-                    showToast("Błąd wysyłania: " + e.message, "error");
-                });
+                sendFriendRequest(targetUid, currentlyViewedProfile.username);
             }
         }
 
@@ -2139,21 +2122,35 @@
             const snap = await db.collection('users').where('friendCode', '==', query).get();
             if (snap.empty) { resBox.style.display = 'none'; showToast('Nie znaleziono spottera.', 'warn'); return; }
             
+            const myDoc = await db.collection('users').doc(currentUser.uid).get();
+            const mySent = myDoc.data().sentRequests || [];
+            const myPending = myDoc.data().pendingRequests || [];
+
             resBox.style.display = 'flex';
             snap.forEach(docSnap => {
                 const u = docSnap.data();
-                if(u.friendCode === currentUser.friendCode) return; // Nie szukaj samego siebie
+                if(u.friendCode === currentUser.friendCode) return; 
                 
                 let isFriend = userData.friends.some(f => f.friendCode === u.friendCode);
+                let isSent = mySent.some(r => r.uid === docSnap.id) || (u.pendingRequests && u.pendingRequests.some(r => r.uid === currentUser.uid));
+                let isReceived = myPending.some(r => r.uid === docSnap.id);
+                
                 let item = document.createElement('div');
                 item.className = 'result-item'; 
                 item.style.flexDirection = 'row'; 
                 item.style.justifyContent = 'space-between'; 
                 item.style.alignItems = 'center';
 
-                let actionBtn = isFriend 
-                    ? '<span style="color:var(--green-traveled)">[Znajomy]</span>' 
-                    : `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
+                let actionBtn = '';
+                if (isFriend) {
+                    actionBtn = '<span style="color:var(--green-traveled)">[Znajomy]</span>';
+                } else if (isSent) {
+                    actionBtn = '<span style="color:var(--accent-orange)">[Zaproszenie wysłane]</span>';
+                } else if (isReceived) {
+                    actionBtn = '<span style="color:var(--accent-cyan)">[Oczekuje na akceptację]</span>';
+                } else {
+                    actionBtn = `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
+                }
                 
                 item.innerHTML = `<span><strong>${u.username}</strong></span> ${actionBtn}`;
                 resBox.appendChild(item);
@@ -2162,6 +2159,28 @@
 
         async function sendFriendRequest(targetUid, targetName) {
             try {
+                if (userData.friends.some(f => f.uid === targetUid)) {
+                    showToast('Ta osoba jest już na Twojej liście znajomych!', 'warn');
+                    return;
+                }
+
+                const targetDoc = await db.collection('users').doc(targetUid).get();
+                if (!targetDoc.exists) return;
+                const targetData = targetDoc.data();
+
+                if (targetData.pendingRequests && targetData.pendingRequests.some(r => r.uid === currentUser.uid)) {
+                    showToast('Zaproszenie zostało już wysłane do tej osoby (Blokada)!', 'error');
+                    return;
+                }
+
+                const myDoc = await db.collection('users').doc(currentUser.uid).get();
+                const myData = myDoc.data();
+                
+                if (myData.pendingRequests && myData.pendingRequests.some(r => r.uid === targetUid)) {
+                    showToast('Ta osoba wysłała Ci już zaproszenie. Zaakceptuj je!', 'warn');
+                    return;
+                }
+
                 await db.collection('users').doc(targetUid).update({
                     pendingRequests: firebase.firestore.FieldValue.arrayUnion({
                         uid: currentUser.uid, 
@@ -2170,9 +2189,18 @@
                         code: currentUser.friendCode
                     })
                 });
+
+                await db.collection('users').doc(currentUser.uid).update({
+                    sentRequests: firebase.firestore.FieldValue.arrayUnion({
+                        uid: targetUid,
+                        username: targetData.username,
+                        avatar: targetData.avatar || "https://via.placeholder.com/150/ff9e00/000000?text=SK",
+                        code: targetData.friendCode
+                    })
+                });
+
                 showToast(`Wysłano zaproszenie do ${targetName}!`, 'success');
-                document.getElementById('friend-search-results').style.display = 'none';
-                document.getElementById('friend-search-input').value = '';
+                searchPotentialFriends(); 
             } catch(e) { 
                 showToast('Błąd wysyłania: ' + e.message, 'error'); 
             }
@@ -2213,35 +2241,41 @@
                 const myDoc = await myRef.get();
                 let myReqs = myDoc.data().pendingRequests || [];
                 
-                // Usuń z listy oczekujących
                 myReqs = myReqs.filter(r => r.uid !== reqUid);
+                
+                const friendRef = db.collection('users').doc(reqUid);
+                const friendDoc = await friendRef.get();
 
                 if(accept) {
-                    // 1. Dodaj znajomego do SWOJEJ bazy
-                    userData.friends.push({ uid: reqUid, username: reqName, friendCode: reqCode, avatar: reqAvatar });
-                    saveUserDataToStorage();
-                    renderFriendsUI();
-
-                    // 2. Dodaj SIEBIE do bazy ZNAJOMEGO (dwustronna relacja)
-                    const friendRef = db.collection('users').doc(reqUid);
-                    const friendDoc = await friendRef.get();
-                    if(friendDoc.exists) {
-                        let fData = friendDoc.data().userData || { friends: [] };
-                        fData.friends.push({
-                            uid: currentUser.uid,
-                            username: currentUser.username,
-                            friendCode: currentUser.friendCode,
-                            avatar: currentUser.avatar
-                        });
-                        await friendRef.update({ 'userData.friends': fData.friends });
+                    if (!userData.friends.some(f => f.uid === reqUid)) {
+                        userData.friends.push({ uid: reqUid, username: reqName, friendCode: reqCode, avatar: reqAvatar });
+                        saveUserDataToStorage();
+                        renderFriendsUI();
                     }
 
+                    if(friendDoc.exists) {
+                        let fData = friendDoc.data().userData || { friends: [] };
+                        if (!fData.friends.some(f => f.uid === currentUser.uid)) {
+                            fData.friends.push({
+                                uid: currentUser.uid,
+                                username: currentUser.username,
+                                friendCode: currentUser.friendCode,
+                                avatar: currentUser.avatar
+                            });
+                            await friendRef.update({ 'userData.friends': fData.friends });
+                        }
+                    }
                     showToast('Dodano do znajomych!', 'success');
                 } else { 
                     showToast('Odrzucono zaproszenie.'); 
                 }
                 
-                // Aktualizuj zaproszenia
+                if(friendDoc.exists) {
+                    let friendSentReqs = friendDoc.data().sentRequests || [];
+                    friendSentReqs = friendSentReqs.filter(r => r.uid !== currentUser.uid);
+                    await friendRef.update({ sentRequests: friendSentReqs });
+                }
+                
                 await myRef.update({ pendingRequests: myReqs });
                 checkPendingRequests(myReqs);
             } catch(e) { 
@@ -2277,16 +2311,13 @@
         }
 
         async function removeFriend(friendUid, friendName) {
-            // Potwierdzenie przed usunięciem (zabezpieczenie)
             if(!confirm(`Czy na pewno chcesz usunąć gracza ${friendName} ze znajomych?`)) return;
 
             try {
-                // 1. Usuń u siebie
                 userData.friends = userData.friends.filter(f => f.uid !== friendUid);
                 saveUserDataToStorage();
                 renderFriendsUI();
 
-                // 2. Usuń siebie u znajomego (dwustronne usuwanie)
                 const friendRef = db.collection('users').doc(friendUid);
                 const friendDoc = await friendRef.get();
                 if(friendDoc.exists) {
