@@ -2131,7 +2131,9 @@
 
         async function searchPotentialFriends() {
             let query = document.getElementById('friend-search-input').value.trim();
-            let resBox = document.getElementById('friend-search-results'); resBox.innerHTML = '';
+            let resBox = document.getElementById('friend-search-results'); 
+            resBox.innerHTML = '';
+            
             if (!query) { resBox.style.display = 'none'; return; }
 
             const snap = await db.collection('users').where('friendCode', '==', query).get();
@@ -2140,7 +2142,7 @@
             resBox.style.display = 'flex';
             snap.forEach(docSnap => {
                 const u = docSnap.data();
-                if(u.friendCode === currentUser.friendCode) return;
+                if(u.friendCode === currentUser.friendCode) return; // Nie szukaj samego siebie
                 
                 let isFriend = userData.friends.some(f => f.friendCode === u.friendCode);
                 let item = document.createElement('div');
@@ -2149,9 +2151,31 @@
                 item.style.justifyContent = 'space-between'; 
                 item.style.alignItems = 'center';
 
-                item.innerHTML = `<span><strong>${u.username}</strong></span> <button class="btn-cyan" onclick="openProfile('${docSnap.id}')">Zobacz Profil</button>`;
+                let actionBtn = isFriend 
+                    ? '<span style="color:var(--green-traveled)">[Znajomy]</span>' 
+                    : `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
+                
+                item.innerHTML = `<span><strong>${u.username}</strong></span> ${actionBtn}`;
                 resBox.appendChild(item);
             });
+        }
+
+        async function sendFriendRequest(targetUid, targetName) {
+            try {
+                await db.collection('users').doc(targetUid).update({
+                    pendingRequests: firebase.firestore.FieldValue.arrayUnion({
+                        uid: currentUser.uid, 
+                        username: currentUser.username, 
+                        avatar: currentUser.avatar, 
+                        code: currentUser.friendCode
+                    })
+                });
+                showToast(`Wysłano zaproszenie do ${targetName}!`, 'success');
+                document.getElementById('friend-search-results').style.display = 'none';
+                document.getElementById('friend-search-input').value = '';
+            } catch(e) { 
+                showToast('Błąd wysyłania: ' + e.message, 'error'); 
+            }
         }
 
         function checkPendingRequests(reqs) {
@@ -2188,51 +2212,125 @@
                 const myRef = db.collection('users').doc(currentUser.uid);
                 const myDoc = await myRef.get();
                 let myReqs = myDoc.data().pendingRequests || [];
+                
+                // Usuń z listy oczekujących
                 myReqs = myReqs.filter(r => r.uid !== reqUid);
 
                 if(accept) {
+                    // 1. Dodaj znajomego do SWOJEJ bazy
                     userData.friends.push({ uid: reqUid, username: reqName, friendCode: reqCode, avatar: reqAvatar });
                     saveUserDataToStorage();
                     renderFriendsUI();
+
+                    // 2. Dodaj SIEBIE do bazy ZNAJOMEGO (dwustronna relacja)
+                    const friendRef = db.collection('users').doc(reqUid);
+                    const friendDoc = await friendRef.get();
+                    if(friendDoc.exists) {
+                        let fData = friendDoc.data().userData || { friends: [] };
+                        fData.friends.push({
+                            uid: currentUser.uid,
+                            username: currentUser.username,
+                            friendCode: currentUser.friendCode,
+                            avatar: currentUser.avatar
+                        });
+                        await friendRef.update({ 'userData.friends': fData.friends });
+                    }
+
                     showToast('Dodano do znajomych!', 'success');
                 } else { 
                     showToast('Odrzucono zaproszenie.'); 
                 }
                 
+                // Aktualizuj zaproszenia
                 await myRef.update({ pendingRequests: myReqs });
+                checkPendingRequests(myReqs);
             } catch(e) { 
                 showToast('Błąd akceptacji.', 'error'); 
-            }
-        }
-
-        function removeFriend(uid, event) {
-            event.stopPropagation();
-            if (confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
-                userData.friends = userData.friends.filter(f => f.uid !== uid);
-                saveUserDataToStorage();
-                renderFriendsUI();
-                showToast("Pomyślnie usunięto ze znajomych.", "warn");
+                console.error(e);
             }
         }
 
         function renderFriendsUI() {
             let fContainer = document.getElementById('friends-list-container');
-            if (userData.friends.length === 0) { fContainer.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak znajomych.</span>`; return; }
+            if (!userData.friends || userData.friends.length === 0) { 
+                fContainer.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Nie masz jeszcze znajomych.</span>`; 
+                return; 
+            }
+            
             fContainer.innerHTML = '';
             userData.friends.forEach((fr) => {
-                let card = document.createElement('div'); card.className = 'friend-card'; card.style.cursor = 'pointer';
-                card.onclick = () => openProfile(fr.uid);
+                let card = document.createElement('div'); 
+                card.className = 'friend-card'; 
+                
                 card.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%;">
-                        <div><strong style="color:var(--accent-cyan);">${fr.username}</strong><br><span style="font-size:10px; color:var(--text-muted);">Kliknij by otworzyć Profil</span></div>
+                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="fetchAndOpenFriend('${fr.uid}')">
+                        <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%; border: 1px solid var(--accent-cyan);">
+                        <div>
+                            <strong style="color:var(--accent-cyan);">${fr.username}</strong><br>
+                            <span style="font-size:10px; color:var(--text-muted);">Kliknij, by otworzyć profil &raquo;</span>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <span style="color:var(--accent-cyan)">&raquo;</span>
-                        <button class="btn-danger" style="padding:4px 8px;" onclick="removeFriend('${fr.uid}', event)">Usuń</button>
-                    </div>`;
+                    <button class="btn-danger" onclick="removeFriend('${fr.uid}', '${fr.username}')" style="padding: 6px 10px;">Usuń</button>
+                `;
                 fContainer.appendChild(card);
             });
+        }
+
+        async function removeFriend(friendUid, friendName) {
+            // Potwierdzenie przed usunięciem (zabezpieczenie)
+            if(!confirm(`Czy na pewno chcesz usunąć gracza ${friendName} ze znajomych?`)) return;
+
+            try {
+                // 1. Usuń u siebie
+                userData.friends = userData.friends.filter(f => f.uid !== friendUid);
+                saveUserDataToStorage();
+                renderFriendsUI();
+
+                // 2. Usuń siebie u znajomego (dwustronne usuwanie)
+                const friendRef = db.collection('users').doc(friendUid);
+                const friendDoc = await friendRef.get();
+                if(friendDoc.exists) {
+                    let fData = friendDoc.data().userData || { friends: [] };
+                    if(fData.friends) {
+                        fData.friends = fData.friends.filter(f => f.uid !== currentUser.uid);
+                        await friendRef.update({ 'userData.friends': fData.friends });
+                    }
+                }
+                
+                showToast(`Usunięto gracza ${friendName} ze znajomych.`, 'warn');
+            } catch(e) {
+                showToast("Błąd usuwania znajomego", "error");
+                console.error(e);
+            }
+        }
+
+        async function fetchAndOpenFriend(uid) {
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if(doc.exists) {
+                    const fData = doc.data().userData || {};
+                    document.getElementById('modal-friend-name').innerText = "// PROFIL: " + doc.data().username;
+                    document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
+                    document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
+                    document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
+                    document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
+                    
+                    document.getElementById('friend-modal').style.display = 'flex';
+                    
+                    if (!friendMapInitialized) {
+                        friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
+                        configurePolandMapBase(friendMap);
+                        friendDynamicLayer = L.layerGroup().addTo(friendMap);
+                        friendMapInitialized = true;
+                    }
+                    setTimeout(() => { 
+                        friendMap.invalidateSize(); 
+                        renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
+                    }, 200);
+                }
+            } catch(e) {
+                showToast("Błąd pobierania danych znajomego", "error");
+            }
         }
 
         function closeFriendModal() { document.getElementById('friend-modal').style.display = 'none'; }
