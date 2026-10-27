@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.6</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.8</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -299,7 +299,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.6</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.8</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -741,7 +741,7 @@
                     <p style="font-size:10px; color:var(--text-muted);">Zbanowany gracz zostanie natychmiast wylogowany z systemu chmurowego.</p>
                 </div>
 
-                <!-- NOWE: ZARZĄDZANIE MODELAMI -->
+                <!-- ZARZĄDZANIE MODELAMI -->
                 <div class="update-box">
                     <h3>1. Dodaj Modele Lokomotyw (Globalne)</h3>
                     <div class="form-group">
@@ -759,7 +759,7 @@
                     <div class="admin-data-list" id="admin-series-list"></div>
                 </div>
 
-                <!-- NOWE: ZARZĄDZANIE PRZEWOŹNIKAMI -->
+                <!-- ZARZĄDZANIE PRZEWOŹNIKAMI -->
                 <div class="update-box">
                     <h3>2. Dodaj Przewoźników (Globalne)</h3>
                     <div class="form-group">
@@ -771,7 +771,7 @@
                     <div class="admin-data-list" id="admin-carriers-list"></div>
                 </div>
 
-                <!-- NOWE: KREATOR LINII I STACJI -->
+                <!-- KREATOR LINII I STACJI (zintegrowany z 1.0.8) -->
                 <div class="update-box" style="grid-column: 1 / -1;">
                     <h3>3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
                     
@@ -819,7 +819,7 @@
                     <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
                 </div>
                 
-                <!-- LISTA DODANYCH LINII (MOŻLIWOŚĆ USUWANIA) -->
+                <!-- LISTA DODANYCH LINII -->
                 <div class="update-box" style="grid-column: 1 / -1;">
                     <h3>Zarządzaj Dodanymi Liniami</h3>
                     <div class="admin-data-list" id="admin-lines-list" style="max-height: 250px;"></div>
@@ -843,7 +843,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.6</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.8</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -902,6 +902,22 @@
     </div>
 
     <script>
+        // --- FUNKCJE BAZOWE I ZABEZPIECZAJĄCE (XSS) ---
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, function(tag) {
+                const chars = {'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'};
+                return chars[tag] || tag;
+            });
+        }
+        
+        function sortPolishLocoSeries(a, b) {
+            let numA = parseInt(a.match(/\d+/)?.[0] || 9999);
+            let numB = parseInt(b.match(/\d+/)?.[0] || 9999);
+            if (numA !== numB) return numA - numB;
+            return a.localeCompare(b, 'pl');
+        }
+
         // --- KONFIGURACJA FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyCOrlNZ-zEv49vkxYueu0elzTI-WYSS1fI",
@@ -1015,14 +1031,25 @@
 
         const changelogData = [
             {
+                version: "Alpha 1.0.8",
+                title: "Trasy, Timeouty, i Lepsza Hierarchia Chmury",
+                date: "Dzisiaj",
+                added: [
+                    "W pełni zabezpieczono przycisk generowania trasy - automatyczny timeout w wypadku awarii zewnętrznego serwera",
+                    "Poprawiono synchronizację linii z chmury. Własnoręcznie dodane linie przez administrację oznaczają się teraz z absolutnym priorytetem",
+                    "Aplikacja w pełni korzysta z widoku zarządania własnymi trasami z opcją wygodnego usuwania",
+                    "Możliwość edycji wcześniej utworzonych Linii Kolejowych w Kreatorze"
+                ]
+            },
+            {
                 version: "Alpha 1.0.6",
                 title: "Mapa dla Kreatora i Rangi Użytkowników",
-                date: "Dzisiaj",
+                date: "Wcześniej",
                 added: [
                     "Wprowadzono minimapę do Kreatora Linii, dzięki czemu administratorzy mogą ustalać i modyfikować pozycję nowo dodanych stacji",
                     "Zoptymalizowano dodawanie i resetowanie linii (połączenie początkowej z końcową)",
                     "Odświeżono wizualnie profil użytkownika — ranga gracza teraz wyraźnie widoczna przy jego nazwie",
-                    "Bezpieczne wczytywanie zawartości tabel minimalizujące podatność na xss"
+                    "Bezpieczne wczytywanie zawartości tabel minimalizujące podatność na xss (Wprowadzono moduły escapeHTML)"
                 ]
             }
         ];
@@ -1047,10 +1074,21 @@
         let cloudStations = [];
         let cloudLines = [];
 
-        function getAllStations() { return [...mockStations, ...cloudStations]; }
-        function getAllLines() { return [...mockLines, ...cloudLines]; }
+        function getAllStations() { 
+            let map = new Map();
+            mockStations.forEach(s => map.set(s.id, s));
+            cloudStations.forEach(s => map.set(s.id, s));
+            return Array.from(map.values());
+        }
 
-        // --- AUTH OBSŁUGA Z FIREBASE (UNIKALNOŚĆ NICKU - ALPHA) ---
+        function getAllLines() { 
+            let map = new Map();
+            mockLines.forEach(l => map.set(l.code, l));
+            cloudLines.forEach(l => map.set(l.code, l)); 
+            return Array.from(map.values());
+        }
+
+        // --- AUTH OBSŁUGA Z FIREBASE ---
         let userDocUnsubscribe = null;
         let adminFeedbackUnsubscribe = null;
         let currentlyViewedProfile = null; 
@@ -1101,7 +1139,7 @@
 
                     await db.collection('users').doc(user.uid).set({
                         email: email,
-                        username: username,
+                        username: username, // Sanityzacja nastąpi przy odczycie
                         friendCode: fCode,
                         avatar: "https://via.placeholder.com/150/ff9e00/000000?text=SK",
                         banner: "",
@@ -1154,11 +1192,11 @@
                         currentUser = {
                             uid: user.uid,
                             email: user.email,
-                            username: data.username || "Spotter",
+                            username: escapeHTML(data.username) || "Spotter",
                             avatar: data.avatar || "https://via.placeholder.com/150/ff9e00/000000?text=SK",
                             banner: data.banner || "",
-                            friendCode: data.friendCode || generateFriendCode(),
-                            role: data.role || "user",
+                            friendCode: escapeHTML(data.friendCode) || generateFriendCode(),
+                            role: escapeHTML(data.role) || "user",
                             createdAt: data.createdAt
                         };
                         userData = data.userData || { visitedStations: [], rides: [], photos: [], friends: [] };
@@ -1198,7 +1236,7 @@
                 uid: currentUser.uid,
                 username: currentUser.username,
                 avatar: currentUser.avatar,
-                msg: msg,
+                msg: msg, 
                 type: type,
                 time: Date.now()
             };
@@ -1230,12 +1268,15 @@
             notifs.forEach(n => {
                 let dateStr = new Date(n.time).toLocaleString('pl-PL');
                 let icon = n.type === 'photo' ? '📷' : '🚂';
+                let safeName = escapeHTML(n.username);
+                let safeMsg = escapeHTML(n.msg);
+                
                 list.innerHTML += `
                     <div class="result-item" style="flex-direction:row; gap:10px; align-items:center; cursor:pointer;" onclick="openProfile('${n.uid}')">
                         <img src="${n.avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--accent-cyan);">
                         <div>
-                            <strong style="color:var(--accent-yellow);">${n.username}</strong> <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span><br>
-                            <span style="color:#fff; font-size:12px;">${icon} ${n.msg}</span>
+                            <strong style="color:var(--accent-yellow);">${safeName}</strong> <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span><br>
+                            <span style="color:#fff; font-size:12px;">${icon} ${safeMsg}</span>
                         </div>
                     </div>
                 `;
@@ -1255,7 +1296,7 @@
             document.getElementById('user-profile-wrapper').style.display = 'block';
 
             document.getElementById('user-display-name').innerText = currentUser.username;
-            document.getElementById('dropdown-user-email').innerText = currentUser.email;
+            document.getElementById('dropdown-user-email').innerText = escapeHTML(currentUser.email);
             document.getElementById('nav-user-avatar').src = currentUser.avatar;
             document.getElementById('nav-friend-code').innerText = currentUser.friendCode;
 
@@ -1319,7 +1360,7 @@
                         dl.innerHTML = '';
                         let merged = [...new Set([...defaultCarriers, ...cloudCarriers])];
                         merged.sort((a,b) => a.localeCompare(b, 'pl'));
-                        merged.forEach(c => dl.innerHTML += `<option value="${c}"></option>`);
+                        merged.forEach(c => dl.innerHTML += `<option value="${escapeHTML(c)}"></option>`);
                     }
 
                     const sl = document.getElementById('sketch-series');
@@ -1340,10 +1381,12 @@
                                 catSeries.sort((a,b) => {
                                     let na = typeof a === 'object' ? a.name : a;
                                     let nb = typeof b === 'object' ? b.name : b;
-                                    return na.localeCompare(nb, 'pl');
+                                    return sortPolishLocoSeries(na, nb);
                                 }).forEach(s => {
                                     let name = typeof s === 'object' ? s.name : s;
-                                    sl.innerHTML += `<option value='{"name":"${name}", "cat":"${cat}"}'>${name}</option>`;
+                                    let safeName = escapeHTML(name);
+                                    let safeCat = escapeHTML(cat);
+                                    sl.innerHTML += `<option value='{"name":"${safeName}", "cat":"${safeCat}"}'>${safeName}</option>`;
                                 });
                             }
                         });
@@ -1357,7 +1400,7 @@
                     const dl = document.getElementById('sketch-carrier-list');
                     if(dl) {
                         dl.innerHTML = '';
-                        defaultCarriers.forEach(c => dl.innerHTML += `<option value="${c}"></option>`);
+                        defaultCarriers.forEach(c => dl.innerHTML += `<option value="${escapeHTML(c)}"></option>`);
                     }
                 }
             });
@@ -1383,31 +1426,35 @@
                 const sortedSeries = [...cloudSeries].sort((a,b) => {
                     let nameA = typeof a === 'object' ? a.name : a;
                     let nameB = typeof b === 'object' ? b.name : b;
-                    return nameA.localeCompare(nameB, 'pl');
+                    return sortPolishLocoSeries(nameA, nameB);
                 });
                 sortedSeries.forEach(s => {
                     let name = typeof s === 'object' ? s.name : s;
                     let cat = typeof s === 'object' ? s.category : 'Inne';
+                    let safeName = escapeHTML(name);
                     seriesList.innerHTML += `<div class="admin-data-item">
-                        <div><strong>${name}</strong> <span style="color:var(--text-muted); font-size:10px;">(${cat})</span></div>
-                        <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveSeries('${name}')">Usuń</button>
+                        <div><strong>${safeName}</strong> <span style="color:var(--text-muted); font-size:10px;">(${escapeHTML(cat)})</span></div>
+                        <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveSeries('${safeName}')">Usuń</button>
                     </div>`;
                 });
             }
             if(carriersList) {
                 carriersList.innerHTML = '';
                 [...cloudCarriers].sort((a,b)=>a.localeCompare(b,'pl')).forEach(c => {
-                    carriersList.innerHTML += `<div class="admin-data-item"><span>${c}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${c}')">Usuń</button></div>`;
+                    let safeC = escapeHTML(c);
+                    carriersList.innerHTML += `<div class="admin-data-item"><span>${safeC}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${safeC}')">Usuń</button></div>`;
                 });
             }
             if(linesList) {
                 linesList.innerHTML = '';
                 [...cloudLines].sort((a,b) => a.code.localeCompare(b.code, 'pl', {numeric: true})).forEach(l => {
+                    let safeCode = escapeHTML(l.code);
+                    let safeName = escapeHTML(l.name);
                     linesList.innerHTML += `<div class="admin-data-item">
-                        <span><strong style="color:var(--accent-cyan);">${l.code}</strong> - ${l.name}</span>
+                        <span><strong style="color:var(--accent-cyan);">${safeCode}</strong> - ${safeName}</span>
                         <div style="display:flex; gap: 5px;">
-                            <button class="btn-cyan" style="padding:4px 8px; font-size:10px; color:#000;" onclick="adminEditLine('${l.code}')">Edytuj</button>
-                            <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveLine('${l.code}')">Usuń</button>
+                            <button class="btn-cyan" style="padding:4px 8px; font-size:10px; color:#000;" onclick="adminEditLine('${safeCode}')">Edytuj</button>
+                            <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveLine('${safeCode}')">Usuń</button>
                         </div>
                     </div>`;
                 });
@@ -1481,8 +1528,8 @@
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
-        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) ---
-        function adminAddLineRow(existingLat = '', existingLng = '', stName = '') {
+        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) z 1.0.8 ---
+        function adminAddLineRow(existingLat = '', existingLng = '', stName = '', type = 'stacja', desc = '', branches = '') {
             const tbody = document.getElementById('admin-line-tbody');
             const rowId = adminRowCounter++;
             const row = document.createElement('tr');
@@ -1509,7 +1556,12 @@
                     <button class="btn-danger" style="padding:6px 10px;" onclick="this.closest('tr').remove()">X</button>
                 </td>
             `;
+            
+            row.querySelector('.type-select').value = type;
             row.querySelector('.station-name-input').value = stName;
+            row.querySelector('.desc-input').value = desc;
+            row.querySelector('.branches-input').value = branches;
+            
             tbody.appendChild(row);
         }
 
@@ -1520,11 +1572,16 @@
             });
             btnElement.style.borderColor = "var(--accent-yellow)";
             
+            if(adminMiniMap) {
+                setTimeout(() => adminMiniMap.invalidateSize(), 100);
+            }
+            
             const row = document.getElementById(`admin-row-${rowId}`);
             let lat = parseFloat(row.dataset.lat);
             let lng = parseFloat(row.dataset.lng);
             let name = row.querySelector('.station-name-input').value.trim() || "Nowa stacja";
-            
+            let safeName = escapeHTML(name);
+
             if (lat && lng && adminMiniMap) {
                 if(!adminMiniMapMarker) {
                     adminMiniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMiniMap);
@@ -1540,7 +1597,7 @@
                 } else {
                     adminMiniMapMarker.setLatLng([lat, lng]);
                 }
-                adminMiniMapMarker.bindPopup(`<b>${name}</b>`).openPopup();
+                adminMiniMapMarker.bindPopup(`<b>${safeName}</b>`).openPopup();
                 adminMiniMap.setView([lat, lng], 12);
             } else {
                 showToast("Kliknij na mapie poniżej, aby ustawić lokalizację dla tej stacji.", "info");
@@ -1564,6 +1621,7 @@
                     row.dataset.lng = e.latlng.lng;
                     
                     let name = row.querySelector('.station-name-input').value.trim() || "Nowa stacja";
+                    let safeName = escapeHTML(name);
                     
                     if (!adminMiniMapMarker) {
                         adminMiniMapMarker = L.marker(e.latlng, { draggable: true }).addTo(adminMiniMap);
@@ -1580,7 +1638,7 @@
                         adminMiniMapMarker.setLatLng(e.latlng);
                     }
                     
-                    adminMiniMapMarker.bindPopup(`<b>${name}</b>`).openPopup();
+                    adminMiniMapMarker.bindPopup(`<b>${safeName}</b>`).openPopup();
                     
                     const btn = row.querySelector('.btn-location');
                     btn.style.background = "#00b32c";
@@ -1617,15 +1675,21 @@
             
             const allSt = getAllStations();
             
-            line.stations.forEach(sId => {
+            line.stations.forEach((sId, index) => {
                 let st = allSt.find(s => s.id === sId);
                 let stName = st ? st.name : '';
                 let stLat = st && st.lat ? st.lat : '';
                 let stLng = st && st.lng ? st.lng : '';
-                adminAddLineRow(stLat, stLng, stName);
+                
+                let ext = line.extendedData ? line.extendedData[index] : null;
+                let type = ext ? ext.type : 'stacja';
+                let desc = ext ? ext.desc : '';
+                let branches = ext ? ext.branches : '';
+                
+                adminAddLineRow(stLat, stLng, stName, type, desc, branches);
             });
             
-            showToast(`Wczytano linię ${line.code} do kreatora.`, "info");
+            showToast(`Wczytano linię ${escapeHTML(line.code)} do kreatora.`, "info");
             document.getElementById('admin-line-code').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -1642,12 +1706,17 @@
 
             let newStationsToAdd = [];
             let lineStationIds = [];
+            let extendedData = [];
+            
             let allExistingSt = getAllStations();
             let maxId = allExistingSt.length > 0 ? Math.max(...allExistingSt.map(s => s.id)) : 100;
 
             rows.forEach((row, index) => {
                 let inputs = row.querySelectorAll('input');
                 let name = inputs[0].value.trim();
+                let desc = inputs[1].value.trim();
+                let branches = inputs[2].value.trim();
+                let type = row.querySelector('select').value;
                 
                 let lat = parseFloat(row.dataset.lat);
                 let lng = parseFloat(row.dataset.lng);
@@ -1660,10 +1729,14 @@
                 if(!name) name = `Punkt ${index}`;
 
                 let existing = allExistingSt.find(s => s.name.toLowerCase() === name.toLowerCase());
+                let stId;
+                
                 if (existing) {
-                    lineStationIds.push(existing.id);
+                    stId = existing.id;
+                    lineStationIds.push(stId);
                 } else {
                     maxId++;
+                    stId = maxId;
                     let newSt = {
                         id: maxId,
                         code: name.substring(0, 3).toUpperCase(),
@@ -1675,6 +1748,8 @@
                     allExistingSt.push(newSt); 
                     lineStationIds.push(maxId);
                 }
+                
+                extendedData.push({ id: stId, type: type, desc: desc, branches: branches });
             });
 
             try {
@@ -1687,7 +1762,8 @@
                 let newLine = {
                     code: code,
                     name: lineName,
-                    stations: lineStationIds
+                    stations: lineStationIds,
+                    extendedData: extendedData
                 };
 
                 let updatedLines = cloudLines.filter(l => l.code !== code);
@@ -1697,7 +1773,7 @@
                     list: updatedLines
                 }, { merge: true });
 
-                showToast(`Zapisano / zaktualizowano linię ${code} wraz z nowymi stacjami!`, "success");
+                showToast(`Zapisano / zaktualizowano linię ${escapeHTML(code)}!`, "success");
                 adminClearLineForm();
             } catch(e) {
                 showToast("Błąd zapisu linii: " + e.message, "error");
@@ -1711,7 +1787,7 @@
                 await db.collection('globalData').doc('lines').update({
                     list: updatedLines
                 });
-                showToast(`Usunięto linię ${code}.`, "success");
+                showToast(`Usunięto linię ${escapeHTML(code)}.`, "success");
             } catch (e) {
                 showToast("Błąd: " + e.message, "error");
             }
@@ -1735,7 +1811,7 @@
 
             const banTime = Date.now() + (hours * 60 * 60 * 1000);
             await db.collection('users').doc(targetDoc.id).update({ bannedUntil: banTime });
-            showToast(`Użytkownik ${targetUser} został zbanowany na ${hours} godzin!`, "success");
+            showToast(`Użytkownik ${escapeHTML(targetUser)} został zbanowany na ${hours} godzin!`, "success");
             document.getElementById('ban-username-input').value = '';
         }
 
@@ -1774,16 +1850,18 @@
                         snap.forEach(doc => {
                             const d = doc.data();
                             let dateStr = new Date(d.time).toLocaleString('pl-PL');
+                            let safeUser = escapeHTML(d.user);
+                            let safeText = escapeHTML(d.text);
                             listHTML += `
                                 <div style="background:#0d0d0f; border:1px solid var(--border-color); padding:12px; border-radius:4px; display:flex; flex-direction:column; gap:8px;">
                                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                         <div>
-                                            <strong style="color:var(--accent-yellow); font-family:'Share Tech Mono';">${d.user}</strong> 
+                                            <strong style="color:var(--accent-yellow); font-family:'Share Tech Mono';">${safeUser}</strong> 
                                             <span style="font-size:10px; color:var(--text-muted);">(${dateStr})</span>
                                         </div>
                                         <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="deleteAdminFeedback('${doc.id}')">Usuń</button>
                                     </div>
-                                    <p style="margin:0; font-size:13px; color:#fff; white-space:pre-wrap;">${d.text}</p>
+                                    <p style="margin:0; font-size:13px; color:#fff; white-space:pre-wrap;">${safeText}</p>
                                 </div>
                             `;
                         });
@@ -1828,7 +1906,7 @@
         // --- POWIĘKSZANIE ZDJĘĆ ---
         function zoomImage(url) {
             if(!url) return;
-            document.getElementById('zoomed-image-view').src = url;
+            document.getElementById('zoomed-image-view').src = url; // Nie eskejpuje src ze względu na logikę Canvas (DataURL)
             document.getElementById('image-zoom-modal').style.display = 'flex';
         }
         function closeZoomModal() {
@@ -1837,7 +1915,7 @@
 
         function openAppInfoModal() { document.getElementById('app-info-modal').style.display = 'flex'; }
 
-        // --- BROUTER ROUTING ---
+        // --- BROUTER ROUTING (Z TIMEOUTEM Z WERSJI 1.0.8) ---
         async function fetchPerfectRoute(startId, endId, lineCode) {
             const allLines = getAllLines();
             const allStations = getAllStations();
@@ -1861,8 +1939,12 @@
             const pointsParam = pointsToVisit.join('|');
             const url = `https://brouter.de/brouter?lonlats=${pointsParam}&profile=rail&alternativeidx=0&format=geojson`;
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
             try {
-                const resp = await fetch(url);
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 if (!resp.ok) throw new Error("Status " + resp.status);
                 const geojson = await resp.json();
                 if (!geojson.features || geojson.features.length === 0) throw new Error("Pusty wynik");
@@ -1872,6 +1954,7 @@
                 const distanceKm = Math.round(distanceMeters / 1000);
                 return { track: rawCoords.map(c => [c[1], c[0]]), distance: distanceKm };
             } catch (err) {
+                clearTimeout(timeoutId);
                 const fb = getFallbackCoords(startId, endId);
                 return { track: fb, distance: calculateSimpleDistance(fb) };
             }
@@ -1908,7 +1991,7 @@
             event.stopPropagation();
             const code = currentUser.friendCode;
             navigator.clipboard.writeText(code).then(() => {
-                showToast("Skopiowano kod: " + code, "success");
+                showToast("Skopiowano kod: " + escapeHTML(code), "success");
             }).catch(() => showToast("Błąd schowka", "warn"));
         }
 
@@ -1971,7 +2054,7 @@
                         const sObj = allStations.find(s => s.id == ride.startId);
                         const eObj = allStations.find(s => s.id == ride.endId);
                         L.polyline(ride.geoTrack, { color: '#00b32c', weight: 5, opacity: 1.0, lineCap: 'round', lineJoin: 'round' })
-                        .bindPopup(`<b>[${ride.line}] ${sObj ? sObj.name : ''} &rarr; ${eObj ? eObj.name : ''}</b><br>Dystans: ${ride.distanceKm} km<br>Środek: ${ride.transport || 'Pociąg planowy'}<br>Data: ${ride.date || '-'}`)
+                        .bindPopup(`<b>[${escapeHTML(ride.line)}] ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''}</b><br>Dystans: ${ride.distanceKm} km<br>Środek: ${escapeHTML(ride.transport) || 'Pociąg planowy'}<br>Data: ${escapeHTML(ride.date) || '-'}`)
                         .addTo(layerGroup);
                     }
                 });
@@ -1982,7 +2065,7 @@
                     const st = typeof stItem === 'object' ? stItem : allStations.find(s => s.id == stItem);
                     if (st && st.lat && st.lng) {
                         L.circleMarker([st.lat, st.lng], { radius: 7, fillColor: '#1756e8', color: '#ffffff', weight: 2, fillOpacity: 1.0 })
-                        .bindPopup(`<b>Odwiedzona stacja:</b><br>${st.name}`)
+                        .bindPopup(`<b>Odwiedzona stacja:</b><br>${escapeHTML(st.name)}`)
                         .addTo(layerGroup);
                     }
                 });
@@ -1992,7 +2075,7 @@
                 dataObj.photos.forEach(photo => {
                     if (photo.lat && photo.lng) {
                         L.circleMarker([photo.lat, photo.lng], { radius: 6, fillColor: '#a259ff', color: '#ffffff', weight: 1.5, fillOpacity: 0.95 })
-                        .bindPopup(`<b>Zdjęcie: ${photo.series} ${photo.number}</b><br>Data: ${photo.date}`)
+                        .bindPopup(`<b>Zdjęcie: ${escapeHTML(photo.series)} ${escapeHTML(photo.number)}</b><br>Data: ${escapeHTML(photo.date)}`)
                         .addTo(layerGroup);
                     }
                 });
@@ -2044,11 +2127,11 @@
                     let data = doc.data();
                     pData = {
                         uid: doc.id,
-                        username: data.username,
+                        username: escapeHTML(data.username),
                         avatar: data.avatar || "https://via.placeholder.com/150/ff9e00/000000?text=SK",
                         banner: data.banner || "",
                         createdAt: data.createdAt,
-                        role: data.role || 'user',
+                        role: escapeHTML(data.role) || 'user',
                         userData: data.userData || { photos: [], rides: [], visitedStations: [] }
                     };
                 }
@@ -2122,7 +2205,7 @@
                     }
                 }
 
-                // Generowanie galerii
+                // Generowanie galerii z zabezpieczeniem (XSS)
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
@@ -2132,6 +2215,12 @@
                 } else {
                     publicPhotos.sort((a,b) => new Date(b.date) - new Date(a.date));
                     publicPhotos.forEach(p => {
+                        let safeSeries = escapeHTML(p.series);
+                        let safeNum = escapeHTML(p.number);
+                        let safeCarrier = escapeHTML(p.carrier);
+                        let safeDate = escapeHTML(p.date);
+                        let safeDev = escapeHTML(p.device);
+                        let safeDesc = escapeHTML(p.desc);
                         
                         let moderBtn = '';
                         if(!isMe && (currentUser.role === 'admin' || currentUser.role === 'moderator')) {
@@ -2142,11 +2231,11 @@
                             <div class="gallery-item">
                                 <img src="${p.url}" onclick="zoomImage(this.src)">
                                 <div class="gallery-item-info">
-                                    <strong style="color:var(--accent-yellow); font-size:15px;">${p.series} ${p.number}</strong>
-                                    <span style="color:var(--accent-cyan); font-size:11px;">${p.carrier || 'Brak przewoźnika'}</span>
-                                    <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date || 'Brak'}</span>
-                                    <span style="color:var(--text-muted); font-size:10px;">${p.device || 'Aparat'}</span>
-                                    ${p.desc ? `<p style="margin-top:4px; font-size:11px; color:#fff;">${p.desc}</p>` : ''}
+                                    <strong style="color:var(--accent-yellow); font-size:15px;">${safeSeries} ${safeNum}</strong>
+                                    <span style="color:var(--accent-cyan); font-size:11px;">${safeCarrier || 'Brak przewoźnika'}</span>
+                                    <span style="color:var(--text-muted); font-size:11px;">Data: ${safeDate || 'Brak'}</span>
+                                    <span style="color:var(--text-muted); font-size:10px;">${safeDev || 'Aparat'}</span>
+                                    ${safeDesc ? `<p style="margin-top:4px; font-size:11px; color:#fff;">${safeDesc}</p>` : ''}
                                     ${moderBtn}
                                 </div>
                             </div>
@@ -2290,14 +2379,16 @@
                     
                     const row = document.createElement('div');
                     row.className = 'admin-user-row';
+                    let safeName = escapeHTML(u.username) || 'Brak nicku';
+                    
                     row.innerHTML = `
                         <div>
                             <div style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
                                 <img src="${u.avatar || 'https://via.placeholder.com/150/ff9e00/000000?text=SK'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border: 1px solid var(--border-color);">
-                                <strong style="color:var(--accent-yellow); font-size:13px;">${u.username || 'Brak nicku'}</strong>
+                                <strong style="color:var(--accent-yellow); font-size:13px;">${safeName}</strong>
                             </div> 
-                            <span style="color:var(--text-muted); font-size:11px;">(${u.email})</span><br>
-                            <span style="color:var(--accent-cyan); font-size:10px;">Kod: ${u.friendCode || '-'}</span>
+                            <span style="color:var(--text-muted); font-size:11px;">(${escapeHTML(u.email)})</span><br>
+                            <span style="color:var(--accent-cyan); font-size:10px;">Kod: ${escapeHTML(u.friendCode) || '-'}</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <select id="role-select-${uid}" style="background:#151518; color:#fff; border:1px solid var(--border-color); padding:5px; font-family:'Share Tech Mono'; font-size:11px; border-radius:3px;">
@@ -2491,9 +2582,9 @@
                 card.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
-                        <div><strong style="color:var(--accent-yellow); font-size:14px;">${p.series} ${p.number}</strong> <span style="color:var(--accent-cyan);">[${p.carrier || 'Brak'}]</span>
-                        <span style="color:var(--text-muted);">• ${p.painting || 'Standardowe'}</span><br>
-                        <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${p.device || 'Aparat'}</span></div></div>
+                        <div><strong style="color:var(--accent-yellow); font-size:14px;">${escapeHTML(p.series)} ${escapeHTML(p.number)}</strong> <span style="color:var(--accent-cyan);">[${escapeHTML(p.carrier) || 'Brak'}]</span>
+                        <span style="color:var(--text-muted);">• ${escapeHTML(p.painting) || 'Standardowe'}</span><br>
+                        <span style="color:var(--text-muted); font-size:11px;">Data: ${escapeHTML(p.date)} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${escapeHTML(p.device) || 'Aparat'}</span></div></div>
                     <button class="btn-danger" onclick="removePhoto(${idx})">Usuń</button>`;
                 container.appendChild(card);
             });
@@ -2557,13 +2648,6 @@
             document.getElementById('drilldown-photos').style.display = 'none';
         }
 
-        function sortPolishLocoSeries(a, b) {
-            let numA = parseInt(a.match(/\d+/)?.[0] || 9999);
-            let numB = parseInt(b.match(/\d+/)?.[0] || 9999);
-            if (numA !== numB) return numA - numB;
-            return a.localeCompare(b, 'pl');
-        }
-
         function showDrilldownSeries(catName, seriesSet) {
             document.getElementById('drilldown-categories').style.display = 'none';
             document.getElementById('drilldown-series').style.display = 'block';
@@ -2582,7 +2666,7 @@
             sortedSeries.forEach(sName => {
                 let card = document.createElement('div'); card.className = 'drilldown-series-card';
                 card.onclick = () => showDrilldownPhotos(catName, sName);
-                card.innerHTML = `<strong style="color:var(--accent-yellow); font-size:16px;">${sName}</strong><br><span style="font-size:10px; color:var(--text-muted);">Pojazdów: ${seriesMap[sName]}</span>`;
+                card.innerHTML = `<strong style="color:var(--accent-yellow); font-size:16px;">${escapeHTML(sName)}</strong><br><span style="font-size:10px; color:var(--text-muted);">Pojazdów: ${seriesMap[sName]}</span>`;
                 seriesCont.appendChild(card);
             });
         }
@@ -2593,7 +2677,7 @@
             document.getElementById('drilldown-photos').style.display = 'block';
             document.getElementById('btn-back-to-series').innerText = `« Wróć do ${catName}`;
             document.getElementById('btn-back-to-series').onclick = () => showDrilldownSeries(catName);
-            document.getElementById('drilldown-photos-title').innerText = `Seria: ${seriesName}`;
+            document.getElementById('drilldown-photos-title').innerText = `Seria: ${escapeHTML(seriesName)}`;
             
             let photosCont = document.getElementById('drilldown-photos-container'); photosCont.innerHTML = '';
             let targetPhotos = userData.photos.filter(p => p.series.toUpperCase().trim() === seriesName);
@@ -2605,8 +2689,8 @@
                 div.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:100px; height:70px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
-                        <div><strong style="color:var(--accent-yellow); font-size:15px;">${p.series} ${p.number}</strong><br>
-                        <span style="color:var(--accent-cyan); font-size:11px;">[${p.carrier || 'Brak'}]</span> • <span style="color:var(--text-muted); font-size:11px;">${p.painting || 'Standardowe'} • ${p.device || 'Aparat'} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Zatajone</span>' : 'Publiczne'}</span></div></div>`;
+                        <div><strong style="color:var(--accent-yellow); font-size:15px;">${escapeHTML(p.series)} ${escapeHTML(p.number)}</strong><br>
+                        <span style="color:var(--accent-cyan); font-size:11px;">[${escapeHTML(p.carrier) || 'Brak'}]</span> • <span style="color:var(--text-muted); font-size:11px;">${escapeHTML(p.painting) || 'Standardowe'} • ${escapeHTML(p.device) || 'Aparat'} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Zatajone</span>' : 'Publiczne'}</span></div></div>`;
                 photosCont.appendChild(div);
             });
         }
@@ -2620,7 +2704,7 @@
             if (filtered.length === 0) { resBox.style.display = 'none'; return; }
             resBox.style.display = 'flex';
             filtered.forEach(line => {
-                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong style="color:var(--accent-cyan);">${line.code}</strong>: ${line.name || ''}</span>`;
+                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong style="color:var(--accent-cyan);">${escapeHTML(line.code)}</strong>: ${escapeHTML(line.name) || ''}</span>`;
                 item.onclick = () => { selectLineForSegment(line); resBox.style.display = 'none'; };
                 resBox.appendChild(item);
             });
@@ -2635,7 +2719,7 @@
             const allSt = getAllStations();
             line.stations.forEach(sId => {
                 let stObj = allSt.find(s => s.id === sId);
-                if (stObj) { startSelect.innerHTML += `<option value="${stObj.id}">${stObj.name}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${stObj.name}</option>`; }
+                if (stObj) { startSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; }
             });
             if (line.stations.length > 1) endSelect.selectedIndex = line.stations.length - 1;
             document.getElementById('segment-selector-box').style.display = 'block';
@@ -2675,7 +2759,7 @@
             userData.rides.forEach((r, idx) => {
                 let sObj = allSt.find(s => s.id === r.startId); let eObj = allSt.find(s => s.id === r.endId);
                 let badge = document.createElement('div'); badge.className = 'ride-badge';
-                badge.innerHTML = `<span><strong>[${r.line}]</strong> ${sObj?.name} &rarr; ${eObj?.name} <span style="color:var(--accent-cyan);">(${r.distanceKm} km)</span></span> <button class="btn-danger" onclick="removeRide(${idx})">Usuń</button>`;
+                badge.innerHTML = `<span><strong>[${escapeHTML(r.line)}]</strong> ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''} <span style="color:var(--accent-cyan);">(${r.distanceKm} km)</span></span> <button class="btn-danger" onclick="removeRide(${idx})">Usuń</button>`;
                 container.appendChild(badge);
             });
         }
@@ -2690,7 +2774,7 @@
             if (filtered.length === 0) { resContainer.style.display = 'none'; return; }
             resContainer.style.display = 'flex';
             filtered.forEach(station => {
-                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong>[${station.code || 'Brak'}] ${station.name}</strong></span>`;
+                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong>[${escapeHTML(station.code) || 'Brak'}] ${escapeHTML(station.name)}</strong></span>`;
                 item.onclick = () => {
                     if (!userData.visitedStations.some(s => typeof s === 'object' ? s.id === station.id : s === station.id)) {
                         userData.visitedStations.push(station); saveUserDataToStorage(); updateVisitedStationsUI(); showToast(`Dodano: ${station.name}`);
@@ -2712,7 +2796,7 @@
                 let sObj = typeof st === 'object' ? st : allSt.find(x => x.id === st);
                 if(sObj) {
                     let badge = document.createElement('div'); badge.className = 'station-badge';
-                    badge.innerHTML = `<span>${sObj.name}</span> <button class="btn-danger" onclick="removeStation(${idx})">Usuń</button>`;
+                    badge.innerHTML = `<span>${escapeHTML(sObj.name)}</span> <button class="btn-danger" onclick="removeStation(${idx})">Usuń</button>`;
                     container.appendChild(badge);
                 }
             });
@@ -2732,7 +2816,7 @@
             if (!sel) return;
             sel.innerHTML = '<option value="">[ Wybierz stację z listy ]</option>';
             let sorted = [...getAllStations()].sort((a,b) => a.name.localeCompare(b.name));
-            sorted.forEach(st => { sel.innerHTML += `<option value="${st.id}">${st.name}</option>`; });
+            sorted.forEach(st => { sel.innerHTML += `<option value="${st.id}">${escapeHTML(st.name)}</option>`; });
         }
 
         // --- ZNAJOMI (SYSTEM CHMUROWY Alpha) ---
@@ -2780,10 +2864,10 @@
                 } else if (isReceived) {
                     actionBtn = '<span style="color:var(--accent-cyan)">[Oczekuje na akceptację]</span>';
                 } else {
-                    actionBtn = `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
+                    actionBtn = `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${escapeHTML(u.username)}')">Zaproś</button>`;
                 }
                 
-                item.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><img src="${u.avatar || 'https://via.placeholder.com/150/ff9e00/000000?text=SK'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;"><span><strong>${u.username}</strong></span></div> ${actionBtn}`;
+                item.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><img src="${u.avatar || 'https://via.placeholder.com/150/ff9e00/000000?text=SK'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;"><span><strong>${escapeHTML(u.username)}</strong></span></div> ${actionBtn}`;
                 resBox.appendChild(item);
             });
         }
@@ -2830,7 +2914,7 @@
                     })
                 });
 
-                showToast(`Wysłano zaproszenie do ${targetName}!`, 'success');
+                showToast(`Wysłano zaproszenie do ${escapeHTML(targetName)}!`, 'success');
                 searchPotentialFriends(); 
             } catch(e) { 
                 showToast('Błąd wysyłania: ' + e.message, 'error'); 
@@ -2852,14 +2936,15 @@
             
             list.innerHTML = '';
             reqs.forEach(r => {
+                let safeName = escapeHTML(r.username);
                 list.innerHTML += `
                     <div class="friend-card" style="margin-bottom:5px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <img src="${r.avatar}" style="width:24px; border-radius:50%;"> 
-                            <b>${r.username}</b>
+                            <b>${safeName}</b>
                         </div>
                         <div style="display:flex; gap:6px;">
-                            <button class="btn-success" onclick="resolveRequest('${r.uid}', '${r.username}', '${r.code}', '${r.avatar}', true)">Akceptuj</button>
+                            <button class="btn-success" onclick="resolveRequest('${r.uid}', '${safeName}', '${r.code}', '${r.avatar}', true)">Akceptuj</button>
                             <button class="btn-danger" onclick="resolveRequest('${r.uid}', '', '', '', false)">Odrzuć</button>
                         </div>
                     </div>`;
@@ -2926,16 +3011,17 @@
             userData.friends.forEach((fr) => {
                 let card = document.createElement('div'); 
                 card.className = 'friend-card'; 
+                let safeName = escapeHTML(fr.username);
                 
                 card.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${fr.uid}')">
                         <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border: 1px solid var(--accent-cyan);">
                         <div>
-                            <strong style="color:var(--accent-cyan);">${fr.username}</strong><br>
+                            <strong style="color:var(--accent-cyan);">${safeName}</strong><br>
                             <span style="font-size:10px; color:var(--text-muted);">Kliknij, by otworzyć profil &raquo;</span>
                         </div>
                     </div>
-                    <button class="btn-danger" onclick="removeFriend('${fr.uid}', '${fr.username}')" style="padding: 6px 10px;">Usuń</button>
+                    <button class="btn-danger" onclick="removeFriend('${fr.uid}', '${safeName}')" style="padding: 6px 10px;">Usuń</button>
                 `;
                 fContainer.appendChild(card);
             });
@@ -2973,7 +3059,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.5", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.8", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
@@ -3012,6 +3098,7 @@
             const container = document.getElementById("toast-container");
             const toast = document.createElement("div");
             toast.className = `toast-msg ${type}`;
+            // Zabezpieczenie przed XSS w wyskakujących okienkach
             toast.innerText = message;
             container.appendChild(toast);
             setTimeout(() => { toast.remove(); }, 3500);
