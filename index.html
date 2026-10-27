@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.5</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.6</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -299,7 +299,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.5</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.6</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -690,7 +690,10 @@
                         <input type="file" id="avatar-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'avatar')">
                     </div>
                     <div class="profile-details">
-                        <h2 id="profile-nick" style="margin:0; font-size:24px; color:var(--accent-yellow); text-transform:none;">SpotterNick</h2>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h2 id="profile-nick" style="margin:0; font-size:24px; color:var(--accent-yellow); text-transform:none;">SpotterNick</h2>
+                            <span id="profile-role-badge" class="role-badge" style="margin:0; font-size:11px; padding:2px 6px;">USER</span>
+                        </div>
                         <div class="profile-actions">
                             <button class="btn-small" id="btn-profile-friend" style="display:none;" onclick="handleProfileFriendAction()">Dodaj znajomego</button>
                             <button class="btn-cyan" id="btn-profile-map" style="display:none;" onclick="openProfileMap()">Pokaż mapę</button>
@@ -771,9 +774,20 @@
                 <!-- NOWE: KREATOR LINII I STACJI -->
                 <div class="update-box" style="grid-column: 1 / -1;">
                     <h3>3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
-                    <div class="form-group">
-                        <label>Oznaczenie Linii (np. LK139):</label>
-                        <input type="text" id="admin-line-code" placeholder="Wpisz LK..." style="max-width: 300px;">
+                    
+                    <div class="row-flex" style="margin-bottom: 10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Oznaczenie Linii (np. LK139):</label>
+                            <input type="text" id="admin-line-code" placeholder="Wpisz LK...">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Stacja początkowa:</label>
+                            <input type="text" id="admin-line-start" placeholder="np. Warszawa Centralna">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Stacja końcowa:</label>
+                            <input type="text" id="admin-line-end" placeholder="np. Katowice">
+                        </div>
                     </div>
                     
                     <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:10px;">Stacje / Posterunki na linii (w kolejności z kilometrażem):</label>
@@ -785,7 +799,7 @@
                                     <th>Nazwa Posterunku / Stacji</th>
                                     <th>Opis Słowny</th>
                                     <th>Odgałęzienia (LK)</th>
-                                    <th style="width:60px;">Akcja</th>
+                                    <th style="width:75px;">Lokalizacja</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-line-tbody">
@@ -793,6 +807,10 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:15px;">Wskazywanie na mapie (Zaznacz ikonę 📍 w rzędzie, a potem kliknij na mapę):</label>
+                    <div class="sketch-mini-map" id="admin-mini-map" style="height: 350px; margin-top:5px; border-color: var(--role-admin);"></div>
+
                     <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;">
                         <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
                         <button class="btn-success" onclick="adminSaveLine()">Zapisz / Aktualizuj w Chmurze</button>
@@ -825,7 +843,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.5</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.6</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -904,6 +922,12 @@
         let mapInitialized = false, friendMapInitialized = false, miniMapInitialized = false;
         let mainDynamicLayer = null, friendDynamicLayer = null;
         let selectedPhotoLatLng = null;
+
+        // ADMIN MINIMAP
+        let adminMiniMap = null;
+        let adminMiniMapMarker = null;
+        let activeAdminRowIndex = -1;
+        let adminRowCounter = 0;
 
         // POWIADOMIENIA BADGE
         let unreadRequests = 0;
@@ -991,15 +1015,14 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.0.5",
-                title: "Edycja Formularza i Wygoda Użytkownika",
+                version: "Alpha 1.0.6",
+                title: "Mapa dla Kreatora i Rangi Użytkowników",
                 date: "Dzisiaj",
                 added: [
-                    "Możliwość edycji wcześniej utworzonych Linii Kolejowych oraz resetowania kreatora w locie",
-                    "Zmieniono dodawanie taboru (uproszczono do 4 kategorii, pole wyboru zamieniono na listę z martwymi polami separatorów)",
-                    "Wprowadzono panel usuwania (moderacji) zdjęć na publicznych profilach graczy",
-                    "Przebudowano Panel Administratora (osobne listy przewoźników i serii, lista użytkowników na samym dole ekranu)",
-                    "Wdrożono natychmiastowe aktualizacje listy kont i powiadomień"
+                    "Wprowadzono minimapę do Kreatora Linii, dzięki czemu administratorzy mogą ustalać i modyfikować pozycję nowo dodanych stacji",
+                    "Zoptymalizowano dodawanie i resetowanie linii (połączenie początkowej z końcową)",
+                    "Odświeżono wizualnie profil użytkownika — ranga gracza teraz wyraźnie widoczna przy jego nazwie",
+                    "Bezpieczne wczytywanie zawartości tabel minimalizujące podatność na xss"
                 ]
             }
         ];
@@ -1459,9 +1482,16 @@
         }
 
         // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) ---
-        function adminAddLineRow() {
+        function adminAddLineRow(existingLat = '', existingLng = '', stName = '') {
             const tbody = document.getElementById('admin-line-tbody');
+            const rowId = adminRowCounter++;
             const row = document.createElement('tr');
+            row.id = `admin-row-${rowId}`;
+            row.dataset.lat = existingLat;
+            row.dataset.lng = existingLng;
+            
+            let locBtnStyle = (existingLat && existingLng) ? 'background:#00b32c; color:#fff;' : 'background:var(--input-bg); color:#fff;';
+
             row.innerHTML = `
                 <td>
                     <select class="admin-line-input type-select">
@@ -1474,14 +1504,101 @@
                 <td><input type="text" class="admin-line-input station-name-input" placeholder="Nazwa posterunku"></td>
                 <td><input type="text" class="admin-line-input desc-input" placeholder="np. stacja węzłowa"></td>
                 <td><input type="text" class="admin-line-input branches-input" placeholder="np. 142, 179"></td>
-                <td><button class="btn-danger" onclick="this.closest('tr').remove()">X</button></td>
+                <td style="display:flex; gap:5px; border:none; justify-content:center;">
+                    <button class="btn-location" style="padding:6px; border:1px solid var(--border-color); border-radius:3px; cursor:pointer; ${locBtnStyle}" onclick="selectAdminRowLoc(${rowId}, this)" title="Ustaw na mapie">📍</button>
+                    <button class="btn-danger" style="padding:6px 10px;" onclick="this.closest('tr').remove()">X</button>
+                </td>
             `;
+            row.querySelector('.station-name-input').value = stName;
             tbody.appendChild(row);
+        }
+
+        function selectAdminRowLoc(rowId, btnElement) {
+            activeAdminRowIndex = rowId;
+            document.querySelectorAll('#admin-line-tbody .btn-location').forEach(b => {
+                b.style.borderColor = "var(--border-color)";
+            });
+            btnElement.style.borderColor = "var(--accent-yellow)";
+            
+            const row = document.getElementById(`admin-row-${rowId}`);
+            let lat = parseFloat(row.dataset.lat);
+            let lng = parseFloat(row.dataset.lng);
+            let name = row.querySelector('.station-name-input').value.trim() || "Nowa stacja";
+            
+            if (lat && lng && adminMiniMap) {
+                if(!adminMiniMapMarker) {
+                    adminMiniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMiniMap);
+                    adminMiniMapMarker.on('dragend', function (ev) {
+                        if(activeAdminRowIndex !== -1) {
+                            const r = document.getElementById(`admin-row-${activeAdminRowIndex}`);
+                            if(r) {
+                                r.dataset.lat = ev.target.getLatLng().lat;
+                                r.dataset.lng = ev.target.getLatLng().lng;
+                            }
+                        }
+                    });
+                } else {
+                    adminMiniMapMarker.setLatLng([lat, lng]);
+                }
+                adminMiniMapMarker.bindPopup(`<b>${name}</b>`).openPopup();
+                adminMiniMap.setView([lat, lng], 12);
+            } else {
+                showToast("Kliknij na mapie poniżej, aby ustawić lokalizację dla tej stacji.", "info");
+            }
+        }
+
+        function initAdminMiniMap() {
+            if(adminMiniMap) return;
+            adminMiniMap = L.map('admin-mini-map', { zoomControl: true, minZoom: 6 }).setView([52.2289, 21.0022], 6);
+            configurePolandMapBase(adminMiniMap);
+            
+            adminMiniMap.on('click', function(e) {
+                if (activeAdminRowIndex === -1) {
+                    showToast("Wybierz najpierw stację z tabeli (kliknij 📍), aby ustalić jej pozycję!", "warn");
+                    return;
+                }
+                
+                const row = document.getElementById(`admin-row-${activeAdminRowIndex}`);
+                if (row) {
+                    row.dataset.lat = e.latlng.lat;
+                    row.dataset.lng = e.latlng.lng;
+                    
+                    let name = row.querySelector('.station-name-input').value.trim() || "Nowa stacja";
+                    
+                    if (!adminMiniMapMarker) {
+                        adminMiniMapMarker = L.marker(e.latlng, { draggable: true }).addTo(adminMiniMap);
+                        adminMiniMapMarker.on('dragend', function (ev) {
+                            if(activeAdminRowIndex !== -1) {
+                                const r = document.getElementById(`admin-row-${activeAdminRowIndex}`);
+                                if(r) {
+                                    r.dataset.lat = ev.target.getLatLng().lat;
+                                    r.dataset.lng = ev.target.getLatLng().lng;
+                                }
+                            }
+                        });
+                    } else {
+                        adminMiniMapMarker.setLatLng(e.latlng);
+                    }
+                    
+                    adminMiniMapMarker.bindPopup(`<b>${name}</b>`).openPopup();
+                    
+                    const btn = row.querySelector('.btn-location');
+                    btn.style.background = "#00b32c";
+                    btn.style.color = "#fff";
+                }
+            });
         }
 
         function adminClearLineForm() {
             document.getElementById('admin-line-code').value = '';
+            document.getElementById('admin-line-start').value = '';
+            document.getElementById('admin-line-end').value = '';
             document.getElementById('admin-line-tbody').innerHTML = '';
+            activeAdminRowIndex = -1;
+            if(adminMiniMapMarker) {
+                adminMiniMapMarker.remove();
+                adminMiniMapMarker = null;
+            }
             showToast("Kreator został wyczyszczony.", "info");
         }
 
@@ -1490,6 +1607,11 @@
             if (!line) { showToast("Nie znaleziono tej linii w chmurze.", "warn"); return; }
             
             document.getElementById('admin-line-code').value = line.code;
+            
+            let lineNameParts = line.name.split(' – ');
+            document.getElementById('admin-line-start').value = lineNameParts[0] || '';
+            document.getElementById('admin-line-end').value = lineNameParts.length > 1 ? lineNameParts[1] : '';
+
             const tbody = document.getElementById('admin-line-tbody');
             tbody.innerHTML = '';
             
@@ -1498,25 +1620,9 @@
             line.stations.forEach(sId => {
                 let st = allSt.find(s => s.id === sId);
                 let stName = st ? st.name : '';
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <select class="admin-line-input type-select">
-                            <option value="stacja">🔴 Stacja</option>
-                            <option value="podg">🔵 Posterunek Odg.</option>
-                            <option value="po">⚪ Przystanek</option>
-                            <option value="none">❌ Zlikwidowany</option>
-                        </select>
-                    </td>
-                    <td><input type="text" class="admin-line-input station-name-input" placeholder="Nazwa posterunku"></td>
-                    <td><input type="text" class="admin-line-input desc-input" placeholder="np. stacja węzłowa"></td>
-                    <td><input type="text" class="admin-line-input branches-input" placeholder="np. 142, 179"></td>
-                    <td><button class="btn-danger" onclick="this.closest('tr').remove()">X</button></td>
-                `;
-                // Bezpieczne przypisanie wartości z pominięciem HTML
-                row.querySelector('.station-name-input').value = stName;
-                tbody.appendChild(row);
+                let stLat = st && st.lat ? st.lat : '';
+                let stLng = st && st.lng ? st.lng : '';
+                adminAddLineRow(stLat, stLng, stName);
             });
             
             showToast(`Wczytano linię ${line.code} do kreatora.`, "info");
@@ -1530,6 +1636,10 @@
             let rows = document.querySelectorAll('#admin-line-tbody tr');
             if(rows.length < 2) { showToast("Linia musi mieć przynajmniej 2 punkty!", "warn"); return; }
 
+            let startName = document.getElementById('admin-line-start').value.trim() || 'Początek';
+            let endName = document.getElementById('admin-line-end').value.trim() || 'Koniec';
+            let lineName = `${startName} – ${endName}`;
+
             let newStationsToAdd = [];
             let lineStationIds = [];
             let allExistingSt = getAllStations();
@@ -1538,9 +1648,14 @@
             rows.forEach((row, index) => {
                 let inputs = row.querySelectorAll('input');
                 let name = inputs[0].value.trim();
-                let desc = inputs[1].value.trim();
-                let branches = inputs[2].value.trim();
-                let type = row.querySelector('select').value;
+                
+                let lat = parseFloat(row.dataset.lat);
+                let lng = parseFloat(row.dataset.lng);
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    lat = 52.0; 
+                    lng = 19.0;
+                }
                 
                 if(!name) name = `Punkt ${index}`;
 
@@ -1553,8 +1668,8 @@
                         id: maxId,
                         code: name.substring(0, 3).toUpperCase(),
                         name: name,
-                        lat: 52.0,
-                        lng: 19.0
+                        lat: lat,
+                        lng: lng
                     };
                     newStationsToAdd.push(newSt);
                     allExistingSt.push(newSt); 
@@ -1571,7 +1686,7 @@
 
                 let newLine = {
                     code: code,
-                    name: `Relacja (Admin) - ${code}`,
+                    name: lineName,
                     stations: lineStationIds
                 };
 
@@ -1900,7 +2015,11 @@
 
             if (viewName === 'mapa' && map) setTimeout(() => { map.invalidateSize(); renderMapDynamicElements(map, mainDynamicLayer, userData); }, 200);
             if (viewName === 'zdjecia') { initMiniMap(); setTimeout(() => { if (miniMap) miniMap.invalidateSize(); }, 200); }
-            if (viewName === 'admin' && currentUser.role === 'admin') loadAdminUsers();
+            if (viewName === 'admin' && currentUser.role === 'admin') {
+                loadAdminUsers();
+                initAdminMiniMap();
+                setTimeout(() => { if(adminMiniMap) adminMiniMap.invalidateSize(); }, 200);
+            }
         }
 
         // --- ZARZĄDZANIE PROFILEM ZEWNĘTRZNYM (NOWY WIDOK) ---
@@ -1916,6 +2035,7 @@
                         avatar: currentUser.avatar,
                         banner: currentUser.banner,
                         createdAt: currentUser.createdAt,
+                        role: currentUser.role,
                         userData: userData
                     };
                 } else {
@@ -1928,6 +2048,7 @@
                         avatar: data.avatar || "https://via.placeholder.com/150/ff9e00/000000?text=SK",
                         banner: data.banner || "",
                         createdAt: data.createdAt,
+                        role: data.role || 'user',
                         userData: data.userData || { photos: [], rides: [], visitedStations: [] }
                     };
                 }
@@ -1936,6 +2057,15 @@
 
                 document.getElementById('profile-nick').innerText = pData.username;
                 document.getElementById('profile-avatar-img').src = pData.avatar;
+                
+                // Set Profile Badge
+                const roleBadge = document.getElementById('profile-role-badge');
+                const roleStr = (pData.role || 'user').toLowerCase();
+                roleBadge.className = 'role-badge'; 
+                if (roleStr === 'admin') { roleBadge.classList.add('role-admin'); roleBadge.innerText = 'ADMIN'; }
+                else if (roleStr === 'moderator') { roleBadge.classList.add('role-mod'); roleBadge.innerText = 'MODERATOR'; }
+                else if (roleStr === 'tester' || roleStr === 'beta tester') { roleBadge.classList.add('role-tester'); roleBadge.innerText = 'BETA TESTER'; }
+                else { roleBadge.classList.add('role-user'); roleBadge.innerText = 'USER'; }
                 
                 let bannerImg = document.getElementById('profile-banner-img');
                 let bannerPlcholder = document.getElementById('profile-banner-placeholder');
