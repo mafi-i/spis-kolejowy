@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.0</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.1</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -122,42 +122,17 @@
         }
         .nav-item.active { background-color: var(--accent-yellow); color: #000; font-weight: bold; }
 
-        .nav-item-admin {
-            color: var(--role-admin);
-            border-color: var(--role-admin);
-            background-color: rgba(255, 42, 42, 0.12);
-            display: none;
-        }
-        .nav-item-admin.active {
-            background-color: var(--role-admin);
-            color: #fff;
-        }
+        .nav-item-admin { color: var(--role-admin); border-color: var(--role-admin); background-color: rgba(255, 42, 42, 0.12); display: none; }
+        .nav-item-admin.active { background-color: var(--role-admin); color: #fff; }
 
         .notif-badge-on-tile {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #ff4d4d;
-            color: #fff;
-            font-size: 10px;
-            font-family: 'Share Tech Mono', monospace;
-            font-weight: bold;
-            border-radius: 50%;
-            padding: 2px 6px;
-            display: none;
-            border: 1px solid var(--bg-color);
+            position: absolute; top: -6px; right: -6px; background: #ff4d4d; color: #fff;
+            font-size: 10px; font-family: 'Share Tech Mono', monospace; font-weight: bold;
+            border-radius: 50%; padding: 2px 6px; display: none; border: 1px solid var(--bg-color);
         }
 
-        .nav-item.nav-item-changelog {
-            color: var(--accent-cyan);
-            border-color: var(--accent-blue);
-            background-color: rgba(255, 109, 0, 0.12);
-        }
-        .nav-item.nav-item-changelog.active {
-            background-color: var(--accent-blue);
-            border-color: var(--accent-cyan);
-            color: #000;
-        }
+        .nav-item.nav-item-changelog { color: var(--accent-cyan); border-color: var(--accent-blue); background-color: rgba(255, 109, 0, 0.12); }
+        .nav-item.nav-item-changelog.active { background-color: var(--accent-blue); border-color: var(--accent-cyan); color: #000; }
 
         /* PROFILE DROPDOWN MENU */
         .user-profile-wrapper { position: relative; border-left: 1px solid var(--border-color); padding-left: 15px; display: none; }
@@ -165,17 +140,7 @@
         .user-avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent-cyan); background: var(--border-color); object-fit: cover; }
         .user-name { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--accent-yellow); }
 
-        .role-badge {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 9px;
-            padding: 1px 5px;
-            border-radius: 3px;
-            margin-top: 2px;
-            display: inline-block;
-            font-weight: bold;
-            text-transform: uppercase;
-            width: fit-content;
-        }
+        .role-badge { font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 1px 5px; border-radius: 3px; margin-top: 2px; display: inline-block; font-weight: bold; text-transform: uppercase; width: fit-content; }
         .role-badge.role-admin { background: var(--role-admin); color: #fff; box-shadow: 0 0 6px rgba(255, 42, 42, 0.6); }
         .role-badge.role-moderator { background: var(--role-mod); color: #000; box-shadow: 0 0 6px rgba(0, 210, 211, 0.6); }
         .role-badge.role-tester { background: var(--role-tester); color: #fff; box-shadow: 0 0 6px rgba(181, 55, 242, 0.6); }
@@ -184,45 +149,26 @@
         .profile-dropdown {
             position: absolute; right: 0; top: 40px; background: var(--panel-bg);
             border: 2px solid var(--accent-blue); border-radius: 6px; width: 260px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1100;
-            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1100; overflow: hidden;
         }
         .user-profile-wrapper:hover .profile-dropdown { display: flex; }
-
         .dropdown-header { padding: 12px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
-        .dropdown-item {
-            padding: 10px 14px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
-            color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px;
-            border: none; background: none; width: 100%; text-align: left; cursor: pointer;
-        }
+        .dropdown-item { padding: 10px 14px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px; border: none; background: none; width: 100%; text-align: left; cursor: pointer; }
         .dropdown-item:hover { background: rgba(255, 158, 0, 0.12); color: var(--accent-cyan); }
         .dropdown-item.danger { color: #ff4d4d; }
         .dropdown-item.danger:hover { background: rgba(255, 77, 77, 0.15); }
 
         .friend-code-display {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 12px;
-            color: var(--text-main);
-            background: rgba(255, 158, 0, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--accent-cyan);
-            margin-top: 6px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: bold;
+            font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-main);
+            background: rgba(255, 158, 0, 0.1); padding: 4px 8px; border-radius: 4px;
+            border: 1px solid var(--accent-cyan); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold;
         }
         .copy-icon { cursor: pointer; font-size: 14px; transition: 0.2s; }
         .copy-icon:hover { color: var(--accent-yellow); transform: scale(1.1); }
 
         /* TOASTS & FLOATING BUTTON */
         #toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
-        .toast-msg {
-            background: #141824; color: #fff; border: 1px solid var(--accent-cyan); border-left: 4px solid var(--accent-cyan);
-            padding: 12px 18px; border-radius: 5px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
-            min-width: 260px; max-width: 380px; box-shadow: 0 6px 20px rgba(0,0,0,0.7);
-        }
+        .toast-msg { background: #141824; color: #fff; border: 1px solid var(--accent-cyan); border-left: 4px solid var(--accent-cyan); padding: 12px 18px; border-radius: 5px; font-family: 'Share Tech Mono', monospace; font-size: 12px; min-width: 260px; max-width: 380px; box-shadow: 0 6px 20px rgba(0,0,0,0.7); }
         .toast-msg.warn { border-color: var(--accent-orange); border-left-color: var(--accent-orange); }
         .toast-msg.error { border-color: #ff4d4d; border-left-color: #ff4d4d; }
         .toast-msg.success { border-color: #00b32c; border-left-color: #00b32c; }
@@ -240,12 +186,9 @@
         .auth-form { display: flex; flex-direction: column; gap: 14px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
         .form-group label { font-family: 'Share Tech Mono', monospace; color: var(--accent-orange); font-size: 11px; text-transform: uppercase; }
-        .form-group input, .form-group select, .form-group textarea {
-            background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; color: #fff;
-            font-family: 'Share Tech Mono', monospace; font-size: 13px; outline: none;
-        }
+        .form-group input, .form-group select, .form-group textarea { background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 13px; outline: none; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent-cyan); }
-        .auth-btn { background: var(--accent-cyan); color: #000; border: none; border-radius: 4px; padding: 12px; font-family: 'Share Tech Mono', monospace; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 5px; }
+        .auth-btn { background: var(--accent-cyan); color: #000; border: none; border-radius: 4px; padding: 12px; font-family: 'Share Tech Mono', monospace; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 5px; width: 100%; }
 
         /* MAIN CONTENT */
         #main-content { display: none; max-width: 1400px; margin: 20px auto; padding: 0 20px; width: 100%; }
@@ -255,12 +198,7 @@
         /* MAP */
         .railmap-frame { border: 2px solid var(--border-color); background-color: #121214; position: relative; border-radius: 4px; overflow: hidden; }
         #map, #friend-map { width: 100%; height: 620px; background-color: #121214; }
-        .legend-box {
-            position: absolute; bottom: 15px; right: 15px; background: rgba(15, 18, 26, 0.95);
-            border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 4px;
-            font-family: 'Share Tech Mono', monospace; font-size: 12px; z-index: 1000;
-            display: flex; flex-direction: column; gap: 6px; color: #e0e0e0;
-        }
+        .legend-box { position: absolute; bottom: 15px; right: 15px; background: rgba(15, 18, 26, 0.95); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 6px; color: #e0e0e0; }
         .legend-item { display: flex; align-items: center; gap: 8px; }
         .legend-color { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
 
@@ -287,7 +225,7 @@
         .sketch-row .form-group { flex: 1; }
         .sketch-mini-map { width: 100%; aspect-ratio: 1 / 1; border: 2px solid var(--border-color); border-radius: 4px; margin-top: 10px; background: #121214; z-index: 1; }
         .sketch-right-col { display: flex; flex-direction: column; gap: 10px; }
-        .sketch-upload-area { border: 2px dashed var(--accent-yellow); background: #0d0d0f; border-radius: 6px; height: 380px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; overflow: hidden; padding: 15px; }
+        .sketch-upload-area { border: 2px dashed var(--accent-yellow); background: #0d0d0f; border-radius: 6px; height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; overflow: hidden; padding: 15px; }
         .sketch-upload-area:hover { background: rgba(255, 158, 0, 0.06); border-color: var(--accent-cyan); }
         .sketch-preview-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
         .sketch-upload-icon { font-size: 32px; color: var(--accent-yellow); margin-bottom: 10px; }
@@ -332,6 +270,28 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-content { background: var(--panel-bg); border: 2px solid var(--accent-cyan); border-radius: 8px; width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 15px; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ff4d4d; font-size: 24px; cursor: pointer; font-weight: bold; }
+        
+        /* NOWY PROFIL SPOTTERA */
+        .profile-header-block { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .profile-banner-container { width: 100%; height: 240px; position: relative; background: #0d0d0f; border-bottom: 1px solid var(--border-color); }
+        .profile-banner { width: 100%; height: 100%; object-fit: cover; }
+        .profile-join-date { position: absolute; bottom: 15px; right: 20px; background: rgba(0,0,0,0.7); padding: 6px 10px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #fff; border: 1px solid var(--border-color); z-index: 10; }
+        .profile-info-row { display: flex; padding: 15px 20px; position: relative; height: 90px; }
+        .profile-avatar-container { position: absolute; top: -75px; left: 30px; width: 140px; height: 140px; border-radius: 50%; border: 4px solid var(--panel-bg); background: #121214; }
+        .profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .edit-btn { position: absolute; background: var(--accent-cyan); color: #000; border: 2px solid var(--panel-bg); border-radius: 50%; width: 34px; height: 34px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 20; transition: 0.2s; font-size:14px; }
+        .edit-btn:hover { background: var(--accent-yellow); transform: scale(1.1); }
+        .edit-btn.banner-edit { top: 15px; right: 15px; }
+        .edit-btn.avatar-edit { bottom: 5px; right: 5px; }
+        .profile-details { margin-left: 180px; display: flex; flex-direction: column; gap: 8px; }
+        .profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .profile-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
+        .gallery-item { background: #0d0d0f; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; }
+        .gallery-item img { width: 100%; height: 190px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
+        .gallery-item-info { padding: 12px; font-family: 'Share Tech Mono', monospace; font-size: 13px; display: flex; flex-direction: column; gap: 5px; }
+
+        /* WŁASNY UKRYTY FILE UPLOAD */
+        .hidden-upload { display: none; }
     </style>
 </head>
 <body>
@@ -343,7 +303,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.0</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.1</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -362,7 +322,6 @@
             <button class="user-profile-btn">
                 <div style="position: relative;">
                     <img src="https://via.placeholder.com/38/ff9e00/000000?text=SK" alt="Avatar" class="user-avatar" id="nav-user-avatar">
-                    <!-- Globalny znacznik powiadomień dla Admina na Avatarze -->
                     <span class="notif-badge-on-tile" id="global-admin-badge" style="top:-4px; right:-4px; z-index:5;">0</span>
                 </div>
                 <div style="display:flex; flex-direction:column;">
@@ -379,16 +338,15 @@
                         <span class="copy-icon" onclick="copyFriendCodeToClipboard(event)">📋</span>
                     </div>
                 </div>
-                <button class="dropdown-item" onclick="switchView('profil')">&#9881; Zarządzaj profilem i bazą</button>
+                <button class="dropdown-item" onclick="openProfile(currentUser.uid)">&#128100; Mój Profil (Galeria)</button>
                 <button class="dropdown-item" onclick="switchView('znajomi')">&#128101; Lista Znajomych</button>
                 <button class="dropdown-item" onclick="switchView('changelog')">&#128221; Dziennik zmian</button>
                 
-                <!-- Przycisk zgłoszeń dla Admina i zgłaszania błędów dla Testera -->
                 <button class="dropdown-item" id="btn-admin-feedback" style="display:none; color:var(--role-admin); justify-content: space-between;" onclick="openAdminFeedbackModal()">
                     <span>&#128227; Odczytaj Zgłoszenia (Admin)</span>
                     <span id="admin-feedback-badge" style="background:#ff4d4d; color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; display:none; font-weight:bold;">0</span>
                 </button>
-                <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Tester)</button>
+                <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Beta)</button>
                 
                 <button class="dropdown-item danger" onclick="handleLogout()">&#9211; Wyloguj się</button>
             </div>
@@ -448,47 +406,26 @@
             <div class="railmap-frame">
                 <div id="map"></div>
                 <div class="legend-box">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #00b32c;"></span>
-                        <span>Przejechane linie (Id-12)</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #1756e8; border: 1px solid #fff;"></span>
-                        <span>Odwiedzone stacje</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: var(--purple-photo);"></span>
-                        <span>Miejsca wykonania zdjęć</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #121214; border: 1px dashed #ff9e00;"></span>
-                        <span>Granice województw</span>
-                    </div>
+                    <div class="legend-item"><span class="legend-color" style="background: #00b32c;"></span><span>Przejechane linie (Id-12)</span></div>
+                    <div class="legend-item"><span class="legend-color" style="background: #1756e8; border: 1px solid #fff;"></span><span>Odwiedzone stacje</span></div>
+                    <div class="legend-item"><span class="legend-color" style="background: var(--purple-photo);"></span><span>Miejsca wykonania zdjęć</span></div>
+                    <div class="legend-item"><span class="legend-color" style="background: #121214; border: 1px dashed #ff9e00;"></span><span>Granice województw</span></div>
                 </div>
             </div>
 
-            <!-- ILOSTAN TABORU -->
             <div class="ilostan-table-container">
                 <h3>// Zarejestrowany Tabor</h3>
                 <div id="drilldown-categories" style="overflow-x:auto;">
                     <table class="rail-table">
-                        <thead>
-                            <tr>
-                                <th style="width:70%;">Typ</th>
-                                <th style="text-align:center;">Serie</th>
-                                <th style="text-align:center;">Pojazdy</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th style="width:70%;">Typ</th><th style="text-align:center;">Serie</th><th style="text-align:center;">Pojazdy</th></tr></thead>
                         <tbody id="map-ilostan-tbody"></tbody>
                     </table>
                 </div>
-
                 <div id="drilldown-series" style="display:none;">
                     <button class="back-btn" onclick="showDrilldownCategories()">&laquo; Wróć do kategorii</button>
                     <h4 style="font-family:'Share Tech Mono'; color:var(--accent-orange); margin-bottom:10px;" id="drilldown-series-title">Kategoria: ...</h4>
                     <div class="drilldown-series-grid" id="drilldown-series-container"></div>
                 </div>
-
                 <div id="drilldown-photos" style="display:none;">
                     <button class="back-btn" id="btn-back-to-series">&laquo; Wróć do ...</button>
                     <h4 style="font-family:'Share Tech Mono'; color:var(--accent-orange); margin-bottom:10px;" id="drilldown-photos-title">Seria: ...</h4>
@@ -500,7 +437,6 @@
         <!-- ZAKŁADKA 2: AKTUALIZOWANIE MAPY -->
         <section id="view-aktualizacja-section" style="display:none;">
             <h2>// Panel Aktualizowania Mapy, Tras i Taboru</h2>
-
             <div class="zaliczak-stats">
                 <div class="stat-item"><span class="stat-val" id="stat-stations">0 / 33</span><span class="stat-label">Zaliczone Stacje</span></div>
                 <div class="stat-item"><span class="stat-val" id="stat-rides">0</span><span class="stat-label">Przejechane Odcinki</span></div>
@@ -514,22 +450,14 @@
                         <div class="form-group" style="flex:1;"><label>Data przejazdu:</label><input type="date" id="ride-date"></div>
                         <div class="form-group" style="flex:1;">
                             <label>Środek transportu:</label>
-                            <select id="ride-transport">
-                                <option value="Pociąg planowy">Pociąg planowy</option>
-                                <option value="Pociąg specjalny">Pociąg specjalny</option>
-                                <option value="Inne">Inne</option>
-                            </select>
+                            <select id="ride-transport"><option value="Pociąg planowy">Pociąg planowy</option><option value="Pociąg specjalny">Pociąg specjalny</option><option value="Inne">Inne</option></select>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Wyszukaj linię PKP PLK:</label>
-                        <div class="row-flex">
-                            <input type="text" id="ride-search-input" placeholder="np. LK1, LK4, Warszawa..." style="flex:1;" oninput="searchLinesForStation()">
-                            <button class="btn-small" onclick="searchLinesForStation()">Pokaż linie</button>
-                        </div>
+                        <div class="row-flex"><input type="text" id="ride-search-input" placeholder="np. LK1, LK4, Warszawa..." style="flex:1;" oninput="searchLinesForStation()"><button class="btn-small" onclick="searchLinesForStation()">Pokaż linie</button></div>
                     </div>
                     <div id="line-search-results" class="results-list" style="display:none;"></div>
-
                     <div id="segment-selector-box" style="display:none; background: #0d0d0f; padding: 12px; border-radius: 4px; border: 1px solid var(--border-color);" class="form-group">
                         <label style="color:var(--accent-cyan)" id="selected-line-title">Linia</label>
                         <div class="row-flex">
@@ -538,7 +466,6 @@
                         </div>
                         <button class="btn-small" id="btn-add-ride" style="margin-top:8px;" onclick="addTraveledSegment()">[ Dodaj Przejazd po Torach » ]</button>
                     </div>
-
                     <div class="form-group" style="margin-top:15px;">
                         <label>Twoje przejechane odcinki:</label>
                         <div id="user-rides-list" style="display:flex; flex-direction:column; gap:6px; max-height: 200px; overflow-y:auto;">
@@ -551,13 +478,9 @@
                     <h3>Dodaj Odwiedzoną Stację</h3>
                     <div class="form-group">
                         <label>Wyszukaj stację węzłową:</label>
-                        <div class="row-flex">
-                            <input type="text" id="station-search-input" placeholder="np. Katowice, Gdańsk, Poznań..." style="flex:1;" oninput="searchStationsOnly()">
-                            <button class="btn-small" onclick="searchStationsOnly()">Szukaj</button>
-                        </div>
+                        <div class="row-flex"><input type="text" id="station-search-input" placeholder="np. Katowice, Gdańsk..." style="flex:1;" oninput="searchStationsOnly()"><button class="btn-small" onclick="searchStationsOnly()">Szukaj</button></div>
                     </div>
                     <div id="station-search-results" class="results-list" style="display:none;"></div>
-
                     <div class="form-group" style="margin-top:10px;">
                         <label>Twoje odwiedzone stacje:</label>
                         <div id="user-visited-stations" style="display:flex; flex-direction:column; gap:6px; max-height: 250px; overflow-y:auto;">
@@ -578,37 +501,20 @@
                             <label>Typ lokomotywy / EZT:</label>
                             <select id="sketch-series" onchange="toggleCustomSeriesInput(this)">
                                 <optgroup label="Lokomotywy Elektryczne">
-                                    <option value="Dragon">Dragon</option>
-                                    <option value="EP07">EP07</option>
-                                    <option value="EP08">EP08</option>
-                                    <option value="EP09">EP09</option>
-                                    <option value="ET22">ET22</option>
-                                    <option value="ET41">ET41</option>
-                                    <option value="EU07">EU07</option>
-                                    <option value="EU160">EU160</option>
-                                    <option value="EU200">EU200</option>
-                                    <option value="Traxx">Traxx</option>
-                                    <option value="Vectron">Vectron</option>
+                                    <option value="Dragon">Dragon</option><option value="EP07">EP07</option><option value="EP08">EP08</option>
+                                    <option value="EP09">EP09</option><option value="ET22">ET22</option><option value="ET41">ET41</option>
+                                    <option value="EU07">EU07</option><option value="EU160">EU160</option><option value="EU200">EU200</option>
+                                    <option value="Traxx">Traxx</option><option value="Vectron">Vectron</option>
                                 </optgroup>
                                 <optgroup label="Lokomotywy Spalinowe">
-                                    <option value="15D">15D</option>
-                                    <option value="6Dg">6Dg</option>
-                                    <option value="BR232">BR232</option>
-                                    <option value="SM42">SM42</option>
-                                    <option value="ST43">ST43</option>
-                                    <option value="ST44">ST44</option>
-                                    <option value="SU160">SU160</option>
-                                    <option value="SU42">SU42</option>
+                                    <option value="15D">15D</option><option value="6Dg">6Dg</option><option value="BR232">BR232</option>
+                                    <option value="SM42">SM42</option><option value="ST43">ST43</option><option value="ST44">ST44</option>
+                                    <option value="SU160">SU160</option><option value="SU42">SU42</option>
                                 </optgroup>
                                 <optgroup label="EZT / Zespoły">
-                                    <option value="31WE">31WE</option>
-                                    <option value="45WE">45WE</option>
-                                    <option value="ED161">ED161</option>
-                                    <option value="ED250">ED250</option>
-                                    <option value="Elf">Elf</option>
-                                    <option value="EN57">EN57</option>
-                                    <option value="Flirt">Flirt</option>
-                                    <option value="Impuls">Impuls</option>
+                                    <option value="31WE">31WE</option><option value="45WE">45WE</option><option value="ED161">ED161</option>
+                                    <option value="ED250">ED250</option><option value="Elf">Elf</option><option value="EN57">EN57</option>
+                                    <option value="Flirt">Flirt</option><option value="Impuls">Impuls</option>
                                 </optgroup>
                                 <option value="CUSTOM">[ Wpisz własny typ... ]</option>
                             </select>
@@ -622,7 +528,6 @@
                     </div>
 
                     <div class="sketch-row">
-                        <!-- Wyszukiwarka przewoźnika (Datalist Combobox) -->
                         <div class="form-group">
                             <label>Przewoźnik:</label>
                             <input type="text" id="sketch-carrier-select" list="sketch-carrier-list" placeholder="np. PKP Intercity, wpisz by wyszukać...">
@@ -637,13 +542,29 @@
                         <div class="form-group"><label>Data:</label><input type="date" id="sketch-date"></div>
                         <div class="form-group">
                             <label>Stacja (Opcjonalnie):</label>
-                            <select id="sketch-station-select" onchange="updateMiniMapPin(this)">
-                                <option value="">[ Wybierz z listy ]</option>
-                            </select>
+                            <select id="sketch-station-select" onchange="updateMiniMapPin(this)"><option value="">[ Wybierz z listy ]</option></select>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:12px; padding:10px; background:rgba(255, 158, 0, 0.05); border:1px solid var(--accent-orange); border-radius:4px;">
+                        <div class="form-group" style="margin:0;">
+                            <label style="color:var(--accent-cyan); font-weight:bold;">Widoczność zdjęcia:</label>
+                            <div style="display:flex; gap: 15px; font-size:12px; font-family:'Share Tech Mono'; margin-top:5px; flex-wrap:wrap;">
+                                <label><input type="radio" name="photo-visibility" value="public" checked> Publiczne (W profilu i w Twoim Ilostanie)</label>
+                                <label><input type="radio" name="photo-visibility" value="private"> Niepubliczne (Tylko w Twoim Ilostanie)</label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label style="color:var(--accent-cyan); font-weight:bold;">Zdjęcie pochodzi z:</label>
+                            <div style="display:flex; gap: 15px; font-size:12px; font-family:'Share Tech Mono'; margin-top:5px; flex-wrap:wrap;">
+                                <label><input type="radio" name="photo-device" value="Aparat" checked> Aparatu</label>
+                                <label><input type="radio" name="photo-device" value="Telefon"> Telefonu</label>
+                                <label><input type="radio" name="photo-device" value="Z filmu"> Kadr z filmu</label>
+                            </div>
                         </div>
                     </div>
 
-                    <label style="font-family:'Share Tech Mono'; color:var(--text-muted); font-size:11px;">Zaznacz lokalizację na mapie (kliknij):</label>
+                    <label style="font-family:'Share Tech Mono'; color:var(--text-muted); font-size:11px; margin-top:5px;">Zaznacz lokalizację na mapie (kliknij):</label>
                     <div class="sketch-mini-map" id="sketch-mini-map"></div>
                 </div>
 
@@ -657,7 +578,7 @@
                         </div>
                         <img id="sketch-preview-img" class="sketch-preview-img" alt="Podgląd">
                     </div>
-                    <input type="file" id="sketch-file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                    <input type="file" id="sketch-file-input" accept="image/*" class="hidden-upload" onchange="handleFileSelect(event)">
 
                     <div class="form-group">
                         <label>Lub adres URL:</label>
@@ -715,25 +636,38 @@
             <div style="max-width: 920px; margin: 0 auto; display:flex; flex-direction:column; gap:15px;" id="changelog-container"></div>
         </section>
 
-        <!-- ZAKŁADKA 6: ZARZĄDZANIE PROFILEM + KOPIE ZAPASOWE -->
-        <section id="view-profil-section" style="display:none;">
-            <h2>// Zarządzanie Kontem i Kopia Zapasowa (JSON)</h2>
-            <div class="update-grid">
-                <div class="update-box">
-                    <h3>Edycja Profilu</h3>
-                    <div class="form-group"><label>Nick:</label><input type="text" id="profile-edit-name" disabled title="Nicku nie można zmieniać po rejestracji"></div>
-                    <div class="form-group"><label>URL Awatara:</label><input type="url" id="profile-edit-avatar" placeholder="https://..."></div>
-                    <div class="form-group"><label>Kod Znajomego:</label><input type="text" id="profile-friend-code" readonly style="color:var(--accent-cyan); font-weight:bold; cursor:not-allowed;"></div>
-                    <button class="btn-small" onclick="saveProfileChanges()">Zapisz Awatar w Chmurze</button>
+        <!-- ZAKŁADKA NOWY PROFIL SPOTTERA -->
+        <section id="view-profil-spottera-section" style="display:none; padding:0; overflow:hidden;">
+            <div class="profile-header-block">
+                <div class="profile-banner-container">
+                    <img src="" id="profile-banner-img" class="profile-banner" style="display:none;">
+                    <div id="profile-banner-placeholder" class="profile-banner" style="background:#0d0d0f; display:flex; justify-content:center; align-items:center; color:var(--text-muted); font-family:'Share Tech Mono'; font-size:12px;">Brak zdjęcia w tle</div>
+                    <button id="btn-edit-banner" class="edit-btn banner-edit" style="display:none;" onclick="document.getElementById('banner-upload').click()">✏️</button>
+                    <input type="file" id="banner-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'banner')">
+                    
+                    <div class="profile-join-date" id="profile-join-date">Dołączył: ...</div>
                 </div>
-                <div class="update-box">
-                    <h3>Kopia Zapasowa JSON</h3>
-                    <p style="font-family:'Share Tech Mono'; font-size:12px; color:var(--text-muted); line-height:1.5;">Pobierz kopię bazy ze stacjami, trasami i zdjęciami lub zaimportuj ją z pliku.</p>
-                    <div class="row-flex" style="margin-top:8px;">
-                        <button class="btn-cyan" onclick="exportUserDatabaseJSON()">&#128190; Eksportuj do JSON</button>
-                        <button class="btn-small" onclick="document.getElementById('import-json-input').click()">&#128194; Importuj z JSON</button>
-                        <input type="file" id="import-json-input" accept=".json" style="display:none;" onchange="importUserDatabaseJSON(event)">
+                <div class="profile-info-row">
+                    <div class="profile-avatar-container">
+                        <img src="https://via.placeholder.com/150/ff9e00/000000?text=SK" id="profile-avatar-img" class="profile-avatar">
+                        <button id="btn-edit-avatar" class="edit-btn avatar-edit" style="display:none;" onclick="document.getElementById('avatar-upload').click()">✏️</button>
+                        <input type="file" id="avatar-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'avatar')">
                     </div>
+                    <div class="profile-details">
+                        <h2 id="profile-nick" style="margin:0; font-size:24px; color:var(--accent-yellow); text-transform:none;">SpotterNick</h2>
+                        <div class="profile-actions">
+                            <button class="btn-small" id="btn-profile-friend" style="display:none;" onclick="handleProfileFriendAction()">Dodaj znajomego</button>
+                            <button class="btn-cyan" id="btn-profile-map" style="display:none;" onclick="openProfileMap()">Pokaż mapę</button>
+                            <button class="btn-small" id="btn-profile-backup" style="background:#4a4a5a; display:none;" onclick="exportUserDatabaseJSON()">💾 Kopia (JSON)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 20px;">
+                <h3 style="font-family:'Share Tech Mono'; color:var(--accent-cyan); border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px; text-transform:uppercase; font-size:14px;">// Galeria Publiczna</h3>
+                <div class="profile-gallery" id="profile-gallery">
+                    <!-- Galeria wpada tutaj -->
                 </div>
             </div>
         </section>
@@ -742,7 +676,6 @@
         <section id="view-admin-section" style="display:none; border-color: var(--role-admin);">
             <h2 style="color: var(--role-admin);" id="admin-panel-title">// Panel Zarządzania Systemem</h2>
             <div class="update-grid">
-                
                 <!-- BANY -->
                 <div class="update-box">
                     <h3>Banowanie Kont (UID / Nick)</h3>
@@ -798,7 +731,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.0</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.1</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -809,11 +742,11 @@
         </div>
     </div>
 
-    <!-- MODAL ZGŁOSZEŃ TESTERA -->
+    <!-- MODAL ZGŁOSZEŃ TESTERA/MODERATORA -->
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-content" style="max-width: 600px;">
             <button class="modal-close" onclick="document.getElementById('feedback-modal').style.display='none'">&times;</button>
-            <h2 style="color:var(--role-tester); font-family:'Share Tech Mono';">// Zgłoś Błąd (Panel Testera)</h2>
+            <h2 style="color:var(--role-tester); font-family:'Share Tech Mono';">// Zgłoś Błąd (Panel Wsparcia)</h2>
             <div class="form-group">
                 <label>Treść zgłoszenia (bug, sugestia):</label>
                 <textarea id="feedback-text" rows="5"></textarea>
@@ -826,18 +759,18 @@
     <div class="modal-overlay" id="admin-feedback-modal">
         <div class="modal-content" style="max-width: 800px;">
             <button class="modal-close" onclick="document.getElementById('admin-feedback-modal').style.display='none'">&times;</button>
-            <h2 style="color:var(--role-admin); font-family:'Share Tech Mono';">// Zgłoszenia od Beta Testerów</h2>
+            <h2 style="color:var(--role-admin); font-family:'Share Tech Mono';">// Zgłoszenia od Zespołu</h2>
             <div id="admin-feedback-list" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto;">
                 <span style="font-size:12px; color:var(--text-muted);">Ładowanie zgłoszeń...</span>
             </div>
         </div>
     </div>
 
-    <!-- MODAL ZNAJOMEGO -->
+    <!-- MODAL MAPY ZNAJOMEGO -->
     <div class="modal-overlay" id="friend-modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeFriendModal()">&times;</button>
-            <h2 id="modal-friend-name" style="margin:0;">// Profil Spottera</h2>
+            <h2 id="modal-friend-name" style="margin:0;">// Mapa Spottera</h2>
             <div class="zaliczak-stats" style="background:#0d0d0f; border:1px solid var(--border-color); border-radius:6px;">
                 <div class="stat-item"><span class="stat-val" id="modal-friend-stations">0</span><span class="stat-label">Stacje</span></div>
                 <div class="stat-item"><span class="stat-val" id="modal-friend-rides">0</span><span class="stat-label">Odcinki</span></div>
@@ -937,15 +870,22 @@
             [54.83, 18.35]
         ];
 
-        let userData = {
-            visitedStations: [],
-            rides: [],
-            photos: [],
-            friends: [],
-            pendingRequests: []
-        };
+        let userData = { visitedStations: [], rides: [], photos: [], friends: [], pendingRequests: [] };
 
         const changelogData = [
+            {
+                version: "Alpha 1.0.1",
+                title: "Nowy Widok Profilu i Ustawienia Prywatności",
+                date: "Dzisiaj",
+                added: [
+                    "Kompletnie nowy wygląd profilu gracza z bannerem i galerią",
+                    "Możliwość zatajania wybranych zdjęć z profilu publicznego (widoczne tylko dla właściciela w Ilostanie)",
+                    "Oznaczanie urządzenia przy robieniu zdjęcia (Aparat / Telefon / Kadr z filmu)",
+                    "Moderatorzy mogą teraz raportować błędy w systemie (Panel Wsparcia)",
+                    "Przyciski dodawania znajomych prosto z nowego wyglądu Profilu",
+                    "Poprawiono pomniejsze błędy z nawigacją JSON"
+                ]
+            },
             {
                 version: "Alpha 1.0.0",
                 title: "Globalna Moderacja, Unikalność i Reorganizacja z Systemu Alpha",
@@ -983,6 +923,7 @@
         // --- AUTH OBSŁUGA Z FIREBASE (UNIKALNOŚĆ NICKU - ALPHA) ---
         let userDocUnsubscribe = null;
         let adminFeedbackUnsubscribe = null;
+        let currentlyViewedProfile = null; // Zmienna uzywana przez profil
 
         function switchAuthTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1032,7 +973,8 @@
                         email: email,
                         username: username,
                         friendCode: fCode,
-                        avatar: "https://via.placeholder.com/38/ff9e00/000000?text=SK",
+                        avatar: "https://via.placeholder.com/150/ff9e00/000000?text=SK",
+                        banner: "",
                         role: "user",
                         pendingRequests: [],
                         userData: { visitedStations: [], rides: [], photos: [], friends: [] },
@@ -1063,7 +1005,7 @@
             });
         }
 
-        // Listener stanu logowania na żywo z chmury + Blokada BAN (Alpha)
+        // Listener stanu logowania na żywo z chmury + Blokada BAN
         auth.onAuthStateChanged((user) => {
             if (userDocUnsubscribe) { userDocUnsubscribe(); userDocUnsubscribe = null; }
             if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
@@ -1083,9 +1025,11 @@
                             uid: user.uid,
                             email: user.email,
                             username: data.username || "Spotter",
-                            avatar: data.avatar || "https://via.placeholder.com/38/ff9e00/000000?text=SK",
+                            avatar: data.avatar || "https://via.placeholder.com/150/ff9e00/000000?text=SK",
+                            banner: data.banner || "",
                             friendCode: data.friendCode || generateFriendCode(),
-                            role: data.role || "user"
+                            role: data.role || "user",
+                            createdAt: data.createdAt
                         };
                         userData = data.userData || { visitedStations: [], rides: [], photos: [], friends: [] };
                         loadGlobalData();
@@ -1127,9 +1071,8 @@
             document.getElementById('dropdown-user-email').innerText = currentUser.email;
             document.getElementById('nav-user-avatar').src = currentUser.avatar;
             document.getElementById('nav-friend-code').innerText = currentUser.friendCode;
-            document.getElementById('profile-friend-code').value = currentUser.friendCode;
-            document.getElementById('profile-edit-name').value = currentUser.username;
 
+            // Rangi i role
             const badge = document.getElementById('user-role-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
             const testerBtn = document.getElementById('btn-tester-feedback');
@@ -1147,6 +1090,7 @@
                 badge.classList.add(role === 'admin' ? 'role-admin' : 'role-moderator');
                 badge.innerText = role.toUpperCase();
                 adminNavBtn.style.display = 'block';
+                testerBtn.style.display = 'block'; // Mody moga uzywac Zgloszen
                 document.getElementById('admin-panel-title').innerText = role === 'admin' ? "// Panel Administratora" : "// Panel Moderatora";
                 
                 if(role === 'admin') {
@@ -1223,18 +1167,15 @@
             const val = document.getElementById('mod-add-value').value.trim();
             if(!val) return;
             
-            // Check for duplicates before pushing
             if (type === 'carriers') {
                 let merged = [...new Set([...defaultCarriers, ...cloudCarriers])];
                 if (merged.map(c => c.toLowerCase()).includes(val.toLowerCase())) {
-                    showToast("Taki przewoźnik już istnieje w bazie!", "warn");
-                    return;
+                    showToast("Taki przewoźnik już istnieje w bazie!", "warn"); return;
                 }
             } else if (type === 'series') {
                 let existingOptions = Array.from(document.getElementById('sketch-series').options).map(o => o.value.toLowerCase());
                 if (existingOptions.includes(val.toLowerCase())) {
-                    showToast("Taka seria taboru już istnieje!", "warn");
-                    return;
+                    showToast("Taka seria taboru już istnieje!", "warn"); return;
                 }
             }
 
@@ -1247,7 +1188,7 @@
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
-        // --- ZABEZPIECZENIA I ADMINISTRACJA (Alpha) ---
+        // --- ZABEZPIECZENIA I ADMINISTRACJA ---
         async function executeBan() {
             if(currentUser.role !== 'admin' && currentUser.role !== 'moderator') return;
             const targetUser = document.getElementById('ban-username-input').value.trim();
@@ -1332,9 +1273,7 @@
                 try {
                     await db.collection('feedback').doc(docId).delete();
                     showToast("Zgłoszenie zostało usunięte.", "success");
-                } catch (e) {
-                    showToast("Błąd przy usuwaniu: " + e.message, "error");
-                }
+                } catch (e) { showToast("Błąd przy usuwaniu: " + e.message, "error"); }
             }
         }
 
@@ -1496,7 +1435,7 @@
 
         // --- OBSŁUGA WIDOKÓW ---
         function switchView(viewName) {
-            ['mapa', 'aktualizacja', 'zdjecia', 'znajomi', 'changelog', 'profil', 'admin'].forEach(v => {
+            ['mapa', 'aktualizacja', 'zdjecia', 'znajomi', 'changelog', 'profil', 'profil-spottera', 'admin'].forEach(v => {
                 let sec = document.getElementById(`view-${v}-section`);
                 if (sec) sec.style.display = 'none';
                 let btn = document.getElementById(`nav-btn-${v}`);
@@ -1510,12 +1449,230 @@
 
             if (viewName === 'mapa' && map) setTimeout(() => { map.invalidateSize(); renderMapDynamicElements(map, mainDynamicLayer, userData); }, 200);
             if (viewName === 'zdjecia') { initMiniMap(); setTimeout(() => { if (miniMap) miniMap.invalidateSize(); }, 200); }
-            if (viewName === 'profil') {
-                document.getElementById('profile-edit-name').value = currentUser.username;
-                document.getElementById('profile-edit-avatar').value = currentUser.avatar;
-            }
             if (viewName === 'admin' && currentUser.role === 'admin') loadAdminUsers();
         }
+
+        // --- ZARZĄDZANIE PROFILEM ZEWNĘTRZNYM (NOWY WIDOK) ---
+        async function openProfile(uid) {
+            try {
+                let pData = null;
+                let isMe = (uid === currentUser.uid);
+                
+                if (isMe) {
+                    pData = {
+                        uid: currentUser.uid,
+                        username: currentUser.username,
+                        avatar: currentUser.avatar,
+                        banner: currentUser.banner,
+                        createdAt: currentUser.createdAt,
+                        userData: userData
+                    };
+                } else {
+                    const doc = await db.collection('users').doc(uid).get();
+                    if(!doc.exists) { showToast("Nie znaleziono profilu.", "error"); return; }
+                    let data = doc.data();
+                    pData = {
+                        uid: doc.id,
+                        username: data.username,
+                        avatar: data.avatar || "https://via.placeholder.com/150/ff9e00/000000?text=SK",
+                        banner: data.banner || "",
+                        createdAt: data.createdAt,
+                        userData: data.userData || { photos: [], rides: [], visitedStations: [] }
+                    };
+                }
+                
+                currentlyViewedProfile = pData;
+
+                document.getElementById('profile-nick').innerText = pData.username;
+                document.getElementById('profile-avatar-img').src = pData.avatar;
+                
+                let bannerImg = document.getElementById('profile-banner-img');
+                let bannerPlcholder = document.getElementById('profile-banner-placeholder');
+                if (pData.banner) {
+                    bannerImg.src = pData.banner;
+                    bannerImg.style.display = 'block';
+                    bannerPlcholder.style.display = 'none';
+                } else {
+                    bannerImg.style.display = 'none';
+                    bannerPlcholder.style.display = 'flex';
+                }
+
+                if (pData.createdAt) {
+                    let d = pData.createdAt.toDate ? pData.createdAt.toDate() : new Date(pData.createdAt);
+                    document.getElementById('profile-join-date').innerText = "Dołączył: " + d.toLocaleDateString('pl-PL');
+                } else {
+                    document.getElementById('profile-join-date').innerText = "Dołączył: Brak danych";
+                }
+
+                const btnEditAvatar = document.getElementById('btn-edit-avatar');
+                const btnEditBanner = document.getElementById('btn-edit-banner');
+                const btnFriend = document.getElementById('btn-profile-friend');
+                const btnMap = document.getElementById('btn-profile-map');
+                const btnBackup = document.getElementById('btn-profile-backup');
+
+                if (isMe) {
+                    btnEditAvatar.style.display = 'flex';
+                    btnEditBanner.style.display = 'flex';
+                    btnBackup.style.display = 'block';
+                    btnFriend.style.display = 'none';
+                    btnMap.style.display = 'none';
+                } else {
+                    btnEditAvatar.style.display = 'none';
+                    btnEditBanner.style.display = 'none';
+                    btnBackup.style.display = 'none';
+                    btnMap.style.display = 'block';
+                    
+                    btnFriend.style.display = 'block';
+                    if (userData.friends.some(f => f.uid === pData.uid)) {
+                        btnFriend.innerText = "Twój znajomy (Usuń)";
+                        btnFriend.style.background = "#4a4a5a";
+                        btnFriend.style.color = "#fff";
+                    } else {
+                        btnFriend.innerText = "Dodaj znajomego";
+                        btnFriend.style.background = "var(--accent-yellow)";
+                        btnFriend.style.color = "#000";
+                    }
+                }
+
+                // Generowanie galerii - filtrowanie zdjec (Publiczne)
+                const gallery = document.getElementById('profile-gallery');
+                gallery.innerHTML = '';
+                
+                let publicPhotos = pData.userData.photos.filter(p => p.visibility !== 'private');
+                if (publicPhotos.length === 0) {
+                    gallery.innerHTML = '<span style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Użytkownik nie udostępnił jeszcze żadnych publicznych zdjęć.</span>';
+                } else {
+                    publicPhotos.sort((a,b) => new Date(b.date) - new Date(a.date)); // najnowsze
+                    publicPhotos.forEach(p => {
+                        gallery.innerHTML += `
+                            <div class="gallery-item">
+                                <img src="${p.url}">
+                                <div class="gallery-item-info">
+                                    <strong style="color:var(--accent-yellow); font-size:15px;">${p.series} ${p.number}</strong>
+                                    <span style="color:var(--accent-cyan); font-size:11px;">${p.carrier || 'Brak przewoźnika'}</span>
+                                    <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date || 'Brak'}</span>
+                                    <span style="color:var(--text-muted); font-size:10px;">${p.device || 'Aparat'}</span>
+                                    ${p.desc ? `<p style="margin-top:4px; font-size:11px; color:#fff;">${p.desc}</p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                switchView('profil-spottera');
+            } catch(e) {
+                showToast("Błąd ładowania profilu: " + e.message, "error");
+            }
+        }
+
+        // Akcja Przycisku w Profilu (Dodaj/Usuń Znajomego)
+        function handleProfileFriendAction() {
+            if(!currentlyViewedProfile) return;
+            const targetUid = currentlyViewedProfile.uid;
+            
+            // Jesli juz jestesmy znajomymi -> usuwanie
+            if(userData.friends.some(f => f.uid === targetUid)) {
+                if(confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
+                    userData.friends = userData.friends.filter(f => f.uid !== targetUid);
+                    saveUserDataToStorage();
+                    renderFriendsUI();
+                    showToast("Usunięto ze znajomych.", "warn");
+                    openProfile(targetUid); // Odśwież UI
+                }
+            } else {
+                // Jesli nie, to wysyłamy zaproszenie
+                db.collection('users').doc(targetUid).update({
+                    pendingRequests: firebase.firestore.FieldValue.arrayUnion({
+                        uid: currentUser.uid, 
+                        username: currentUser.username, 
+                        avatar: currentUser.avatar, 
+                        code: currentUser.friendCode
+                    })
+                }).then(() => {
+                    showToast("Wysłano zaproszenie do " + currentlyViewedProfile.username, "success");
+                }).catch(e => {
+                    showToast("Błąd wysyłania: " + e.message, "error");
+                });
+            }
+        }
+
+        // Otwieranie Mapy z poziomu Profilu
+        function openProfileMap() {
+            if(!currentlyViewedProfile) return;
+            
+            document.getElementById('modal-friend-name').innerText = "// Mapa: " + currentlyViewedProfile.username;
+            const fData = currentlyViewedProfile.userData;
+            
+            document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
+            document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
+            document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
+            document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
+            
+            document.getElementById('friend-modal').style.display = 'flex';
+            
+            if (!friendMapInitialized) {
+                friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
+                configurePolandMapBase(friendMap);
+                friendDynamicLayer = L.layerGroup().addTo(friendMap);
+                friendMapInitialized = true;
+            }
+            setTimeout(() => { 
+                friendMap.invalidateSize(); 
+                renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
+            }, 200);
+        }
+
+        // Wspólna funkcja wgrywania avataru / bannera
+        function handleProfileImageUpload(event, type) {
+            let file = event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showToast('To nie jest obraz!', 'error'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let maxWidth = type === 'avatar' ? 400 : 1200;
+                    let maxHeight = type === 'avatar' ? 400 : 600;
+                    
+                    let width = img.width, height = img.height;
+                    
+                    if (width > height) { 
+                        if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; } 
+                    } else { 
+                        if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; } 
+                    }
+                    
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    let compressedUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    // Update global UI and currentUser
+                    if (type === 'avatar') {
+                        currentUser.avatar = compressedUrl;
+                        document.getElementById('nav-user-avatar').src = compressedUrl;
+                        document.getElementById('profile-avatar-img').src = compressedUrl;
+                    } else {
+                        currentUser.banner = compressedUrl;
+                        document.getElementById('profile-banner-img').src = compressedUrl;
+                        document.getElementById('profile-banner-img').style.display = 'block';
+                        document.getElementById('profile-banner-placeholder').style.display = 'none';
+                    }
+
+                    // Save to DB
+                    db.collection('users').doc(currentUser.uid).update({
+                        [type]: compressedUrl
+                    }).then(() => {
+                        showToast(`Pomyślnie zaktualizowano ${type === 'avatar' ? 'awatar' : 'tło'}.`, "success");
+                    });
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
 
         // --- PANEL ZARZĄDZANIA (ROLE) ---
         function loadAdminUsers() {
@@ -1658,12 +1815,20 @@
             let desc = document.getElementById('sketch-desc').value.trim();
             let date = document.getElementById('sketch-date').value || 'Brak daty';
 
+            // Zbieranie nowych danych z radio-boxow
+            let visibility = document.querySelector('input[name="photo-visibility"]:checked').value;
+            let device = document.querySelector('input[name="photo-device"]:checked').value;
+
             if (!series || !number) { showToast('Wprowadź typ oraz numer pojazdu!', 'warn'); return; }
 
             const finalLat = selectedPhotoLatLng ? selectedPhotoLatLng.lat : 52.2289;
             const finalLng = selectedPhotoLatLng ? selectedPhotoLatLng.lng : 21.0022;
 
-            let newPhoto = { series, number, carrier, painting, date, url: uploadedImageDataUrl || 'https://via.placeholder.com/400x250/151518/ff9e00?text=Tabor', desc, lat: finalLat, lng: finalLng };
+            let newPhoto = { 
+                series, number, carrier, painting, date, url: uploadedImageDataUrl || 'https://via.placeholder.com/400x250/151518/ff9e00?text=Tabor', 
+                desc, lat: finalLat, lng: finalLng,
+                visibility: visibility, device: device
+            };
 
             userData.photos.push(newPhoto);
             saveUserDataToStorage();
@@ -1682,6 +1847,8 @@
             let container = document.getElementById('user-photos-list');
             if (userData.photos.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak wpisów w bazie.</span>`; updateTaborStats(); return; }
             container.innerHTML = '';
+            
+            // Wyswietla wszystkie, wlasciciel ma podglad co zrobil
             userData.photos.forEach((p, idx) => {
                 let card = document.createElement('div'); card.className = 'photo-card';
                 card.innerHTML = `
@@ -1689,7 +1856,7 @@
                         <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color);">
                         <div><strong style="color:var(--accent-yellow); font-size:14px;">${p.series} ${p.number}</strong> <span style="color:var(--accent-cyan);">[${p.carrier || 'Brak'}]</span>
                         <span style="color:var(--text-muted);">• ${p.painting || 'Standardowe'}</span><br>
-                        <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date}</span></div></div>
+                        <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${p.device || 'Aparat'}</span></div></div>
                     <button class="btn-danger" onclick="removePhoto(${idx})">Usuń</button>`;
                 container.appendChild(card);
             });
@@ -1796,13 +1963,14 @@
             
             targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl', { numeric: true }));
 
+            // Wyswietlanie wewnatrz wlasnego ilostanu - pokazuje wszystko + status
             targetPhotos.forEach(p => {
                 let div = document.createElement('div'); div.className = 'photo-card'; div.style.marginBottom = "0";
                 div.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:100px; height:70px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color);">
                         <div><strong style="color:var(--accent-yellow); font-size:15px;">${p.series} ${p.number}</strong><br>
-                        <span style="color:var(--accent-cyan); font-size:11px;">[${p.carrier || 'Brak'}]</span> • <span style="color:var(--text-muted); font-size:11px;">${p.painting || 'Standardowe'}</span></div></div>`;
+                        <span style="color:var(--accent-cyan); font-size:11px;">[${p.carrier || 'Brak'}]</span> • <span style="color:var(--text-muted); font-size:11px;">${p.painting || 'Standardowe'} • ${p.device || 'Aparat'} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Zatajone</span>' : 'Publiczne'}</span></div></div>`;
                 photosCont.appendChild(div);
             });
         }
@@ -1943,30 +2111,10 @@
                 item.style.justifyContent = 'space-between'; 
                 item.style.alignItems = 'center';
 
-                let actionBtn = isFriend 
-                    ? '<span style="color:var(--green-traveled)">[Znajomy]</span>' 
-                    : `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
-                
-                item.innerHTML = `<span><strong>${u.username}</strong></span> ${actionBtn}`;
+                // Nowy podgląd otwiera się z wyszukiwarki zamiast dodawania
+                item.innerHTML = `<span><strong>${u.username}</strong></span> <button class="btn-cyan" onclick="openProfile('${docSnap.id}')">Zobacz Profil</button>`;
                 resBox.appendChild(item);
             });
-        }
-
-        async function sendFriendRequest(targetUid, targetName) {
-            try {
-                await db.collection('users').doc(targetUid).update({
-                    pendingRequests: firebase.firestore.FieldValue.arrayUnion({
-                        uid: currentUser.uid, 
-                        username: currentUser.username, 
-                        avatar: currentUser.avatar, 
-                        code: currentUser.friendCode
-                    })
-                });
-                showToast(`Wysłano zaproszenie do ${targetName}!`, 'success');
-                document.getElementById('friend-search-results').style.display = 'none';
-            } catch(e) { 
-                showToast('Błąd wysyłania: ' + e.message, 'error'); 
-            }
         }
 
         function checkPendingRequests(reqs) {
@@ -2037,11 +2185,11 @@
             fContainer.innerHTML = '';
             userData.friends.forEach((fr) => {
                 let card = document.createElement('div'); card.className = 'friend-card'; card.style.cursor = 'pointer';
-                card.onclick = () => fetchAndOpenFriend(fr.uid);
+                card.onclick = () => openProfile(fr.uid);
                 card.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px;">
                         <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%;">
-                        <div><strong style="color:var(--accent-cyan);">${fr.username}</strong><br><span style="font-size:10px; color:var(--text-muted);">Kliknij by otworzyć mapę</span></div>
+                        <div><strong style="color:var(--accent-cyan);">${fr.username}</strong><br><span style="font-size:10px; color:var(--text-muted);">Kliknij by otworzyć Profil</span></div>
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <span style="color:var(--accent-cyan)">&raquo;</span>
@@ -2051,52 +2199,11 @@
             });
         }
 
-        async function fetchAndOpenFriend(uid) {
-            try {
-                const doc = await db.collection('users').doc(uid).get();
-                if(doc.exists) {
-                    const fData = doc.data().userData || {};
-                    document.getElementById('modal-friend-name').innerText = "// " + doc.data().username;
-                    document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
-                    document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
-                    document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
-                    document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
-                    
-                    document.getElementById('friend-modal').style.display = 'flex';
-                    
-                    if (!friendMapInitialized) {
-                        friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
-                        configurePolandMapBase(friendMap);
-                        friendDynamicLayer = L.layerGroup().addTo(friendMap);
-                        friendMapInitialized = true;
-                    }
-                    setTimeout(() => { 
-                        friendMap.invalidateSize(); 
-                        renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
-                    }, 200);
-                }
-            } catch(e) {
-                showToast("Błąd pobierania danych znajomego", "error");
-            }
-        }
-
         function closeFriendModal() { document.getElementById('friend-modal').style.display = 'none'; }
 
-        // --- PROFIL & JSON ---
-        function saveProfileChanges() {
-            const newAvatar = document.getElementById('profile-edit-avatar').value.trim();
-            currentUser.avatar = newAvatar || currentUser.avatar;
-
-            db.collection('users').doc(currentUser.uid).update({
-                avatar: currentUser.avatar
-            }).then(() => {
-                document.getElementById('nav-user-avatar').src = currentUser.avatar;
-                showToast("Zapisano zmiany profilu w chmurze!", "success");
-            });
-        }
-
+        // --- PROFIL (Ustawienia stare, tylko dla JSON) ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.0", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
