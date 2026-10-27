@@ -491,22 +491,17 @@
                         <div class="form-group">
                             <label>Typ lokomotywy / EZT:</label>
                             <select id="sketch-series" onchange="toggleCustomSeriesInput(this)">
-                                <optgroup label="Lokomotywy Elektryczne">
-                                    <option value="Dragon">Dragon</option><option value="EP07">EP07</option><option value="EP08">EP08</option>
+                                
+                                    <option value="15D">15D</option><option value="31WE">31WE</option><option value="45WE">45WE</option>
+                                    <option value="6Dg">6Dg</option><option value="BR232">BR232</option><option value="Dragon">Dragon</option>
+                                    <option value="ED161">ED161</option><option value="ED250">ED250</option><option value="Elf">Elf</option>
+                                    <option value="EN57">EN57</option><option value="EP07">EP07</option><option value="EP08">EP08</option>
                                     <option value="EP09">EP09</option><option value="ET22">ET22</option><option value="ET41">ET41</option>
                                     <option value="EU07">EU07</option><option value="EU160">EU160</option><option value="EU200">EU200</option>
-                                    <option value="Traxx">Traxx</option><option value="Vectron">Vectron</option>
-                                </optgroup>
-                                <optgroup label="Lokomotywy Spalinowe">
-                                    <option value="15D">15D</option><option value="6Dg">6Dg</option><option value="BR232">BR232</option>
-                                    <option value="SM42">SM42</option><option value="ST43">ST43</option><option value="ST44">ST44</option>
-                                    <option value="SU160">SU160</option><option value="SU42">SU42</option>
-                                </optgroup>
-                                <optgroup label="EZT / Zespoły">
-                                    <option value="31WE">31WE</option><option value="45WE">45WE</option><option value="ED161">ED161</option>
-                                    <option value="ED250">ED250</option><option value="Elf">Elf</option><option value="EN57">EN57</option>
-                                    <option value="Flirt">Flirt</option><option value="Impuls">Impuls</option>
-                                </optgroup>
+                                    <option value="Flirt">Flirt</option><option value="Impuls">Impuls</option><option value="SM42">SM42</option>
+                                    <option value="ST43">ST43</option><option value="ST44">ST44</option><option value="SU160">SU160</option>
+                                    <option value="SU42">SU42</option><option value="Traxx">Traxx</option><option value="Vectron">Vectron</option>
+        
                                 <option value="CUSTOM">[ Wpisz własny typ... ]</option>
                             </select>
                         </div>
@@ -661,6 +656,7 @@
                     <img src="" id="profile-banner-img" class="profile-banner" style="display:none; cursor:zoom-in;" onclick="zoomImage(this.src)">
                     <div id="profile-banner-placeholder" class="profile-banner" style="background:#0d0d0f; display:flex; justify-content:center; align-items:center; color:var(--text-muted); font-family:'Share Tech Mono'; font-size:12px;">Brak zdjęcia w tle</div>
                     <button id="btn-edit-banner" class="edit-btn banner-edit" style="display:none;" onclick="document.getElementById('banner-upload').click()">✏️</button>
+                    <button id="btn-remove-banner" class="edit-btn banner-edit" style="display:none; top: 15px; right: 55px; background: #ff4d4d; color: white;" onclick="removeProfileImage('banner')">🗑️</button>
                     <input type="file" id="banner-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'banner')">
                     
                     <div class="profile-join-date" id="profile-join-date">Dołączył: ...</div>
@@ -669,6 +665,7 @@
                     <div class="profile-avatar-container">
                         <img src="https://via.placeholder.com/150/ff9e00/000000?text=SK" id="profile-avatar-img" class="profile-avatar" onclick="zoomImage(this.src)">
                         <button id="btn-edit-avatar" class="edit-btn avatar-edit" style="display:none;" onclick="document.getElementById('avatar-upload').click()">✏️</button>
+                        <button id="btn-remove-avatar" class="edit-btn avatar-edit" style="display:none; bottom: 5px; right: -35px; background: #ff4d4d; color: white;" onclick="removeProfileImage('avatar')">🗑️</button>
                         <input type="file" id="avatar-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'avatar')">
                     </div>
                     <div class="profile-details">
@@ -1163,16 +1160,26 @@
 
                     const sl = document.getElementById('sketch-series');
                     if(sl && cloudSeries.length > 0) {
-                        let og = document.getElementById('cloud-series-optgroup');
-                        if(!og) {
-                            og = document.createElement('optgroup');
-                            og.id = 'cloud-series-optgroup';
-                            og.label = 'Dodane z Chmury';
-                            sl.insertBefore(og, sl.querySelector('option[value="CUSTOM"]'));
-                        }
-                        og.innerHTML = '';
-                        let sortedSeries = [...cloudSeries].sort((a,b) => a.localeCompare(b, 'pl'));
-                        sortedSeries.forEach(s => og.innerHTML += `<option value="${s}">${s}</option>`);
+                        // Znajdź lub utwórz wspólną grupę dla wszystkich pojazdów jeśli chcesz, 
+                        // lub po prostu dodaj nowe serie jako opcje przed opcją "CUSTOM".
+                        // Aby uniknąć duplikatów i grup, wstawimy je bezpośrednio lub do grupy 'EZT / Zespoły'
+                        // dla uproszczenia (ale z posortowaniem razem z resztą byłoby idealnie).
+                        // O wiele lepsze podejście: dodać wszystkie w jedno miejsce. 
+                        // Modyfikujemy to tak, by dodać po prostu opcje.
+                        
+                        let customOption = sl.querySelector('option[value="CUSTOM"]');
+                        
+                        // Zbieramy istniejące
+                        let existingVals = Array.from(sl.options).map(o => o.value);
+                        
+                        cloudSeries.forEach(s => {
+                            if (!existingVals.includes(s)) {
+                                let opt = document.createElement('option');
+                                opt.value = s;
+                                opt.textContent = s;
+                                sl.insertBefore(opt, customOption);
+                            }
+                        });
                     }
                 } else {
                     const dl = document.getElementById('sketch-carrier-list');
@@ -1537,20 +1544,26 @@
                 }
 
                 const btnEditAvatar = document.getElementById('btn-edit-avatar');
+                const btnRemoveAvatar = document.getElementById('btn-remove-avatar');
                 const btnEditBanner = document.getElementById('btn-edit-banner');
+                const btnRemoveBanner = document.getElementById('btn-remove-banner');
                 const btnFriend = document.getElementById('btn-profile-friend');
                 const btnMap = document.getElementById('btn-profile-map');
                 const btnBackup = document.getElementById('btn-profile-backup');
 
                 if (isMe) {
                     btnEditAvatar.style.display = 'flex';
+                    btnRemoveAvatar.style.display = 'flex';
                     btnEditBanner.style.display = 'flex';
+                    btnRemoveBanner.style.display = 'flex';
                     btnBackup.style.display = 'block';
                     btnFriend.style.display = 'none';
                     btnMap.style.display = 'none';
                 } else {
                     btnEditAvatar.style.display = 'none';
+                    btnRemoveAvatar.style.display = 'none';
                     btnEditBanner.style.display = 'none';
+                    btnRemoveBanner.style.display = 'none';
                     btnBackup.style.display = 'none';
                     btnMap.style.display = 'block';
                     
@@ -1603,7 +1616,9 @@
             const targetUid = currentlyViewedProfile.uid;
             
             if(userData.friends.some(f => f.uid === targetUid)) {
-                removeFriend(targetUid, currentlyViewedProfile.username).then(() => openProfile(targetUid));
+                if(confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
+                    removeFriend(targetUid, currentlyViewedProfile.username).then(() => openProfile(targetUid));
+                }
             } else {
                 sendFriendRequest(targetUid, currentlyViewedProfile.username);
             }
@@ -1634,6 +1649,30 @@
             }, 200);
         }
 
+        
+        function removeProfileImage(type) {
+            if (!confirm(`Czy na pewno chcesz usunąć ${type === 'avatar' ? 'zdjęcie profilowe' : 'zdjęcie w tle'}?`)) return;
+
+            let updateData = {};
+            if (type === 'avatar') {
+                updateData.avatar = "https://via.placeholder.com/150/ff9e00/000000?text=SK";
+                currentUser.avatar = updateData.avatar;
+                document.getElementById('nav-user-avatar').src = updateData.avatar;
+                document.getElementById('profile-avatar-img').src = updateData.avatar;
+            } else {
+                updateData.banner = "";
+                currentUser.banner = updateData.banner;
+                document.getElementById('profile-banner-img').style.display = 'none';
+                document.getElementById('profile-banner-placeholder').style.display = 'flex';
+            }
+
+            db.collection('users').doc(currentUser.uid).update(updateData).then(() => {
+                showToast(`Pomyślnie usunięto ${type === 'avatar' ? 'awatar' : 'tło'}.`, "success");
+            }).catch(e => {
+                showToast("Błąd podczas usuwania zdjęcia: " + e.message, "error");
+            });
+        }
+    
         function handleProfileImageUpload(event, type) {
             let file = event.target.files[0];
             if (!file) return;
@@ -1683,12 +1722,17 @@
         }
 
         // --- PANEL ZARZĄDZANIA (ROLE) ---
+        let adminUsersUnsubscribe = null;
         function loadAdminUsers() {
             const list = document.getElementById('admin-users-list');
             if(!list) return;
             list.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Pobieranie kont...</span>';
 
-            db.collection('users').get().then(snapshot => {
+            if (adminUsersUnsubscribe) {
+                adminUsersUnsubscribe();
+            }
+
+            adminUsersUnsubscribe = db.collection('users').onSnapshot(snapshot => {
                 list.innerHTML = '';
                 snapshot.forEach(docSnap => {
                     const u = docSnap.data();
@@ -1699,7 +1743,10 @@
                     row.className = 'admin-user-row';
                     row.innerHTML = `
                         <div>
-                            <strong style="color:var(--accent-yellow); font-size:13px;">${u.username || 'Brak nicku'}</strong> 
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
+                                <img src="${u.avatar || 'https://via.placeholder.com/150/ff9e00/000000?text=SK'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border: 1px solid var(--border-color);">
+                                <strong style="color:var(--accent-yellow); font-size:13px;">${u.username || 'Brak nicku'}</strong>
+                            </div> 
                             <span style="color:var(--text-muted); font-size:11px;">(${u.email})</span><br>
                             <span style="color:var(--accent-cyan); font-size:10px;">Kod: ${u.friendCode || '-'}</span>
                         </div>
@@ -1715,7 +1762,7 @@
                     `;
                     list.appendChild(row);
                 });
-            }).catch(e => {
+            }, e => {
                 list.innerHTML = `<span style="color:#ff4d4d; font-size:12px;">Brak uprawnień lub błąd odczytu bazy.</span>`;
             });
         }
@@ -2152,7 +2199,7 @@
                     actionBtn = `<button class="btn-small" onclick="sendFriendRequest('${docSnap.id}', '${u.username}')">Zaproś</button>`;
                 }
                 
-                item.innerHTML = `<span><strong>${u.username}</strong></span> ${actionBtn}`;
+                item.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><img src="${u.avatar || 'https://via.placeholder.com/150/ff9e00/000000?text=SK'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;"><span><strong>${u.username}</strong></span></div> ${actionBtn}`;
                 resBox.appendChild(item);
             });
         }
@@ -2297,7 +2344,7 @@
                 card.className = 'friend-card'; 
                 
                 card.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${fr.uid}')"> <!-- POPRAWIONO FUNKCJĘ TUTAJ -->
+                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${fr.uid}')">
                         <img src="${fr.avatar}" style="width:34px; height:34px; border-radius:50%; border: 1px solid var(--accent-cyan);">
                         <div>
                             <strong style="color:var(--accent-cyan);">${fr.username}</strong><br>
@@ -2311,13 +2358,16 @@
         }
 
         async function removeFriend(friendUid, friendName) {
+            // Potwierdzenie przed usunięciem (zabezpieczenie)
             if(!confirm(`Czy na pewno chcesz usunąć gracza ${friendName} ze znajomych?`)) return;
 
             try {
+                // 1. Usuń u siebie
                 userData.friends = userData.friends.filter(f => f.uid !== friendUid);
                 saveUserDataToStorage();
                 renderFriendsUI();
 
+                // 2. Usuń siebie u znajomego (dwustronne usuwanie)
                 const friendRef = db.collection('users').doc(friendUid);
                 const friendDoc = await friendRef.get();
                 if(friendDoc.exists) {
@@ -2332,6 +2382,35 @@
             } catch(e) {
                 showToast("Błąd usuwania znajomego", "error");
                 console.error(e);
+            }
+        }
+
+        async function fetchAndOpenFriend(uid) {
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if(doc.exists) {
+                    const fData = doc.data().userData || {};
+                    document.getElementById('modal-friend-name').innerText = "// PROFIL: " + doc.data().username;
+                    document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
+                    document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
+                    document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
+                    document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
+                    
+                    document.getElementById('friend-modal').style.display = 'flex';
+                    
+                    if (!friendMapInitialized) {
+                        friendMap = L.map('friend-map', { center: [52.0693, 19.4803], zoom: 6, minZoom: 6, maxBounds: [[48.7, 13.8], [55.1, 24.5]], maxBoundsViscosity: 1.0 });
+                        configurePolandMapBase(friendMap);
+                        friendDynamicLayer = L.layerGroup().addTo(friendMap);
+                        friendMapInitialized = true;
+                    }
+                    setTimeout(() => { 
+                        friendMap.invalidateSize(); 
+                        renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
+                    }, 200);
+                }
+            } catch(e) {
+                showToast("Błąd pobierania danych znajomego", "error");
             }
         }
 
