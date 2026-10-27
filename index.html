@@ -50,7 +50,7 @@
             height: 70px;
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 2000; /* Z-INDEX POPRAWIONY: chroni przed nachodzeniem mapy */
         }
 
         .nav-logo {
@@ -84,44 +84,17 @@
             text-shadow: 0 0 8px var(--accent-cyan), 0 0 16px var(--accent-blue);
             letter-spacing: 4px;
         }
-        .logo-title {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 18px;
-            color: #fff4e6;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
+        .logo-title { font-family: 'Share Tech Mono', monospace; font-size: 18px; color: #fff4e6; text-transform: uppercase; font-weight: bold; }
         .logo-title span.slash { color: var(--accent-cyan); }
-        .version-badge {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 10px;
-            background: rgba(255, 158, 0, 0.12);
-            color: var(--accent-cyan);
-            border: 1px solid var(--accent-cyan);
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 8px;
-        }
+        .version-badge { font-family: 'Share Tech Mono', monospace; font-size: 10px; background: rgba(255, 158, 0, 0.12); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
 
         .nav-menu { display: none; align-items: center; gap: 8px; margin-left: auto; margin-right: 15px; }
         .nav-item {
-            position: relative;
-            text-decoration: none;
-            color: var(--accent-yellow);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 11px;
-            text-align: center;
-            padding: 6px 10px;
-            border-radius: 4px;
-            border: 1px solid var(--accent-yellow);
-            background-color: rgba(255, 183, 3, 0.1);
-            text-transform: uppercase;
-            cursor: pointer;
-            line-height: 1.2;
-            transition: 0.2s;
+            position: relative; text-decoration: none; color: var(--accent-yellow); font-family: 'Share Tech Mono', monospace;
+            font-size: 11px; text-align: center; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--accent-yellow);
+            background-color: rgba(255, 183, 3, 0.1); text-transform: uppercase; cursor: pointer; line-height: 1.2; transition: 0.2s;
         }
         .nav-item.active { background-color: var(--accent-yellow); color: #000; font-weight: bold; }
-
         .nav-item-admin { color: var(--role-admin); border-color: var(--role-admin); background-color: rgba(255, 42, 42, 0.12); display: none; }
         .nav-item-admin.active { background-color: var(--role-admin); color: #fff; }
 
@@ -149,7 +122,7 @@
         .profile-dropdown {
             position: absolute; right: 0; top: 40px; background: var(--panel-bg);
             border: 2px solid var(--accent-blue); border-radius: 6px; width: 260px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1100; overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 2100; overflow: hidden;
         }
         .user-profile-wrapper:hover .profile-dropdown { display: flex; }
         .dropdown-header { padding: 12px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
@@ -158,11 +131,7 @@
         .dropdown-item.danger { color: #ff4d4d; }
         .dropdown-item.danger:hover { background: rgba(255, 77, 77, 0.15); }
 
-        .friend-code-display {
-            font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-main);
-            background: rgba(255, 158, 0, 0.1); padding: 4px 8px; border-radius: 4px;
-            border: 1px solid var(--accent-cyan); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold;
-        }
+        .friend-code-display { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-main); background: rgba(255, 158, 0, 0.1); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--accent-cyan); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; }
         .copy-icon { cursor: pointer; font-size: 14px; transition: 0.2s; }
         .copy-icon:hover { color: var(--accent-yellow); transform: scale(1.1); }
 
@@ -230,6 +199,18 @@
         .sketch-preview-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
         .sketch-upload-icon { font-size: 32px; color: var(--accent-yellow); margin-bottom: 10px; }
 
+        /* CUSTOM CHECKBOXES FOR RADIO BUTTONS */
+        .custom-radio-group { display: flex; gap: 15px; font-size:12px; font-family:'Share Tech Mono'; margin-top:5px; flex-wrap:wrap; }
+        .custom-radio-label { display: flex; align-items: center; cursor: pointer; gap: 8px; color: #fff; }
+        .custom-radio-label input { display: none; }
+        .custom-radio-box {
+            width: 16px; height: 16px; border: 1px solid var(--border-color); border-radius: 3px;
+            display: flex; justify-content: center; align-items: center; background: var(--input-bg); transition: 0.2s;
+        }
+        .custom-radio-label:hover .custom-radio-box { border-color: var(--accent-cyan); }
+        .custom-radio-label input:checked + .custom-radio-box { background: var(--accent-cyan); border-color: var(--accent-cyan); }
+        .custom-radio-label input:checked + .custom-radio-box::after { content: '✔'; color: #000; font-size: 11px; font-weight: bold; }
+
         /* PANELE I GRID */
         .update-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .update-grid { grid-template-columns: 1fr; } }
@@ -266,28 +247,37 @@
         /* ADMIN PANEL CARDS */
         .admin-user-row { background: #0d0d0f; border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
 
-        /* MODAL */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
         .modal-content { background: var(--panel-bg); border: 2px solid var(--accent-cyan); border-radius: 8px; width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 15px; }
-        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ff4d4d; font-size: 24px; cursor: pointer; font-weight: bold; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ff4d4d; font-size: 24px; cursor: pointer; font-weight: bold; z-index: 10; }
         
+        /* IMAGE ZOOM MODAL OVERRIDE */
+        #image-zoom-modal .modal-content { background: transparent; border: none; box-shadow: none; align-items: center; max-width: 90vw; padding:0; overflow: visible; }
+        #zoomed-image-view { max-width: 100%; max-height: 85vh; border-radius: 6px; border: 2px solid var(--accent-cyan); object-fit: contain; }
+        #image-zoom-modal .modal-close { top: -40px; right: 0; color: #fff; font-size: 32px; }
+
         /* NOWY PROFIL SPOTTERA */
         .profile-header-block { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 20px; position: relative; overflow: hidden; }
         .profile-banner-container { width: 100%; height: 240px; position: relative; background: #0d0d0f; border-bottom: 1px solid var(--border-color); }
         .profile-banner { width: 100%; height: 100%; object-fit: cover; }
         .profile-join-date { position: absolute; bottom: 15px; right: 20px; background: rgba(0,0,0,0.7); padding: 6px 10px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #fff; border: 1px solid var(--border-color); z-index: 10; }
         .profile-info-row { display: flex; padding: 15px 20px; position: relative; height: 90px; }
-        .profile-avatar-container { position: absolute; top: -75px; left: 30px; width: 140px; height: 140px; border-radius: 50%; border: 4px solid var(--panel-bg); background: #121214; }
-        .profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        
+        /* Zmieniony Avatar w panelu profilu */
+        .profile-avatar-container { position: absolute; top: -85px; left: 50px; width: 170px; height: 170px; border-radius: 50%; border: 5px solid var(--panel-bg); background: #121214; }
+        .profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; cursor: pointer; }
+        
         .edit-btn { position: absolute; background: var(--accent-cyan); color: #000; border: 2px solid var(--panel-bg); border-radius: 50%; width: 34px; height: 34px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 20; transition: 0.2s; font-size:14px; }
         .edit-btn:hover { background: var(--accent-yellow); transform: scale(1.1); }
         .edit-btn.banner-edit { top: 15px; right: 15px; }
         .edit-btn.avatar-edit { bottom: 5px; right: 5px; }
-        .profile-details { margin-left: 180px; display: flex; flex-direction: column; gap: 8px; }
+        .profile-details { margin-left: 240px; display: flex; flex-direction: column; gap: 8px; }
         .profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .profile-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
-        .gallery-item { background: #0d0d0f; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; }
-        .gallery-item img { width: 100%; height: 190px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
+        .gallery-item { background: #0d0d0f; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
+        .gallery-item:hover { border-color: var(--accent-cyan); }
+        .gallery-item img { width: 100%; height: 190px; object-fit: cover; border-bottom: 1px solid var(--border-color); cursor: zoom-in; }
         .gallery-item-info { padding: 12px; font-family: 'Share Tech Mono', monospace; font-size: 13px; display: flex; flex-direction: column; gap: 5px; }
 
         /* WŁASNY UKRYTY FILE UPLOAD */
@@ -319,7 +309,8 @@
         </div>
 
         <div class="user-profile-wrapper" id="user-profile-wrapper">
-            <button class="user-profile-btn">
+            <!-- Skrót do profilu -->
+            <button class="user-profile-btn" onclick="if(currentUser) openProfile(currentUser.uid);">
                 <div style="position: relative;">
                     <img src="https://via.placeholder.com/38/ff9e00/000000?text=SK" alt="Avatar" class="user-avatar" id="nav-user-avatar">
                     <span class="notif-badge-on-tile" id="global-admin-badge" style="top:-4px; right:-4px; z-index:5;">0</span>
@@ -343,10 +334,10 @@
                 <button class="dropdown-item" onclick="switchView('changelog')">&#128221; Dziennik zmian</button>
                 
                 <button class="dropdown-item" id="btn-admin-feedback" style="display:none; color:var(--role-admin); justify-content: space-between;" onclick="openAdminFeedbackModal()">
-                    <span>&#128227; Odczytaj Zgłoszenia (Admin)</span>
+                    <span>&#128227; Odczytaj Zgłoszenia</span>
                     <span id="admin-feedback-badge" style="background:#ff4d4d; color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; display:none; font-weight:bold;">0</span>
                 </button>
-                <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Beta)</button>
+                <button class="dropdown-item" id="btn-tester-feedback" style="display:none; color:var(--role-tester);" onclick="openFeedbackModal()">&#9993; Zgłoś Błąd (Wsparcie)</button>
                 
                 <button class="dropdown-item danger" onclick="handleLogout()">&#9211; Wyloguj się</button>
             </div>
@@ -413,6 +404,7 @@
                 </div>
             </div>
 
+            <!-- ILOSTAN TABORU -->
             <div class="ilostan-table-container">
                 <h3>// Zarejestrowany Tabor</h3>
                 <div id="drilldown-categories" style="overflow-x:auto;">
@@ -455,7 +447,7 @@
                     </div>
                     <div class="form-group">
                         <label>Wyszukaj linię PKP PLK:</label>
-                        <div class="row-flex"><input type="text" id="ride-search-input" placeholder="np. LK1, LK4, Warszawa..." style="flex:1;" oninput="searchLinesForStation()"><button class="btn-small" onclick="searchLinesForStation()">Pokaż linie</button></div>
+                        <div class="row-flex"><input type="text" id="ride-search-input" placeholder="np. LK1, LK4..." style="flex:1;" oninput="searchLinesForStation()"><button class="btn-small" onclick="searchLinesForStation()">Pokaż linie</button></div>
                     </div>
                     <div id="line-search-results" class="results-list" style="display:none;"></div>
                     <div id="segment-selector-box" style="display:none; background: #0d0d0f; padding: 12px; border-radius: 4px; border: 1px solid var(--border-color);" class="form-group">
@@ -533,7 +525,18 @@
                             <input type="text" id="sketch-carrier-select" list="sketch-carrier-list" placeholder="np. PKP Intercity, wpisz by wyszukać...">
                             <datalist id="sketch-carrier-list"></datalist>
                         </div>
-                        <div class="form-group"><label>Malowanie:</label><input type="text" id="sketch-painting" placeholder="np. Fabryczne, Historyczne"></div>
+                        
+                        <!-- MALOWANIE Z UKRYTYM POLEM -->
+                        <div class="form-group">
+                            <label>Malowanie:</label>
+                            <select id="sketch-painting-select" onchange="togglePaintingInput(this)">
+                                <option value="Standardowe">Standardowe</option>
+                                <option value="Historyczne">Historyczne</option>
+                                <option value="Okleina">Okleina (Reklama)</option>
+                                <option value="Inne">Inne...</option>
+                            </select>
+                            <input type="text" id="sketch-painting-custom" style="display:none; margin-top:5px;" placeholder="Wpisz nazwę okleiny/malowania...">
+                        </div>
                     </div>
 
                     <div class="form-group"><label>Opis / Uwagi:</label><textarea id="sketch-desc" rows="2" placeholder="np. Skład IC..."></textarea></div>
@@ -546,20 +549,36 @@
                         </div>
                     </div>
                     
+                    <!-- NOWE, KWADRATOWE CHECKBOXY DLA RADIO (Styl Custom) -->
                     <div style="display:flex; flex-direction:column; gap:12px; padding:10px; background:rgba(255, 158, 0, 0.05); border:1px solid var(--accent-orange); border-radius:4px;">
                         <div class="form-group" style="margin:0;">
                             <label style="color:var(--accent-cyan); font-weight:bold;">Widoczność zdjęcia:</label>
-                            <div style="display:flex; gap: 15px; font-size:12px; font-family:'Share Tech Mono'; margin-top:5px; flex-wrap:wrap;">
-                                <label><input type="radio" name="photo-visibility" value="public" checked> Publiczne (W profilu i w Twoim Ilostanie)</label>
-                                <label><input type="radio" name="photo-visibility" value="private"> Niepubliczne (Tylko w Twoim Ilostanie)</label>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label">
+                                    <input type="radio" name="photo-visibility" value="public" checked>
+                                    <div class="custom-radio-box"></div> Publiczne (Profil i Ilostan)
+                                </label>
+                                <label class="custom-radio-label">
+                                    <input type="radio" name="photo-visibility" value="private">
+                                    <div class="custom-radio-box"></div> Niepubliczne (Tylko Ilostan)
+                                </label>
                             </div>
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label style="color:var(--accent-cyan); font-weight:bold;">Zdjęcie pochodzi z:</label>
-                            <div style="display:flex; gap: 15px; font-size:12px; font-family:'Share Tech Mono'; margin-top:5px; flex-wrap:wrap;">
-                                <label><input type="radio" name="photo-device" value="Aparat" checked> Aparatu</label>
-                                <label><input type="radio" name="photo-device" value="Telefon"> Telefonu</label>
-                                <label><input type="radio" name="photo-device" value="Z filmu"> Kadr z filmu</label>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label">
+                                    <input type="radio" name="photo-device" value="Aparat" checked>
+                                    <div class="custom-radio-box"></div> Aparatu
+                                </label>
+                                <label class="custom-radio-label">
+                                    <input type="radio" name="photo-device" value="Telefon">
+                                    <div class="custom-radio-box"></div> Telefonu
+                                </label>
+                                <label class="custom-radio-label">
+                                    <input type="radio" name="photo-device" value="Z filmu">
+                                    <div class="custom-radio-box"></div> Kadr z filmu
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -640,7 +659,7 @@
         <section id="view-profil-spottera-section" style="display:none; padding:0; overflow:hidden;">
             <div class="profile-header-block">
                 <div class="profile-banner-container">
-                    <img src="" id="profile-banner-img" class="profile-banner" style="display:none;">
+                    <img src="" id="profile-banner-img" class="profile-banner" style="display:none; cursor:zoom-in;" onclick="zoomImage(this.src)">
                     <div id="profile-banner-placeholder" class="profile-banner" style="background:#0d0d0f; display:flex; justify-content:center; align-items:center; color:var(--text-muted); font-family:'Share Tech Mono'; font-size:12px;">Brak zdjęcia w tle</div>
                     <button id="btn-edit-banner" class="edit-btn banner-edit" style="display:none;" onclick="document.getElementById('banner-upload').click()">✏️</button>
                     <input type="file" id="banner-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'banner')">
@@ -649,7 +668,7 @@
                 </div>
                 <div class="profile-info-row">
                     <div class="profile-avatar-container">
-                        <img src="https://via.placeholder.com/150/ff9e00/000000?text=SK" id="profile-avatar-img" class="profile-avatar">
+                        <img src="https://via.placeholder.com/150/ff9e00/000000?text=SK" id="profile-avatar-img" class="profile-avatar" onclick="zoomImage(this.src)">
                         <button id="btn-edit-avatar" class="edit-btn avatar-edit" style="display:none;" onclick="document.getElementById('avatar-upload').click()">✏️</button>
                         <input type="file" id="avatar-upload" accept="image/*" class="hidden-upload" onchange="handleProfileImageUpload(event, 'avatar')">
                     </div>
@@ -781,6 +800,14 @@
         </div>
     </div>
 
+    <!-- NOWY MODAL: POWIĘKSZANIE ZDJĘĆ -->
+    <div class="modal-overlay" id="image-zoom-modal" onclick="closeZoomModal()">
+        <div class="modal-content" style="max-width: 90vw; padding:0; background:transparent; border:none; display:flex; justify-content:center; align-items:center;">
+            <button class="modal-close" style="top: -40px; right: 0; color:#fff; font-size: 32px;" onclick="closeZoomModal()">&times;</button>
+            <img id="zoomed-image-view" src="">
+        </div>
+    </div>
+
     <script>
         // --- KONFIGURACJA FIREBASE ---
         const firebaseConfig = {
@@ -879,25 +906,20 @@
                 date: "Dzisiaj",
                 added: [
                     "Kompletnie nowy wygląd profilu gracza z bannerem i galerią",
-                    "Możliwość zatajania wybranych zdjęć z profilu publicznego (widoczne tylko dla właściciela w Ilostanie)",
-                    "Oznaczanie urządzenia przy robieniu zdjęcia (Aparat / Telefon / Kadr z filmu)",
-                    "Moderatorzy mogą teraz raportować błędy w systemie (Panel Wsparcia)",
-                    "Przyciski dodawania znajomych prosto z nowego wyglądu Profilu",
-                    "Poprawiono pomniejsze błędy z nawigacją JSON"
+                    "Kliknięcie profilówki w menu od razu przenosi do własnego profilu",
+                    "Możliwość zatajania wybranych zdjęć z profilu publicznego (widoczne tylko w Ilostanie)",
+                    "Możliwość wyboru przy robieniu zdjęcia (Aparat / Telefon / Kadr z filmu) i własnej okleiny",
+                    "Naprawiono błąd nakładania się przycisków +/- z mapy na górne menu"
                 ]
             },
             {
                 version: "Alpha 1.0.0",
-                title: "Globalna Moderacja, Unikalność i Reorganizacja z Systemu Alpha",
+                title: "Globalna Moderacja, Unikalność i Reorganizacja",
                 date: "26.10.2026",
                 added: [
                     "Wyszukiwarka i duża pre-definiowana baza przewoźników z UTK",
                     "Blokada duplikatów przy dodawaniu globalnych danych",
-                    "Złożony mechanizm sortujący tabele (alfabetyczno-cyfrowy pod polski tabor)",
-                    "Blokada tworzenia kont z takim samym nickiem",
-                    "Całkowicie przepisany system znajomych (akceptacja/odrzucanie i usuwanie)",
-                    "Zarządzanie globalnymi listami z poziomu panelu Mod/Admin",
-                    "Zawieszenia/Bany w czasie rzeczywistym"
+                    "Złożony mechanizm sortujący tabele (alfabetyczno-cyfrowy pod polski tabor)"
                 ]
             }
         ];
@@ -1090,7 +1112,7 @@
                 badge.classList.add(role === 'admin' ? 'role-admin' : 'role-moderator');
                 badge.innerText = role.toUpperCase();
                 adminNavBtn.style.display = 'block';
-                testerBtn.style.display = 'block'; // Mody moga uzywac Zgloszen
+                testerBtn.style.display = 'block'; 
                 document.getElementById('admin-panel-title').innerText = role === 'admin' ? "// Panel Administratora" : "// Panel Moderatora";
                 
                 if(role === 'admin') {
@@ -1275,6 +1297,16 @@
                     showToast("Zgłoszenie zostało usunięte.", "success");
                 } catch (e) { showToast("Błąd przy usuwaniu: " + e.message, "error"); }
             }
+        }
+
+        // --- POWIĘKSZANIE ZDJĘĆ ---
+        function zoomImage(url) {
+            if(!url) return;
+            document.getElementById('zoomed-image-view').src = url;
+            document.getElementById('image-zoom-modal').style.display = 'flex';
+        }
+        function closeZoomModal() {
+            document.getElementById('image-zoom-modal').style.display = 'none';
         }
 
         function openAppInfoModal() { document.getElementById('app-info-modal').style.display = 'flex'; }
@@ -1527,6 +1559,7 @@
                         btnFriend.innerText = "Twój znajomy (Usuń)";
                         btnFriend.style.background = "#4a4a5a";
                         btnFriend.style.color = "#fff";
+                        btnFriend.style.border = "none";
                     } else {
                         btnFriend.innerText = "Dodaj znajomego";
                         btnFriend.style.background = "var(--accent-yellow)";
@@ -1542,11 +1575,11 @@
                 if (publicPhotos.length === 0) {
                     gallery.innerHTML = '<span style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Użytkownik nie udostępnił jeszcze żadnych publicznych zdjęć.</span>';
                 } else {
-                    publicPhotos.sort((a,b) => new Date(b.date) - new Date(a.date)); // najnowsze
+                    publicPhotos.sort((a,b) => new Date(b.date) - new Date(a.date));
                     publicPhotos.forEach(p => {
                         gallery.innerHTML += `
                             <div class="gallery-item">
-                                <img src="${p.url}">
+                                <img src="${p.url}" onclick="zoomImage(this.src)">
                                 <div class="gallery-item-info">
                                     <strong style="color:var(--accent-yellow); font-size:15px;">${p.series} ${p.number}</strong>
                                     <span style="color:var(--accent-cyan); font-size:11px;">${p.carrier || 'Brak przewoźnika'}</span>
@@ -1565,22 +1598,19 @@
             }
         }
 
-        // Akcja Przycisku w Profilu (Dodaj/Usuń Znajomego)
         function handleProfileFriendAction() {
             if(!currentlyViewedProfile) return;
             const targetUid = currentlyViewedProfile.uid;
             
-            // Jesli juz jestesmy znajomymi -> usuwanie
             if(userData.friends.some(f => f.uid === targetUid)) {
                 if(confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
                     userData.friends = userData.friends.filter(f => f.uid !== targetUid);
                     saveUserDataToStorage();
                     renderFriendsUI();
                     showToast("Usunięto ze znajomych.", "warn");
-                    openProfile(targetUid); // Odśwież UI
+                    openProfile(targetUid);
                 }
             } else {
-                // Jesli nie, to wysyłamy zaproszenie
                 db.collection('users').doc(targetUid).update({
                     pendingRequests: firebase.firestore.FieldValue.arrayUnion({
                         uid: currentUser.uid, 
@@ -1596,7 +1626,6 @@
             }
         }
 
-        // Otwieranie Mapy z poziomu Profilu
         function openProfileMap() {
             if(!currentlyViewedProfile) return;
             
@@ -1622,7 +1651,6 @@
             }, 200);
         }
 
-        // Wspólna funkcja wgrywania avataru / bannera
         function handleProfileImageUpload(event, type) {
             let file = event.target.files[0];
             if (!file) return;
@@ -1649,7 +1677,6 @@
                     ctx.drawImage(img, 0, 0, width, height);
                     let compressedUrl = canvas.toDataURL('image/jpeg', 0.6);
                     
-                    // Update global UI and currentUser
                     if (type === 'avatar') {
                         currentUser.avatar = compressedUrl;
                         document.getElementById('nav-user-avatar').src = compressedUrl;
@@ -1661,7 +1688,6 @@
                         document.getElementById('profile-banner-placeholder').style.display = 'none';
                     }
 
-                    // Save to DB
                     db.collection('users').doc(currentUser.uid).update({
                         [type]: compressedUrl
                     }).then(() => {
@@ -1672,7 +1698,6 @@
             };
             reader.readAsDataURL(file);
         }
-
 
         // --- PANEL ZARZĄDZANIA (ROLE) ---
         function loadAdminUsers() {
@@ -1806,16 +1831,31 @@
             document.getElementById('custom-series-group').style.display = selectEl.value === 'CUSTOM' ? 'flex' : 'none';
         }
 
+        function togglePaintingInput(selectEl) {
+            const customInput = document.getElementById('sketch-painting-custom');
+            if(selectEl.value === 'Okleina' || selectEl.value === 'Inne') {
+                customInput.style.display = 'block';
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+
         function addLocoPhotoFromSketch() {
             let selectSeries = document.getElementById('sketch-series').value;
             let series = selectSeries === 'CUSTOM' ? document.getElementById('sketch-custom-series').value.trim() : selectSeries;
             let number = document.getElementById('sketch-number').value.trim();
             let carrier = document.getElementById('sketch-carrier-select').value.trim() || 'Brak';
-            let painting = document.getElementById('sketch-painting').value.trim() || 'Standardowe';
+            
+            let basePainting = document.getElementById('sketch-painting-select').value;
+            let painting = basePainting;
+            if(basePainting === 'Okleina' || basePainting === 'Inne') {
+                let customP = document.getElementById('sketch-painting-custom').value.trim();
+                painting = customP ? `${basePainting}: ${customP}` : basePainting;
+            }
+            
             let desc = document.getElementById('sketch-desc').value.trim();
             let date = document.getElementById('sketch-date').value || 'Brak daty';
 
-            // Zbieranie nowych danych z radio-boxow
             let visibility = document.querySelector('input[name="photo-visibility"]:checked').value;
             let device = document.querySelector('input[name="photo-device"]:checked').value;
 
@@ -1835,7 +1875,7 @@
             updatePhotosUI();
 
             document.getElementById('sketch-number').value = '';
-            document.getElementById('sketch-painting').value = '';
+            document.getElementById('sketch-painting-custom').value = '';
             document.getElementById('sketch-desc').value = '';
             uploadedImageDataUrl = '';
             document.getElementById('sketch-preview-img').style.display = 'none';
@@ -1848,12 +1888,11 @@
             if (userData.photos.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak wpisów w bazie.</span>`; updateTaborStats(); return; }
             container.innerHTML = '';
             
-            // Wyswietla wszystkie, wlasciciel ma podglad co zrobil
             userData.photos.forEach((p, idx) => {
                 let card = document.createElement('div'); card.className = 'photo-card';
                 card.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
-                        <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color);">
+                        <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
                         <div><strong style="color:var(--accent-yellow); font-size:14px;">${p.series} ${p.number}</strong> <span style="color:var(--accent-cyan);">[${p.carrier || 'Brak'}]</span>
                         <span style="color:var(--text-muted);">• ${p.painting || 'Standardowe'}</span><br>
                         <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${p.device || 'Aparat'}</span></div></div>
@@ -1963,12 +2002,11 @@
             
             targetPhotos.sort((a,b) => a.number.localeCompare(b.number, 'pl', { numeric: true }));
 
-            // Wyswietlanie wewnatrz wlasnego ilostanu - pokazuje wszystko + status
             targetPhotos.forEach(p => {
                 let div = document.createElement('div'); div.className = 'photo-card'; div.style.marginBottom = "0";
                 div.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
-                        <img src="${p.url}" style="width:100px; height:70px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color);">
+                        <img src="${p.url}" style="width:100px; height:70px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
                         <div><strong style="color:var(--accent-yellow); font-size:15px;">${p.series} ${p.number}</strong><br>
                         <span style="color:var(--accent-cyan); font-size:11px;">[${p.carrier || 'Brak'}]</span> • <span style="color:var(--text-muted); font-size:11px;">${p.painting || 'Standardowe'} • ${p.device || 'Aparat'} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Zatajone</span>' : 'Publiczne'}</span></div></div>`;
                 photosCont.appendChild(div);
@@ -2111,7 +2149,6 @@
                 item.style.justifyContent = 'space-between'; 
                 item.style.alignItems = 'center';
 
-                // Nowy podgląd otwiera się z wyszukiwarki zamiast dodawania
                 item.innerHTML = `<span><strong>${u.username}</strong></span> <button class="btn-cyan" onclick="openProfile('${docSnap.id}')">Zobacz Profil</button>`;
                 resBox.appendChild(item);
             });
@@ -2168,7 +2205,6 @@
             }
         }
 
-        // --- USUWANIE ZNAJOMYCH ---
         function removeFriend(uid, event) {
             event.stopPropagation();
             if (confirm("Czy na pewno chcesz usunąć tę osobę ze znajomych?")) {
@@ -2201,7 +2237,7 @@
 
         function closeFriendModal() { document.getElementById('friend-modal').style.display = 'none'; }
 
-        // --- PROFIL (Ustawienia stare, tylko dla JSON) ---
+        // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
             const payload = { version: "Alpha 1.0.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
