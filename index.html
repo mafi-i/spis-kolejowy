@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.2</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.3</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -247,6 +247,13 @@
         /* ADMIN PANEL CARDS */
         .admin-user-row { background: #0d0d0f; border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
 
+        /* ADMIN TABLES */
+        .admin-data-list { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 4px; max-height: 200px; overflow-y: auto; padding: 8px; margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .admin-data-item { display: flex; justify-content: space-between; align-items: center; font-family: 'Share Tech Mono'; font-size: 12px; background: #1a1a20; padding: 6px 10px; border-radius: 3px; border-left: 2px solid var(--accent-cyan); }
+        
+        .admin-line-input { background: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 6px; font-family: 'Share Tech Mono'; width: 100%; border-radius: 3px; outline: none; }
+        .admin-line-input:focus { border-color: var(--accent-orange); }
+
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
         .modal-content { background: var(--panel-bg); border: 2px solid var(--accent-cyan); border-radius: 8px; width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 15px; }
@@ -292,7 +299,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.2</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.3</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -697,10 +704,24 @@
 
         <!-- ZAKŁADKA 7: PANEL ZARZĄDZANIA (ADMIN & MODERATOR) -->
         <section id="view-admin-section" style="display:none; border-color: var(--role-admin);">
-            <h2 style="color: var(--role-admin);" id="admin-panel-title">// Panel Zarządzania Systemem</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="color: var(--role-admin); margin:0;" id="admin-panel-title">// Panel Zarządzania Systemem</h2>
+                <div style="font-family:'Share Tech Mono'; font-size:11px; background:rgba(255, 77, 77, 0.1); padding:4px 8px; border:1px solid #ff4d4d; border-radius:4px; color:#ff4d4d;">
+                    Skaner treści AI: Wymaga funkcji backendowej (GCP Vision)
+                </div>
+            </div>
+            
             <div class="update-grid">
+                
+                <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
+                    <h3>Zarejestrowani Użytkownicy & Przydział Ról (Tylko Admin)</h3>
+                    <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
+                        <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
+                    </div>
+                </div>
+
                 <!-- BANY -->
-                <div class="update-box">
+                <div class="update-box" style="grid-column: 1 / -1;">
                     <h3>Banowanie Kont (UID / Nick)</h3>
                     <div class="form-group">
                         <label>Dokładny Nick użytkownika:</label>
@@ -717,32 +738,63 @@
                     </div>
                     <p style="font-size:10px; color:var(--text-muted);">Zbanowany gracz zostanie natychmiast wylogowany z systemu chmurowego.</p>
                 </div>
-                
-                <!-- DANE GLOBALNE -->
+
+                <!-- NOWE: ZARZĄDZANIE MODELAMI -->
                 <div class="update-box">
-                    <h3>Dodaj Globalne Dane (Przewoźnicy / Serie)</h3>
+                    <h3>1. Dodaj Modele Lokomotyw (Globalne)</h3>
                     <div class="form-group">
-                        <label>Typ danych do bazy:</label>
-                        <select id="mod-add-type" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px;">
-                            <option value="carriers">Nowy Przewoźnik</option>
-                            <option value="series">Nowa Seria Taboru</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Wartość:</label>
                         <div class="row-flex">
-                            <input type="text" id="mod-add-value" style="flex:1;" placeholder="np. Koleje Małopolskie">
-                            <button class="btn-small" onclick="addGlobalData()">Dodaj</button>
+                            <input type="text" id="mod-add-series-value" style="flex:1;" placeholder="np. EU07, ED250">
+                            <button class="btn-small" onclick="adminAddGlobalData('series')">Dodaj</button>
                         </div>
                     </div>
+                    <div class="admin-data-list" id="admin-series-list"></div>
                 </div>
 
-                <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
-                    <h3>Zarejestrowani Użytkownicy & Przydział Ról (Tylko Admin)</h3>
-                    <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 450px; overflow-y:auto;">
-                        <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
+                <!-- NOWE: ZARZĄDZANIE PRZEWOŹNIKAMI -->
+                <div class="update-box">
+                    <h3>2. Dodaj Przewoźników (Globalne)</h3>
+                    <div class="form-group">
+                        <div class="row-flex">
+                            <input type="text" id="mod-add-carrier-value" style="flex:1;" placeholder="np. Koleje Małopolskie">
+                            <button class="btn-small" onclick="adminAddGlobalData('carriers')">Dodaj</button>
+                        </div>
                     </div>
+                    <div class="admin-data-list" id="admin-carriers-list"></div>
                 </div>
+
+                <!-- NOWE: KREATOR LINII I STACJI -->
+                <div class="update-box" style="grid-column: 1 / -1;">
+                    <h3>3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
+                    <div class="form-group">
+                        <label>Oznaczenie Linii (np. LK139):</label>
+                        <input type="text" id="admin-line-code" placeholder="Wpisz LK..." style="max-width: 300px;">
+                    </div>
+                    
+                    <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:10px;">Stacje / Posterunki na linii (w kolejności z kilometrażem):</label>
+                    <div style="overflow-x:auto;">
+                        <table class="rail-table" id="admin-line-table" style="margin-top:5px; min-width: 600px;">
+                            <thead>
+                                <tr>
+                                    <th style="width:150px;">Typ Posterunku</th>
+                                    <th>Nazwa Posterunku / Stacji</th>
+                                    <th>Opis Słowny</th>
+                                    <th>Odgałęzienia (LK)</th>
+                                    <th style="width:60px;">Akcja</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-line-tbody">
+                                <!-- Dynamic rows go here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
+                        <button class="btn-success" onclick="adminSaveLine()">Zapisz Linię Kolejową w Chmurze</button>
+                    </div>
+                    <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
+                </div>
+
             </div>
         </section>
 
@@ -754,7 +806,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.2</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.3</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -920,15 +972,15 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.0.2",
-                title: "Optymalizacja List Pojazdów i Powiadomienia Live",
+                version: "Alpha 1.0.3",
+                title: "Wielka Aktualizacja Administracyjna i Społecznościowa",
                 date: "Dzisiaj",
                 added: [
-                    "Zmiana dodawania modeli - usunięto podział z chmury, 4 sztywne główne sekcje oraz własnoręczne wpisywanie wsparte podpowiedziami z Firebase",
-                    "Powiadomienia od znajomych na żywo gdy dodadzą nowy odcinek trasy lub nową fotografię (w zakładce społeczność)",
-                    "Kliknięcie profilu znajomego w liście wyświetli teraz pełny widok profilowy z jego własną galerią, zamiast mapy",
-                    "Funkcja natychmiastowego kasowania zawartości awatara oraz tła baneru (ikony kosza)",
-                    "Lista zarządzania automatycznie nasłuchuje wykreśleń usuniętych kont z głównego uwierzytelnienia"
+                    "Kreator Linii Kolejowych: Admin może budować własne relacje (stacje, podg) od zera a system sam dodaje je do chmury",
+                    "Zmieniono dodawanie taboru (uproszczono do 4 kategorii, pole wyboru zamieniono na inteligentne pole wpisywania)",
+                    "Wprowadzono panel usuwania (moderacji) zdjęć na publicznych profilach graczy",
+                    "Przebudowano Panel Administratora (osobne listy przewoźników i serii)",
+                    "Wdrożono natychmiastowe aktualizacje listy kont i powiadomień"
                 ]
             }
         ];
@@ -950,11 +1002,16 @@
 
         let cloudCarriers = [];
         let cloudSeries = [];
+        let cloudStations = [];
+        let cloudLines = [];
+
+        function getAllStations() { return [...mockStations, ...cloudStations]; }
+        function getAllLines() { return [...mockLines, ...cloudLines]; }
 
         // --- AUTH OBSŁUGA Z FIREBASE (UNIKALNOŚĆ NICKU - ALPHA) ---
         let userDocUnsubscribe = null;
         let adminFeedbackUnsubscribe = null;
-        let currentlyViewedProfile = null; // Zmienna uzywana przez profil
+        let currentlyViewedProfile = null; 
 
         function switchAuthTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1037,7 +1094,6 @@
             });
         }
 
-        // Listener stanu logowania na żywo z chmury + Blokada BAN
         auth.onAuthStateChanged((user) => {
             if (userDocUnsubscribe) { userDocUnsubscribe(); userDocUnsubscribe = null; }
             if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
@@ -1161,7 +1217,6 @@
             document.getElementById('nav-user-avatar').src = currentUser.avatar;
             document.getElementById('nav-friend-code').innerText = currentUser.friendCode;
 
-            // Rangi i role
             const badge = document.getElementById('user-role-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
             const testerBtn = document.getElementById('btn-tester-feedback');
@@ -1229,13 +1284,15 @@
                     }
 
                     const sl = document.getElementById('sketch-series-list');
-                    if(sl && cloudSeries.length > 0) {
+                    if(sl) {
                         sl.innerHTML = '';
                         let sortedSeries = [...cloudSeries].sort((a,b) => a.localeCompare(b, 'pl'));
                         sortedSeries.forEach(s => {
                             sl.innerHTML += `<option value="${s}"></option>`;
                         });
                     }
+                    
+                    renderAdminLists();
                 } else {
                     const dl = document.getElementById('sketch-carrier-list');
                     if(dl) {
@@ -1244,36 +1301,153 @@
                     }
                 }
             });
+
+            db.collection('globalData').doc('stations').onSnapshot(doc => {
+                if (doc.exists) cloudStations = doc.data().list || [];
+                populatePhotoStations();
+            });
+
+            db.collection('globalData').doc('lines').onSnapshot(doc => {
+                if (doc.exists) cloudLines = doc.data().list || [];
+            });
         }
 
-        async function addGlobalData() {
-            const type = document.getElementById('mod-add-type').value;
-            const val = document.getElementById('mod-add-value').value.trim();
+        function renderAdminLists() {
+            const seriesList = document.getElementById('admin-series-list');
+            const carriersList = document.getElementById('admin-carriers-list');
+            if(seriesList) {
+                seriesList.innerHTML = '';
+                [...cloudSeries].sort((a,b)=>a.localeCompare(b,'pl')).forEach(s => {
+                    seriesList.innerHTML += `<div class="admin-data-item"><span>${s}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('series', '${s}')">Usuń</button></div>`;
+                });
+            }
+            if(carriersList) {
+                carriersList.innerHTML = '';
+                [...cloudCarriers].sort((a,b)=>a.localeCompare(b,'pl')).forEach(c => {
+                    carriersList.innerHTML += `<div class="admin-data-item"><span>${c}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${c}')">Usuń</button></div>`;
+                });
+            }
+        }
+
+        async function adminAddGlobalData(type) {
+            const inputId = type === 'series' ? 'mod-add-series-value' : 'mod-add-carrier-value';
+            const val = document.getElementById(inputId).value.trim();
             if(!val) return;
-            
-            if (type === 'carriers') {
-                let merged = [...new Set([...defaultCarriers, ...cloudCarriers])];
-                if (merged.map(c => c.toLowerCase()).includes(val.toLowerCase())) {
-                    showToast("Taki przewoźnik już istnieje w bazie!", "warn"); return;
-                }
-            } else if (type === 'series') {
-                let existingOptions = [];
-                const sl = document.getElementById('sketch-series-list');
-                if (sl) {
-                    existingOptions = Array.from(sl.options).map(o => o.value.toLowerCase());
-                }
-                if (existingOptions.includes(val.toLowerCase())) {
-                    showToast("Taka seria taboru już istnieje!", "warn"); return;
-                }
+
+            let existing = type === 'series' ? cloudSeries : cloudCarriers;
+            if(existing.map(e => e.toLowerCase()).includes(val.toLowerCase())) {
+                showToast("Taka wartość już istnieje!", "warn"); return;
             }
 
             try {
                 await db.collection('globalData').doc('lists').set({
                     [type]: firebase.firestore.FieldValue.arrayUnion(val)
                 }, { merge: true });
-                showToast("Dane globalne dodane pomyślnie!", "success");
-                document.getElementById('mod-add-value').value = '';
+                showToast("Dodano do bazy!", "success");
+                document.getElementById(inputId).value = '';
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
+        }
+
+        async function adminRemoveGlobalData(type, val) {
+            if(!confirm(`Na pewno usunąć "${val}" z bazy?`)) return;
+            try {
+                await db.collection('globalData').doc('lists').update({
+                    [type]: firebase.firestore.FieldValue.arrayRemove(val)
+                });
+                showToast("Usunięto.", "success");
+            } catch(e) { showToast("Błąd: " + e.message, "error"); }
+        }
+
+        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) ---
+        function adminAddLineRow() {
+            const tbody = document.getElementById('admin-line-tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <select class="admin-line-input">
+                        <option value="stacja">🔴 Stacja</option>
+                        <option value="podg">🔵 Posterunek Odg.</option>
+                        <option value="po">⚪ Przystanek</option>
+                        <option value="none">❌ Zlikwidowany</option>
+                    </select>
+                </td>
+                <td><input type="text" class="admin-line-input station-name-input" placeholder="Nazwa posterunku"></td>
+                <td><input type="text" class="admin-line-input" placeholder="np. stacja węzłowa"></td>
+                <td><input type="text" class="admin-line-input" placeholder="np. 142, 179"></td>
+                <td><button class="btn-danger" onclick="this.closest('tr').remove()">X</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        async function adminSaveLine() {
+            let code = document.getElementById('admin-line-code').value.trim();
+            if(!code) { showToast("Podaj oznaczenie linii (LK)!", "warn"); return; }
+            
+            let rows = document.querySelectorAll('#admin-line-tbody tr');
+            if(rows.length < 2) { showToast("Linia musi mieć przynajmniej 2 punkty!", "warn"); return; }
+
+            let newStationsToAdd = [];
+            let lineStationIds = [];
+            let allExistingSt = getAllStations();
+            let maxId = allExistingSt.length > 0 ? Math.max(...allExistingSt.map(s => s.id)) : 100;
+
+            rows.forEach((row, index) => {
+                let inputs = row.querySelectorAll('input');
+                let name = inputs[0].value.trim();
+                let desc = inputs[1].value.trim();
+                let branches = inputs[2].value.trim();
+                let type = row.querySelector('select').value;
+                
+                if(!name) name = `Punkt ${index}`;
+
+                // Sprawdzamy czy istnieje
+                let existing = allExistingSt.find(s => s.name.toLowerCase() === name.toLowerCase());
+                if (existing) {
+                    lineStationIds.push(existing.id);
+                } else {
+                    maxId++;
+                    let newSt = {
+                        id: maxId,
+                        code: name.substring(0, 3).toUpperCase(),
+                        name: name,
+                        lat: 52.0, // Default środek polski jeśli brak GPS
+                        lng: 19.0
+                    };
+                    newStationsToAdd.push(newSt);
+                    allExistingSt.push(newSt); // local cache
+                    lineStationIds.push(maxId);
+                }
+            });
+
+            try {
+                // 1. Dodaj nowe stacje do chmury
+                if (newStationsToAdd.length > 0) {
+                    await db.collection('globalData').doc('stations').set({
+                        list: firebase.firestore.FieldValue.arrayUnion(...newStationsToAdd)
+                    }, { merge: true });
+                }
+
+                // 2. Dodaj Linię Kolejową
+                let newLine = {
+                    code: code,
+                    name: `Relacja (Admin) - ${code}`,
+                    stations: lineStationIds
+                };
+
+                // Zastępowanie jeśli istnieje, lub dodanie
+                let updatedLines = cloudLines.filter(l => l.code !== code);
+                updatedLines.push(newLine);
+
+                await db.collection('globalData').doc('lines').set({
+                    list: updatedLines
+                }, { merge: true });
+
+                showToast(`Zapisano linię ${code} wraz z nowymi stacjami!`, "success");
+                document.getElementById('admin-line-code').value = '';
+                document.getElementById('admin-line-tbody').innerHTML = '';
+            } catch(e) {
+                showToast("Błąd zapisu linii: " + e.message, "error");
+            }
         }
 
         // --- ZABEZPIECZENIA I ADMINISTRACJA ---
@@ -1365,6 +1539,26 @@
             }
         }
 
+        // MODERACJA ZDJĘĆ
+        async function adminDeletePhoto(targetUid, photoUrl) {
+            if(!confirm("MODERACJA: Czy na pewno chcesz usunąć to zdjęcie tego użytkownika?")) return;
+            try {
+                const doc = await db.collection('users').doc(targetUid).get();
+                if(!doc.exists) return;
+                
+                let targetUserData = doc.data().userData;
+                targetUserData.photos = targetUserData.photos.filter(p => p.url !== photoUrl);
+                
+                await db.collection('users').doc(targetUid).update({ 'userData': targetUserData });
+                showToast("Usunięto zdjęcie w trybie moderatora.", "success");
+                
+                // Refresh the profile gallery
+                openProfile(targetUid);
+            } catch(e) {
+                showToast("Błąd usuwania zdjęcia: " + e.message, "error");
+            }
+        }
+
         // --- POWIĘKSZANIE ZDJĘĆ ---
         function zoomImage(url) {
             if(!url) return;
@@ -1379,7 +1573,10 @@
 
         // --- BROUTER ROUTING ---
         async function fetchPerfectRoute(startId, endId, lineCode) {
-            const line = mockLines.find(l => l.code === lineCode);
+            const allLines = getAllLines();
+            const allStations = getAllStations();
+
+            const line = allLines.find(l => l.code === lineCode);
             if (!line) return getFallbackCoords(startId, endId);
 
             const idxStart = line.stations.indexOf(startId);
@@ -1389,9 +1586,11 @@
             const step = idxStart < idxEnd ? 1 : -1;
             const pointsToVisit = [];
             for (let i = idxStart; i !== idxEnd + step; i += step) {
-                const sObj = mockStations.find(s => s.id === line.stations[i]);
-                if(sObj) pointsToVisit.push(`${sObj.lng},${sObj.lat}`);
+                const sObj = allStations.find(s => s.id === line.stations[i]);
+                if(sObj && sObj.lat && sObj.lng) pointsToVisit.push(`${sObj.lng},${sObj.lat}`);
             }
+
+            if(pointsToVisit.length < 2) return getFallbackCoords(startId, endId);
 
             const pointsParam = pointsToVisit.join('|');
             const url = `https://brouter.de/brouter?lonlats=${pointsParam}&profile=rail&alternativeidx=0&format=geojson`;
@@ -1413,8 +1612,9 @@
         }
 
         function getFallbackCoords(startId, endId) {
-            const stA = mockStations.find(s => s.id === startId);
-            const stB = mockStations.find(s => s.id === endId);
+            const allStations = getAllStations();
+            const stA = allStations.find(s => s.id === startId);
+            const stB = allStations.find(s => s.id === endId);
             if (stA && stB) return [[stA.lat, stA.lng], [stB.lat, stB.lng]];
             return [];
         }
@@ -1496,12 +1696,14 @@
         function renderMapDynamicElements(targetMap, layerGroup, dataObj) {
             if (!targetMap || !layerGroup) return;
             layerGroup.clearLayers();
+            
+            const allStations = getAllStations();
 
             if (dataObj.rides && dataObj.rides.length > 0) {
                 dataObj.rides.forEach(ride => {
                     if (ride.geoTrack && ride.geoTrack.length >= 2) {
-                        const sObj = mockStations.find(s => s.id == ride.startId);
-                        const eObj = mockStations.find(s => s.id == ride.endId);
+                        const sObj = allStations.find(s => s.id == ride.startId);
+                        const eObj = allStations.find(s => s.id == ride.endId);
                         L.polyline(ride.geoTrack, { color: '#00b32c', weight: 5, opacity: 1.0, lineCap: 'round', lineJoin: 'round' })
                         .bindPopup(`<b>[${ride.line}] ${sObj ? sObj.name : ''} &rarr; ${eObj ? eObj.name : ''}</b><br>Dystans: ${ride.distanceKm} km<br>Środek: ${ride.transport || 'Pociąg planowy'}<br>Data: ${ride.date || '-'}`)
                         .addTo(layerGroup);
@@ -1511,8 +1713,8 @@
 
             if (dataObj.visitedStations && dataObj.visitedStations.length > 0) {
                 dataObj.visitedStations.forEach(stItem => {
-                    const st = typeof stItem === 'object' ? stItem : mockStations.find(s => s.id == stItem);
-                    if (st) {
+                    const st = typeof stItem === 'object' ? stItem : allStations.find(s => s.id == stItem);
+                    if (st && st.lat && st.lng) {
                         L.circleMarker([st.lat, st.lng], { radius: 7, fillColor: '#1756e8', color: '#ffffff', weight: 2, fillOpacity: 1.0 })
                         .bindPopup(`<b>Odwiedzona stacja:</b><br>${st.name}`)
                         .addTo(layerGroup);
@@ -1639,7 +1841,7 @@
                     }
                 }
 
-                // Generowanie galerii - filtrowanie zdjec (Publiczne)
+                // Generowanie galerii
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
@@ -1649,6 +1851,12 @@
                 } else {
                     publicPhotos.sort((a,b) => new Date(b.date) - new Date(a.date));
                     publicPhotos.forEach(p => {
+                        
+                        let moderBtn = '';
+                        if(!isMe && (currentUser.role === 'admin' || currentUser.role === 'moderator')) {
+                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%;" onclick="adminDeletePhoto('${pData.uid}', '${p.url}')">🗑️ Usuń (Moderacja)</button>`;
+                        }
+                        
                         gallery.innerHTML += `
                             <div class="gallery-item">
                                 <img src="${p.url}" onclick="zoomImage(this.src)">
@@ -1658,6 +1866,7 @@
                                     <span style="color:var(--text-muted); font-size:11px;">Data: ${p.date || 'Brak'}</span>
                                     <span style="color:var(--text-muted); font-size:10px;">${p.device || 'Aparat'}</span>
                                     ${p.desc ? `<p style="margin-top:4px; font-size:11px; color:#fff;">${p.desc}</p>` : ''}
+                                    ${moderBtn}
                                 </div>
                             </div>
                         `;
@@ -1864,8 +2073,9 @@
         function updateMiniMapPin(selectElement) {
             let stId = selectElement.value;
             if(!stId) return;
-            let stObj = mockStations.find(s => s.id == stId);
-            if (stObj && miniMap) {
+            let allSt = getAllStations();
+            let stObj = allSt.find(s => s.id == stId);
+            if (stObj && stObj.lat && stObj.lng && miniMap) {
                 let newPos = [stObj.lat, stObj.lng];
                 miniMap.setView(newPos, 12);
                 if (miniMapMarker) {
@@ -2107,11 +2317,12 @@
         function searchLinesForStation() {
             let query = document.getElementById('ride-search-input').value.toLowerCase();
             let resBox = document.getElementById('line-search-results'); resBox.innerHTML = '';
-            let filtered = mockLines.filter(l => l.code.toLowerCase().includes(query) || l.name.toLowerCase().includes(query));
+            const allLines = getAllLines();
+            let filtered = allLines.filter(l => l.code.toLowerCase().includes(query) || (l.name && l.name.toLowerCase().includes(query)));
             if (filtered.length === 0) { resBox.style.display = 'none'; return; }
             resBox.style.display = 'flex';
             filtered.forEach(line => {
-                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong style="color:var(--accent-cyan);">${line.code}</strong>: ${line.name}</span>`;
+                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong style="color:var(--accent-cyan);">${line.code}</strong>: ${line.name || ''}</span>`;
                 item.onclick = () => { selectLineForSegment(line); resBox.style.display = 'none'; };
                 resBox.appendChild(item);
             });
@@ -2119,11 +2330,13 @@
 
         let activeSelectedLine = null;
         function selectLineForSegment(line) {
-            activeSelectedLine = line; document.getElementById('selected-line-title').innerText = `Linia: ${line.code} (${line.name})`;
+            activeSelectedLine = line; document.getElementById('selected-line-title').innerText = `Linia: ${line.code} (${line.name || ''})`;
             let startSelect = document.getElementById('select-start-station'); let endSelect = document.getElementById('select-end-station');
             startSelect.innerHTML = ''; endSelect.innerHTML = '';
+            
+            const allSt = getAllStations();
             line.stations.forEach(sId => {
-                let stObj = mockStations.find(s => s.id === sId);
+                let stObj = allSt.find(s => s.id === sId);
                 if (stObj) { startSelect.innerHTML += `<option value="${stObj.id}">${stObj.name}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${stObj.name}</option>`; }
             });
             if (line.stations.length > 1) endSelect.selectedIndex = line.stations.length - 1;
@@ -2159,8 +2372,10 @@
             refreshStatsAndRank();
             if (userData.rides.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak przejazdów.</span>`; return; }
             container.innerHTML = '';
+            
+            const allSt = getAllStations();
             userData.rides.forEach((r, idx) => {
-                let sObj = mockStations.find(s => s.id === r.startId); let eObj = mockStations.find(s => s.id === r.endId);
+                let sObj = allSt.find(s => s.id === r.startId); let eObj = allSt.find(s => s.id === r.endId);
                 let badge = document.createElement('div'); badge.className = 'ride-badge';
                 badge.innerHTML = `<span><strong>[${r.line}]</strong> ${sObj?.name} &rarr; ${eObj?.name} <span style="color:var(--accent-cyan);">(${r.distanceKm} km)</span></span> <button class="btn-danger" onclick="removeRide(${idx})">Usuń</button>`;
                 container.appendChild(badge);
@@ -2171,13 +2386,15 @@
         function searchStationsOnly() {
             let query = document.getElementById('station-search-input').value.toLowerCase();
             let resContainer = document.getElementById('station-search-results'); resContainer.innerHTML = '';
-            let filtered = mockStations.filter(s => s.name.toLowerCase().includes(query) || s.code.toLowerCase().includes(query));
+            
+            const allSt = getAllStations();
+            let filtered = allSt.filter(s => s.name.toLowerCase().includes(query) || (s.code && s.code.toLowerCase().includes(query)));
             if (filtered.length === 0) { resContainer.style.display = 'none'; return; }
             resContainer.style.display = 'flex';
             filtered.forEach(station => {
-                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong>[${station.code}] ${station.name}</strong></span>`;
+                let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong>[${station.code || 'Brak'}] ${station.name}</strong></span>`;
                 item.onclick = () => {
-                    if (!userData.visitedStations.some(s => s.id === station.id)) {
+                    if (!userData.visitedStations.some(s => typeof s === 'object' ? s.id === station.id : s === station.id)) {
                         userData.visitedStations.push(station); saveUserDataToStorage(); updateVisitedStationsUI(); showToast(`Dodano: ${station.name}`);
                     } else showToast('Stacja już znajduje się na liście.', 'warn');
                     resContainer.style.display = 'none';
@@ -2191,17 +2408,23 @@
             refreshStatsAndRank();
             if (userData.visitedStations.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak stacji.</span>`; return; }
             container.innerHTML = '';
+            
+            const allSt = getAllStations();
             userData.visitedStations.forEach((st, idx) => {
-                let badge = document.createElement('div'); badge.className = 'station-badge';
-                badge.innerHTML = `<span>${st.name}</span> <button class="btn-danger" onclick="removeStation(${idx})">Usuń</button>`;
-                container.appendChild(badge);
+                let sObj = typeof st === 'object' ? st : allSt.find(x => x.id === st);
+                if(sObj) {
+                    let badge = document.createElement('div'); badge.className = 'station-badge';
+                    badge.innerHTML = `<span>${sObj.name}</span> <button class="btn-danger" onclick="removeStation(${idx})">Usuń</button>`;
+                    container.appendChild(badge);
+                }
             });
         }
         function removeStation(index) { userData.visitedStations.splice(index, 1); saveUserDataToStorage(); updateVisitedStationsUI(); showToast('Usunięto stację.', 'warn'); }
 
         function refreshStatsAndRank() {
             const totalKm = calculateTotalKm(userData.rides);
-            document.getElementById('stat-stations').innerText = `${userData.visitedStations.length} / ${mockStations.length}`;
+            const allSt = getAllStations();
+            document.getElementById('stat-stations').innerText = `${userData.visitedStations.length} / ${allSt.length}`;
             document.getElementById('stat-rides').innerText = userData.rides.length;
             document.getElementById('stat-km').innerText = `${totalKm} km`;
         }
@@ -2210,7 +2433,7 @@
             let sel = document.getElementById('sketch-station-select');
             if (!sel) return;
             sel.innerHTML = '<option value="">[ Wybierz stację z listy ]</option>';
-            let sorted = [...mockStations].sort((a,b) => a.name.localeCompare(b.name));
+            let sorted = [...getAllStations()].sort((a,b) => a.name.localeCompare(b.name));
             sorted.forEach(st => { sel.innerHTML += `<option value="${st.id}">${st.name}</option>`; });
         }
 
@@ -2452,7 +2675,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.2", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.3", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
