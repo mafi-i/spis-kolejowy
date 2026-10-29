@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.8.1</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.0.9</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -254,6 +254,9 @@
         .admin-line-input { background: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 6px; font-family: 'Share Tech Mono'; width: 100%; border-radius: 3px; outline: none; }
         .admin-line-input:focus { border-color: var(--accent-orange); }
 
+        /* MAP TOOLTIPS */
+        .admin-map-tooltip { background: rgba(0,0,0,0.85); border: 1px solid var(--accent-cyan); color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 11px; padding: 2px 6px; border-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
         .modal-content { background: var(--panel-bg); border: 2px solid var(--accent-cyan); border-radius: 8px; width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 15px; }
@@ -299,7 +302,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.8.1</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.0.9</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -481,7 +484,7 @@
                     </div>
                 </div>
 
-                <!-- NOWE: Wyróżniona sekcja do usuwania własnych tras -->
+                <!-- Wyróżniona sekcja do usuwania własnych tras -->
                 <div class="update-box" style="grid-column: 1 / -1;">
                     <h3>Twoje Przejechane Odcinki (Zarządzanie)</h3>
                     <div id="user-rides-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
@@ -508,6 +511,12 @@
                             <label>Numer boczny:</label>
                             <input type="text" id="sketch-number" placeholder="np. 045...">
                         </div>
+                    </div>
+                    
+                    <!-- Podtypy Kaskadowe (jeśli model ma warianty) -->
+                    <div class="form-group" id="sketch-subtype-group" style="display:none;">
+                        <label>Podtyp / Wariant Modelu:</label>
+                        <select id="sketch-subtype"></select>
                     </div>
                     
                     <div class="form-group" id="custom-series-group" style="display:none; background: #1a1a20; padding:10px; border-radius:4px; border: 1px dashed var(--accent-orange);">
@@ -671,7 +680,7 @@
 
         <!-- ZAKŁADKA NOWY PROFIL SPOTTERA -->
         <section id="view-profil-spottera-section" style="display:none; padding:0; overflow:hidden;">
-            <div class="profile-header-block">
+            <div class="profile-header-block" id="profile-header-block">
                 <div class="profile-banner-container">
                     <img src="" id="profile-banner-img" class="profile-banner" style="display:none; cursor:zoom-in;" onclick="zoomImage(this.src)">
                     <div id="profile-banner-placeholder" class="profile-banner" style="background:#0d0d0f; display:flex; justify-content:center; align-items:center; color:var(--text-muted); font-family:'Share Tech Mono'; font-size:12px;">Brak zdjęcia w tle</div>
@@ -711,126 +720,156 @@
         </section>
 
         <!-- ZAKŁADKA 7: PANEL ZARZĄDZANIA (ADMIN & MODERATOR) -->
-        <section id="view-admin-section" style="display:none; border-color: var(--role-admin);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <section id="view-admin-section" style="display:none; border-color: var(--role-admin); padding:0; background:transparent; border:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--panel-bg); border: 1px solid var(--role-admin); padding:15px; border-radius:6px;">
                 <h2 style="color: var(--role-admin); margin:0;" id="admin-panel-title">// Panel Zarządzania Systemem</h2>
                 <div style="font-family:'Share Tech Mono'; font-size:11px; background:rgba(255, 77, 77, 0.1); padding:4px 8px; border:1px solid #ff4d4d; border-radius:4px; color:#ff4d4d;">
                     Skaner treści AI: Wymaga funkcji backendowej (GCP Vision)
                 </div>
             </div>
             
-            <div class="update-grid">
-
-                <!-- BANY -->
-                <div class="update-box" style="grid-column: 1 / -1;">
-                    <h3>Banowanie Kont (UID / Nick)</h3>
-                    <div class="form-group">
-                        <label>Dokładny Nick użytkownika:</label>
-                        <div class="row-flex">
-                            <input type="text" id="ban-username-input" style="flex:1;" placeholder="Wpisz nick spottera">
-                            <select id="ban-time-select" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px;">
-                                <option value="1">1 Godzina</option>
-                                <option value="24">24 Godziny</option>
-                                <option value="168">7 Dni</option>
-                                <option value="999999">Perm Ban</option>
+            <!-- BLOK 1: BAZA DANYCH -->
+            <div class="admin-db-section" style="background:var(--panel-bg); border: 1px solid var(--accent-cyan); padding: 20px; border-radius: 6px; margin-bottom: 25px;">
+                <h3 style="color:var(--accent-cyan); margin-bottom: 15px; font-family:'Share Tech Mono'; text-transform:uppercase; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+                    // Część 1: Rozbudowa Bazy Danych
+                </h3>
+                <div class="update-grid">
+                    <!-- ZARZĄDZANIE MODELAMI -->
+                    <div class="update-box">
+                        <h3 style="color:var(--accent-cyan);">1. Dodaj Modele Lokomotyw (Z podtypami)</h3>
+                        <div class="form-group">
+                            <label>Typ Pojazdu (Kategoria):</label>
+                            <select id="mod-add-series-cat" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px; margin-bottom:5px;">
+                                <option value="Lokomotywy elektryczne">Lokomotywy elektryczne</option>
+                                <option value="Lokomotywy spalinowe">Lokomotywy spalinowe</option>
+                                <option value="Elektryczne zespoły trakcyjne">Elektryczne Zespoły Trakcyjne (EZT)</option>
+                                <option value="Spalinowe zespoły trakcyjne i autobusy szynowe">Spalinowe Zespoły Trakcyjne (SZT)</option>
                             </select>
-                            <button class="btn-danger" onclick="executeBan()">ZBANUJ</button>
-                        </div>
-                    </div>
-                    <p style="font-size:10px; color:var(--text-muted);">Zbanowany gracz zostanie natychmiast wylogowany z systemu chmurowego.</p>
-                </div>
+                            
+                            <label>Rodzaj Zasilania (np. dla Elektryków):</label>
+                            <select id="mod-add-series-power" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px; margin-bottom:5px;">
+                                <option value="3kV DC">3kV DC (Polska)</option>
+                                <option value="25kV AC">25kV AC</option>
+                                <option value="Wielosystemowa">Wielosystemowa</option>
+                                <option value="Spalinowa">Trakcja Spalinowa</option>
+                                <option value="Hybrydowa">Hybrydowa (Bimodalna)</option>
+                                <option value="Parowa">Trakcja Parowa</option>
+                                <option value="Brak (np. wagony)">Brak sprecyzowanego</option>
+                            </select>
 
-                <!-- ZARZĄDZANIE MODELAMI -->
-                <div class="update-box">
-                    <h3>1. Dodaj Modele Lokomotyw (Globalne)</h3>
-                    <div class="form-group">
-                        <select id="mod-add-series-cat" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px; margin-bottom:5px;">
-                            <option value="Lokomotywy elektryczne">Lokomotywy elektryczne</option>
-                            <option value="Lokomotywy spalinowe">Lokomotywy spalinowe</option>
-                            <option value="Elektryczne zespoły trakcyjne">Elektryczne Zespoły Trakcyjne (EZT)</option>
-                            <option value="Spalinowe zespoły trakcyjne i autobusy szynowe">Spalinowe Zespoły Trakcyjne (SZT)</option>
-                        </select>
-                        <div class="row-flex">
-                            <input type="text" id="mod-add-series-value" style="flex:1;" placeholder="np. EU07, ED250">
-                            <button class="btn-small" onclick="adminAddSeries()">Dodaj</button>
+                            <label>Nazwa Serii / Modelu (np. Siemens Vectron):</label>
+                            <input type="text" id="mod-add-series-value" placeholder="Główna nazwa" style="margin-bottom:5px;">
+                            
+                            <label>Podtypy / Warianty (Opcjonalnie, np. 193, 393):</label>
+                            <input type="text" id="mod-add-series-subtypes" placeholder="Wpisz warianty oddzielając przecinkiem (,)" style="margin-bottom:10px;">
+                            
+                            <button class="btn-cyan" onclick="adminAddSeries()">Dodaj Model do Bazy</button>
                         </div>
+                        <div class="admin-data-list" id="admin-series-list"></div>
                     </div>
-                    <div class="admin-data-list" id="admin-series-list"></div>
-                </div>
 
-                <!-- ZARZĄDZANIE PRZEWOŹNIKAMI -->
-                <div class="update-box">
-                    <h3>2. Dodaj Przewoźników (Globalne)</h3>
-                    <div class="form-group">
-                        <div class="row-flex">
-                            <input type="text" id="mod-add-carrier-value" style="flex:1;" placeholder="np. Koleje Małopolskie">
-                            <button class="btn-small" onclick="adminAddGlobalData('carriers')">Dodaj</button>
+                    <!-- ZARZĄDZANIE PRZEWOŹNIKAMI -->
+                    <div class="update-box">
+                        <h3 style="color:var(--accent-cyan);">2. Dodaj Przewoźników</h3>
+                        <div class="form-group">
+                            <label>Nazwa przewoźnika:</label>
+                            <div class="row-flex">
+                                <input type="text" id="mod-add-carrier-value" style="flex:1;" placeholder="np. Koleje Małopolskie">
+                                <button class="btn-small" style="background:var(--accent-cyan);" onclick="adminAddGlobalData('carriers')">Dodaj</button>
+                            </div>
                         </div>
+                        <div class="admin-data-list" id="admin-carriers-list"></div>
                     </div>
-                    <div class="admin-data-list" id="admin-carriers-list"></div>
-                </div>
 
-                <!-- KREATOR LINII I STACJI -->
-                <div class="update-box" style="grid-column: 1 / -1;">
-                    <h3>3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
+                    <!-- KREATOR LINII I STACJI -->
+                    <div class="update-box" style="grid-column: 1 / -1; border-color:var(--accent-cyan);">
+                        <h3 style="color:var(--accent-cyan);">3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
+                        
+                        <div class="row-flex" style="margin-bottom: 10px;">
+                            <div class="form-group" style="flex:1;">
+                                <label>Oznaczenie Linii (np. LK139):</label>
+                                <input type="text" id="admin-line-code" placeholder="Wpisz LK...">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label>Stacja początkowa:</label>
+                                <input type="text" id="admin-line-start" placeholder="np. Warszawa Centralna">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label>Stacja końcowa:</label>
+                                <input type="text" id="admin-line-end" placeholder="np. Katowice">
+                            </div>
+                        </div>
+                        
+                        <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:10px;">Stacje / Posterunki na linii (w kolejności z kilometrażem):</label>
+                        <div style="overflow-x:auto;">
+                            <table class="rail-table" id="admin-line-table" style="margin-top:5px; min-width: 600px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:150px;">Typ Posterunku</th>
+                                        <th>Nazwa Posterunku / Stacji</th>
+                                        <th>Opis Słowny</th>
+                                        <th>Odgałęzienia (LK)</th>
+                                        <th style="width:75px;">Lokalizacja</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-line-tbody">
+                                    <!-- Dynamic rows go here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:15px;">Podgląd Mappy szlaku (Wybierz ikonę 📍 przy stacji i kliknij, by uaktualnić):</label>
+                        <div class="sketch-mini-map" id="admin-mini-map" style="height: 350px; margin-top:5px; border-color: var(--accent-cyan);"></div>
+
+                        <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; align-items:center;">
+                            <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
+                            <button class="btn-small" style="background:#ff9e00; padding:8px;" onclick="adminGenerateRoute()">[ Przelicz i Rysuj Trasę (BRouter) ]</button>
+                            <button class="btn-success" style="margin-left:auto;" onclick="adminSaveLine()">Zapisz / Aktualizuj w Chmurze</button>
+                            <button class="btn-danger" style="background:#4a4a5a;" onclick="adminClearLineForm()">Wyczyść Kreator</button>
+                        </div>
+                        <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
+                    </div>
                     
-                    <div class="row-flex" style="margin-bottom: 10px;">
-                        <div class="form-group" style="flex:1;">
-                            <label>Oznaczenie Linii (np. LK139):</label>
-                            <input type="text" id="admin-line-code" placeholder="Wpisz LK...">
-                        </div>
-                        <div class="form-group" style="flex:1;">
-                            <label>Stacja początkowa:</label>
-                            <input type="text" id="admin-line-start" placeholder="np. Warszawa Centralna">
-                        </div>
-                        <div class="form-group" style="flex:1;">
-                            <label>Stacja końcowa:</label>
-                            <input type="text" id="admin-line-end" placeholder="np. Katowice">
-                        </div>
+                    <!-- LISTA DODANYCH LINII -->
+                    <div class="update-box" style="grid-column: 1 / -1;">
+                        <h3 style="color:var(--accent-cyan);">Zarządzaj Dodanymi Liniami</h3>
+                        <div class="admin-data-list" id="admin-lines-list" style="max-height: 250px;"></div>
                     </div>
-                    
-                    <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:10px;">Stacje / Posterunki na linii (w kolejności z kilometrażem):</label>
-                    <div style="overflow-x:auto;">
-                        <table class="rail-table" id="admin-line-table" style="margin-top:5px; min-width: 600px;">
-                            <thead>
-                                <tr>
-                                    <th style="width:150px;">Typ Posterunku</th>
-                                    <th>Nazwa Posterunku / Stacji</th>
-                                    <th>Opis Słowny</th>
-                                    <th>Odgałęzienia (LK)</th>
-                                    <th style="width:75px;">Lokalizacja</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-line-tbody">
-                                <!-- Dynamic rows go here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:15px;">Wskazywanie na mapie (Zaznacz ikonę 📍 w rzędzie, a potem kliknij na mapę):</label>
-                    <div class="sketch-mini-map" id="admin-mini-map" style="height: 350px; margin-top:5px; border-color: var(--role-admin);"></div>
+                </div>
+            </div>
 
-                    <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;">
-                        <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
-                        <button class="btn-success" onclick="adminSaveLine()">Zapisz / Aktualizuj w Chmurze</button>
-                        <button class="btn-danger" style="background:#4a4a5a;" onclick="adminClearLineForm()">Wyczyść Kreator</button>
+            <!-- BLOK 2: UŻYTKOWNICY I BANY -->
+            <div class="admin-users-section" style="background:var(--panel-bg); border: 1px solid var(--role-admin); padding: 20px; border-radius: 6px;">
+                <h3 style="color:var(--role-admin); margin-bottom: 15px; font-family:'Share Tech Mono'; text-transform:uppercase; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+                    // Część 2: Użytkownicy i Bezpieczeństwo
+                </h3>
+                <div class="update-grid">
+                    <!-- BANY -->
+                    <div class="update-box" style="grid-column: 1 / -1; border-color:var(--role-admin);">
+                        <h3 style="color:var(--role-admin);">Banowanie Kont (Wymuś Wylogowanie)</h3>
+                        <div class="form-group">
+                            <label>Dokładny Nick użytkownika (Case-sensitive):</label>
+                            <div class="row-flex">
+                                <input type="text" id="ban-username-input" style="flex:1;" placeholder="Wpisz nick spottera">
+                                <select id="ban-time-select" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px;">
+                                    <option value="1">1 Godzina</option>
+                                    <option value="24">24 Godziny</option>
+                                    <option value="168">7 Dni</option>
+                                    <option value="999999">Perm Ban</option>
+                                </select>
+                                <button class="btn-danger" style="background:var(--role-admin); padding:10px 15px; font-size:12px; font-weight:bold;" onclick="executeBan()">NAŁÓŻ BAN</button>
+                            </div>
+                        </div>
+                        <p style="font-size:10px; color:var(--text-muted);">Zbanowany gracz zostanie natychmiast wylogowany z systemu chmurowego, a jego ponowne logowanie będzie zablokowane przez określony czas.</p>
                     </div>
-                    <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
-                </div>
-                
-                <!-- LISTA DODANYCH LINII -->
-                <div class="update-box" style="grid-column: 1 / -1;">
-                    <h3>Zarządzaj Dodanymi Liniami</h3>
-                    <div class="admin-data-list" id="admin-lines-list" style="max-height: 250px;"></div>
-                </div>
-                
-                <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
-                    <h3>Zarejestrowani Użytkownicy & Przydział Ról (Tylko Admin)</h3>
-                    <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 250px; overflow-y:auto;">
-                        <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
-                    </div>
-                </div>
 
+                    <div class="update-box" style="grid-column: 1 / -1;" id="admin-role-manager-container">
+                        <h3 style="color:var(--role-admin);">Zarejestrowani Użytkownicy (Role)</h3>
+                        <div id="admin-users-list" style="display:flex; flex-direction:column; gap:8px; max-height: 400px; overflow-y:auto; background:var(--input-bg); padding:10px; border-radius:4px; border:1px solid var(--border-color);">
+                            <span style="font-size:12px; color:var(--text-muted);">Pobieranie użytkowników z Firebase...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -842,7 +881,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.0.8.1</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.0.9</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -956,7 +995,8 @@
 
         // ADMIN MINIMAP
         let adminMiniMap = null;
-        let adminMiniMapMarker = null;
+        let adminStationsLayer = null; // nowa warstwa grupująca wszystkie piny kreatora
+        let adminLinePolyline = null;  // wygenerowana trasa na mapie
         let activeAdminRowIndex = -1;
         let adminRowCounter = 0;
 
@@ -1046,15 +1086,26 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.0.8.1",
-                title: "Optymalizacja List i Naprawa Wczytywania tras",
+                version: "Alpha 1.0.9",
+                title: "Podtypy Taboru, Narzędzia Moderacji i Mapy Linii",
                 date: "Dzisiaj",
                 added: [
-                    "Kompleksowe rozwiązanie problemu zawieszającego się przycisku 'Trasowanie...' dzięki asynchronicznym blokom try-finally",
-                    "Widok własnych przejazdów został lepiej wyeksponowany w nowym oknie ułatwiającym usuwanie błędnych wpisów",
-                    "Kreator map podczas edycji wczytuje i wyświetla absolutnie wszystkie stacje przypisane do danego szlaku (nawet te bez dodanych koordynatów)",
-                    "Wprowadzono logiczne sortowanie Modeli Taboru uwzględniające człony literowe, po których następuje sortowanie liczbowe",
-                    "Priorytet Admina: Linie zapisane ręcznie w kreatorze permanentnie nadpisują wbudowane, systemowe szablony tras (LK)"
+                    "Wprowadzono podtypy (warianty) lokomotyw (np. rozróżnienie rodziny Siemens Vectron) dostępne w formularzu dodawania taboru",
+                    "Do systemowych modeli przypisano rodzaj zasilania (DC, AC, Multi, Spalinowa, Hybrydowa, Parowa)",
+                    "Silnik mapowy Kreatora (Dla Admina): Ujawnia lokalizacje i etykiety tekstowe absolutnie wszystkich stacji na szlaku w czasie rzeczywistym",
+                    "Guzik wytyczania geometrycznej Linii PKP PLK za pośrednictwem BRoutera na żywo w kreatorze nowej linii",
+                    "Całkowicie zreorganizowano Panel Zarządzania, oddzielając bazy taborowe od kontroli użyszkodników",
+                    "Moderatorzy otrzymali nowe narzędzia prewencyjne – bezpośrednie usuwanie niecenzuralnych avatarów oraz teł użytkowników (wymuszenie default)"
+                ]
+            },
+            {
+                version: "Alpha 1.0.8.1",
+                title: "Optymalizacja List i Naprawa Wczytywania tras",
+                date: "Wcześniej",
+                added: [
+                    "Rozwiązanie problemu zawieszającego się przycisku 'Trasowanie...' dzięki blokom try-finally",
+                    "Własne przejazdy zostały lepiej wyeksponowane w nowym oknie ułatwiającym zarządzanie (usuwanie odcinków)",
+                    "Wprowadzono mieszane, logiczne sortowanie Modeli Taboru (najpierw litery, potem liczby, np. EU07 > EU160)"
                 ]
             }
         ];
@@ -1088,7 +1139,6 @@
 
         function getAllLines() { 
             let map = new Map();
-            // Priorytet nakładania: mockLines nałożone najpierw, potem nadpisane cloudLines. Kod to gwarantuje.
             mockLines.forEach(l => map.set(l.code, l));
             cloudLines.forEach(l => map.set(l.code, l)); 
             return Array.from(map.values());
@@ -1353,7 +1403,7 @@
             setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData); }, 300);
         }
 
-        // --- GLOBALNE DANE ---
+        // --- GLOBALNE DANE (Zasilanie i Podtypy) ---
         function loadGlobalData() {
             db.collection('globalData').doc('lists').onSnapshot(doc => {
                 if(doc.exists) {
@@ -1387,12 +1437,16 @@
                                 catSeries.sort((a,b) => {
                                     let na = typeof a === 'object' ? a.name : a;
                                     let nb = typeof b === 'object' ? b.name : b;
-                                    return sortPolishLocoSeries(na, nb); // Sortowanie literowo cyfrowe (np. EU07 > EU160)
+                                    return sortPolishLocoSeries(na, nb);
                                 }).forEach(s => {
                                     let name = typeof s === 'object' ? s.name : s;
                                     let safeName = escapeHTML(name);
                                     let safeCat = escapeHTML(cat);
-                                    sl.innerHTML += `<option value='{"name":"${safeName}", "cat":"${safeCat}"}'>${safeName}</option>`;
+                                    // Uciekanie podtypów do poprawnego JSON (Data Attribute)
+                                    let rawSubtypes = (typeof s === 'object' && s.subtypes) ? s.subtypes : [];
+                                    let safeSubtypesJSON = JSON.stringify(rawSubtypes).replace(/"/g, '&quot;');
+                                    
+                                    sl.innerHTML += `<option value='{"name":"${safeName}", "cat":"${safeCat}", "subtypes":${safeSubtypesJSON}}'>${safeName}</option>`;
                                 });
                             }
                         });
@@ -1437,10 +1491,17 @@
                 sortedSeries.forEach(s => {
                     let name = typeof s === 'object' ? s.name : s;
                     let cat = typeof s === 'object' ? s.category : 'Inne';
+                    let power = typeof s === 'object' ? (s.power || 'Brak danych') : 'Brak danych';
+                    let subs = (typeof s === 'object' && s.subtypes && s.subtypes.length > 0) ? s.subtypes.join(', ') : 'Brak wariantów';
                     let safeName = escapeHTML(name);
-                    seriesList.innerHTML += `<div class="admin-data-item">
-                        <div><strong>${safeName}</strong> <span style="color:var(--text-muted); font-size:10px;">(${escapeHTML(cat)})</span></div>
-                        <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveSeries('${safeName}')">Usuń</button>
+                    
+                    seriesList.innerHTML += `<div class="admin-data-item" style="flex-direction:column; align-items:flex-start;">
+                        <div style="display:flex; justify-content:space-between; width:100%;">
+                            <strong>${safeName}</strong>
+                            <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveSeries('${safeName}')">Usuń</button>
+                        </div>
+                        <div style="color:var(--text-muted); font-size:10px;">Kategoria: ${escapeHTML(cat)} | Zasilanie: <span style="color:var(--accent-cyan);">${escapeHTML(power)}</span></div>
+                        <div style="color:#a259ff; font-size:10px; margin-top:2px;">Podtypy: ${escapeHTML(subs)}</div>
                     </div>`;
                 });
             }
@@ -1469,28 +1530,58 @@
 
         function toggleCustomSeriesInput(selectEl) {
             const customGroup = document.getElementById('custom-series-group');
+            const subtypeGroup = document.getElementById('sketch-subtype-group');
+            const subtypeSelect = document.getElementById('sketch-subtype');
+            subtypeSelect.innerHTML = '';
+            
             if(selectEl.value === 'CUSTOM') {
                 customGroup.style.display = 'block';
+                subtypeGroup.style.display = 'none';
+            } else if (selectEl.value !== '') {
+                customGroup.style.display = 'none';
+                try {
+                    let parsed = JSON.parse(selectEl.value);
+                    if (parsed.subtypes && parsed.subtypes.length > 0) {
+                        subtypeGroup.style.display = 'block';
+                        parsed.subtypes.forEach(st => {
+                            subtypeSelect.innerHTML += `<option value="${escapeHTML(st)}">${escapeHTML(st)}</option>`;
+                        });
+                    } else {
+                        subtypeGroup.style.display = 'none';
+                    }
+                } catch(e) {
+                    subtypeGroup.style.display = 'none';
+                }
             } else {
                 customGroup.style.display = 'none';
+                subtypeGroup.style.display = 'none';
             }
         }
 
         async function adminAddSeries() {
             const cat = document.getElementById('mod-add-series-cat').value;
+            const power = document.getElementById('mod-add-series-power').value;
             const val = document.getElementById('mod-add-series-value').value.trim();
+            const rawSubtypes = document.getElementById('mod-add-series-subtypes').value.trim();
             if(!val) return;
 
             if(cloudSeries.some(s => (typeof s === 'object' ? s.name : s).toLowerCase() === val.toLowerCase())) {
                 showToast("Taka seria taboru już istnieje!", "warn"); return;
             }
+            
+            let subtypesArr = [];
+            if(rawSubtypes) {
+                subtypesArr = rawSubtypes.split(',').map(item => item.trim()).filter(item => item.length > 0);
+            }
 
             try {
+                let newSeriesObj = { name: val, category: cat, power: power, subtypes: subtypesArr };
                 await db.collection('globalData').doc('lists').set({
-                    series: firebase.firestore.FieldValue.arrayUnion({ name: val, category: cat })
+                    series: firebase.firestore.FieldValue.arrayUnion(newSeriesObj)
                 }, { merge: true });
                 showToast("Dodano model do bazy!", "success");
                 document.getElementById('mod-add-series-value').value = '';
+                document.getElementById('mod-add-series-subtypes').value = '';
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
@@ -1534,7 +1625,7 @@
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
-        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN) ---
+        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN MAPA + BROUTER) ---
         function adminAddLineRow(existingLat = '', existingLng = '', stName = '', type = 'stacja', desc = '', branches = '') {
             const tbody = document.getElementById('admin-line-tbody');
             const rowId = adminRowCounter++;
@@ -1559,7 +1650,7 @@
                 <td><input type="text" class="admin-line-input branches-input" placeholder="np. 142, 179"></td>
                 <td style="display:flex; gap:5px; border:none; justify-content:center;">
                     <button class="btn-location" style="padding:6px; border:1px solid var(--border-color); border-radius:3px; cursor:pointer; ${locBtnStyle}" onclick="selectAdminRowLoc(${rowId}, this)" title="Ustaw na mapie">📍</button>
-                    <button class="btn-danger" style="padding:6px 10px;" onclick="this.closest('tr').remove()">X</button>
+                    <button class="btn-danger" style="padding:6px 10px;" onclick="removeAdminRow(this)">X</button>
                 </td>
             `;
             
@@ -1569,6 +1660,13 @@
             row.querySelector('.branches-input').value = branches;
             
             tbody.appendChild(row);
+            redrawAdminMap(); // Rysuj nowo wczytane dane na mapie
+        }
+
+        function removeAdminRow(btn) {
+            btn.closest('tr').remove();
+            activeAdminRowIndex = -1;
+            redrawAdminMap();
         }
 
         function selectAdminRowLoc(rowId, btnElement) {
@@ -1578,35 +1676,88 @@
             });
             btnElement.style.borderColor = "var(--accent-yellow)";
             
-            if(adminMiniMap) {
-                setTimeout(() => adminMiniMap.invalidateSize(), 100);
-            }
+            if(adminMiniMap) { setTimeout(() => adminMiniMap.invalidateSize(), 100); }
+            redrawAdminMap(); // Przeładuje mapę z aktywnym punktem
             
             const row = document.getElementById(`admin-row-${rowId}`);
             let lat = parseFloat(row.dataset.lat);
             let lng = parseFloat(row.dataset.lng);
-            let name = row.querySelector('.station-name-input').value.trim() || "Nowa stacja";
-            let safeName = escapeHTML(name);
 
             if (lat && lng && adminMiniMap) {
-                if(!adminMiniMapMarker) {
-                    adminMiniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMiniMap);
-                    adminMiniMapMarker.on('dragend', function (ev) {
-                        if(activeAdminRowIndex !== -1) {
-                            const r = document.getElementById(`admin-row-${activeAdminRowIndex}`);
-                            if(r) {
-                                r.dataset.lat = ev.target.getLatLng().lat;
-                                r.dataset.lng = ev.target.getLatLng().lng;
-                            }
-                        }
-                    });
-                } else {
-                    adminMiniMapMarker.setLatLng([lat, lng]);
-                }
-                adminMiniMapMarker.bindPopup(`<b>${safeName}</b>`).openPopup();
                 adminMiniMap.setView([lat, lng], 12);
             } else {
                 showToast("Kliknij na mapie poniżej, aby ustawić lokalizację dla tej stacji.", "info");
+            }
+        }
+
+        function redrawAdminMap() {
+            if(!adminStationsLayer || !adminMiniMap) return;
+            adminStationsLayer.clearLayers();
+            
+            let points = [];
+            document.querySelectorAll('#admin-line-tbody tr').forEach(row => {
+                let lat = parseFloat(row.dataset.lat);
+                let lng = parseFloat(row.dataset.lng);
+                let name = row.querySelector('.station-name-input').value.trim() || "Punkt trasy";
+                
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    let isActive = (row.id === `admin-row-${activeAdminRowIndex}`);
+                    
+                    let markerOptions = { draggable: isActive };
+                    if(isActive) {
+                         let activeIcon = L.divIcon({ className: 'custom-photo-marker', html: `<div style="background-color: var(--accent-yellow); width: 14px; height: 14px; border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 10px #ffb703;"></div>`, iconSize: [18, 18], iconAnchor: [9, 9] });
+                         markerOptions.icon = activeIcon;
+                    }
+                    
+                    let m = L.marker([lat, lng], markerOptions).addTo(adminStationsLayer);
+                    m.bindTooltip(`<b>${escapeHTML(name)}</b>`, {permanent: true, direction: 'right', className: 'admin-map-tooltip'}).openTooltip();
+                    
+                    if(isActive) {
+                        m.on('dragend', function(e) {
+                            row.dataset.lat = e.target.getLatLng().lat;
+                            row.dataset.lng = e.target.getLatLng().lng;
+                            let btn = row.querySelector('.btn-location');
+                            btn.style.background = "#00b32c"; btn.style.color = "#fff";
+                            if(adminLinePolyline) { adminMiniMap.removeLayer(adminLinePolyline); adminLinePolyline = null; }
+                        });
+                    }
+                    points.push([lat, lng]);
+                }
+            });
+            
+            if(points.length > 0 && adminLinePolyline === null) {
+                // Skaluj do stacji tylko jeśli nie ma wygenerowanej trasy broutera (żeby nie skakało)
+                // adminMiniMap.fitBounds(L.latLngBounds(points).pad(0.1));
+            }
+        }
+
+        async function adminGenerateRoute() {
+            let points = [];
+            document.querySelectorAll('#admin-line-tbody tr').forEach(row => {
+                let lat = parseFloat(row.dataset.lat);
+                let lng = parseFloat(row.dataset.lng);
+                if (!isNaN(lat) && !isNaN(lng)) points.push({lat, lng});
+            });
+            
+            if (points.length < 2) { showToast("Potrzebujesz co najmniej 2 stacji na mapie (Z pinezkami)!", "warn"); return; }
+            
+            showToast("Generowanie Linii przez BRouter...", "info");
+            let lonlats = points.map(p => `${p.lng},${p.lat}`).join('|');
+            let url = `https://brouter.de/brouter?lonlats=${lonlats}&profile=rail&alternativeidx=0&format=geojson`;
+            
+            try {
+                let resp = await fetch(url);
+                if(!resp.ok) throw new Error("Błąd serwera tras");
+                let geojson = await resp.json();
+                let rawCoords = geojson.features[0].geometry.coordinates;
+                let track = rawCoords.map(c => [c[1], c[0]]);
+                
+                if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
+                adminLinePolyline = L.polyline(track, { color: '#ff9e00', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
+                adminMiniMap.fitBounds(adminLinePolyline.getBounds());
+                showToast("Trasa geometryczna wygenerowana na mapie!", "success");
+            } catch(e) {
+                showToast("Nie udało się pobrać geometrii trasy (BRouter): " + e.message, "error");
             }
         }
 
@@ -1614,6 +1765,7 @@
             if(adminMiniMap) return;
             adminMiniMap = L.map('admin-mini-map', { zoomControl: true, minZoom: 6 }).setView([52.2289, 21.0022], 6);
             configurePolandMapBase(adminMiniMap);
+            adminStationsLayer = L.layerGroup().addTo(adminMiniMap);
             
             adminMiniMap.on('click', function(e) {
                 if (activeAdminRowIndex === -1) {
@@ -1626,29 +1778,12 @@
                     row.dataset.lat = e.latlng.lat;
                     row.dataset.lng = e.latlng.lng;
                     
-                    let name = row.querySelector('.station-name-input').value.trim() || "Nowa stacja";
-                    let safeName = escapeHTML(name);
-                    
-                    if (!adminMiniMapMarker) {
-                        adminMiniMapMarker = L.marker(e.latlng, { draggable: true }).addTo(adminMiniMap);
-                        adminMiniMapMarker.on('dragend', function (ev) {
-                            if(activeAdminRowIndex !== -1) {
-                                const r = document.getElementById(`admin-row-${activeAdminRowIndex}`);
-                                if(r) {
-                                    r.dataset.lat = ev.target.getLatLng().lat;
-                                    r.dataset.lng = ev.target.getLatLng().lng;
-                                }
-                            }
-                        });
-                    } else {
-                        adminMiniMapMarker.setLatLng(e.latlng);
-                    }
-                    
-                    adminMiniMapMarker.bindPopup(`<b>${safeName}</b>`).openPopup();
-                    
                     const btn = row.querySelector('.btn-location');
                     btn.style.background = "#00b32c";
                     btn.style.color = "#fff";
+                    
+                    if(adminLinePolyline) { adminMiniMap.removeLayer(adminLinePolyline); adminLinePolyline = null; }
+                    redrawAdminMap();
                 }
             });
         }
@@ -1659,15 +1794,12 @@
             document.getElementById('admin-line-end').value = '';
             document.getElementById('admin-line-tbody').innerHTML = '';
             activeAdminRowIndex = -1;
-            if(adminMiniMapMarker) {
-                adminMiniMapMarker.remove();
-                adminMiniMapMarker = null;
-            }
+            if(adminLinePolyline) { adminMiniMap.removeLayer(adminLinePolyline); adminLinePolyline = null; }
+            if(adminStationsLayer) adminStationsLayer.clearLayers();
             showToast("Kreator został wyczyszczony.", "info");
         }
 
         function adminEditLine(code) {
-            // Wyszukaj linię uwzględniając priorytet w getAllLines() by zassało poprawnie wszystkie jej punkty
             let line = getAllLines().find(l => l.code === code);
             if (!line) { showToast("Nie znaleziono tej linii.", "warn"); return; }
             
@@ -1892,7 +2024,7 @@
             }
         }
 
-        // MODERACJA ZDJĘĆ
+        // MODERACJA ZDJĘĆ Z TABORU
         async function adminDeletePhoto(targetUid, photoUrl) {
             if(!confirm("MODERACJA: Czy na pewno chcesz usunąć to zdjęcie tego użytkownika?")) return;
             try {
@@ -1911,6 +2043,23 @@
             }
         }
 
+        // MODERACJA ZDJĘCIA PROFILOWEGO / BANNERA
+        async function adminDeleteProfileImage(targetUid, type) {
+            if(!confirm(`MODERACJA: Czy na pewno chcesz usunąć to zdjęcie w profilu użytkownika (${type})?`)) return;
+            try {
+                let updateData = {};
+                if(type === 'avatar') updateData.avatar = "https://via.placeholder.com/150/ff9e00/000000?text=SK";
+                if(type === 'banner') updateData.banner = "";
+                
+                await db.collection('users').doc(targetUid).update(updateData);
+                showToast(`Wymuszono usunięcie ${type} na koncie użytkownika.`, "success");
+                
+                openProfile(targetUid);
+            } catch(e) {
+                showToast("Błąd usuwania: " + e.message, "error");
+            }
+        }
+
         // --- POWIĘKSZANIE ZDJĘĆ ---
         function zoomImage(url) {
             if(!url) return;
@@ -1923,7 +2072,7 @@
 
         function openAppInfoModal() { document.getElementById('app-info-modal').style.display = 'flex'; }
 
-        // --- BROUTER ROUTING Z ULEPSZONYM ZABEZPIECZENIEM (TIMEOUT & TRY-FINALLY) ---
+        // --- BROUTER ROUTING ---
         async function fetchPerfectRoute(startId, endId, lineCode) {
             const allLines = getAllLines();
             const allStations = getAllStations();
@@ -2082,8 +2231,9 @@
             if (dataObj.photos && dataObj.photos.length > 0) {
                 dataObj.photos.forEach(photo => {
                     if (photo.lat && photo.lng) {
+                        let subInfo = photo.subtype ? ` <i>(${escapeHTML(photo.subtype)})</i>` : '';
                         L.circleMarker([photo.lat, photo.lng], { radius: 6, fillColor: '#a259ff', color: '#ffffff', weight: 1.5, fillOpacity: 0.95 })
-                        .bindPopup(`<b>Zdjęcie: ${escapeHTML(photo.series)} ${escapeHTML(photo.number)}</b><br>Data: ${escapeHTML(photo.date)}`)
+                        .bindPopup(`<b>Zdjęcie: ${escapeHTML(photo.series)}${subInfo} ${escapeHTML(photo.number)}</b><br>Data: ${escapeHTML(photo.date)}`)
                         .addTo(layerGroup);
                     }
                 });
@@ -2109,7 +2259,7 @@
             if (viewName === 'admin' && currentUser.role === 'admin') {
                 loadAdminUsers();
                 initAdminMiniMap();
-                setTimeout(() => { if(adminMiniMap) adminMiniMap.invalidateSize(); }, 200);
+                setTimeout(() => { if(adminMiniMap) adminMiniMap.invalidateSize(); redrawAdminMap(); }, 200);
             }
         }
 
@@ -2183,6 +2333,9 @@
                 const btnFriend = document.getElementById('btn-profile-friend');
                 const btnMap = document.getElementById('btn-profile-map');
                 const btnBackup = document.getElementById('btn-profile-backup');
+                
+                // Czyścimy stare przyciski moderacyjne przy przełączaniu profilu
+                document.querySelectorAll('.mod-profile-btn').forEach(e => e.remove());
 
                 if (isMe) {
                     btnEditAvatar.style.display = 'flex';
@@ -2211,8 +2364,29 @@
                         btnFriend.style.background = "var(--accent-yellow)";
                         btnFriend.style.color = "#000";
                     }
+
+                    // MODERACJA AVATARA I TŁA ZEWNĘTRZNA
+                    if (currentUser.role === 'admin' || currentUser.role === 'moderator') {
+                        let headerBlock = document.getElementById('profile-header-block');
+                        let modAvatar = document.createElement('button');
+                        modAvatar.className = 'btn-danger mod-profile-btn';
+                        modAvatar.innerText = "Mod: Resetuj Avatar";
+                        modAvatar.style.cssText = "position:absolute; bottom:5px; left:230px; font-size:10px; z-index:20; padding:4px 8px;";
+                        modAvatar.onclick = () => adminDeleteProfileImage(pData.uid, 'avatar');
+                        headerBlock.appendChild(modAvatar);
+
+                        if(pData.banner) {
+                            let modBanner = document.createElement('button');
+                            modBanner.className = 'btn-danger mod-profile-btn';
+                            modBanner.innerText = "Mod: Skasuj Tło";
+                            modBanner.style.cssText = "position:absolute; top:15px; right:15px; font-size:10px; z-index:20; padding:4px 8px;";
+                            modBanner.onclick = () => adminDeleteProfileImage(pData.uid, 'banner');
+                            headerBlock.appendChild(modBanner);
+                        }
+                    }
                 }
 
+                // Generowanie galerii z zabezpieczeniem (XSS)
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
@@ -2228,6 +2402,9 @@
                         let safeDate = escapeHTML(p.date);
                         let safeDev = escapeHTML(p.device);
                         let safeDesc = escapeHTML(p.desc);
+                        let safeSubtype = p.subtype ? escapeHTML(p.subtype) : '';
+                        
+                        let displaySeries = safeSubtype ? `${safeSeries} <span style="font-size:12px; color:var(--text-muted);">(${safeSubtype})</span>` : safeSeries;
                         
                         let moderBtn = '';
                         if(!isMe && (currentUser.role === 'admin' || currentUser.role === 'moderator')) {
@@ -2238,7 +2415,7 @@
                             <div class="gallery-item">
                                 <img src="${p.url}" onclick="zoomImage(this.src)">
                                 <div class="gallery-item-info">
-                                    <strong style="color:var(--accent-yellow); font-size:15px;">${safeSeries} ${safeNum}</strong>
+                                    <strong style="color:var(--accent-yellow); font-size:15px;">${displaySeries} ${safeNum}</strong>
                                     <span style="color:var(--accent-cyan); font-size:11px;">${safeCarrier || 'Brak przewoźnika'}</span>
                                     <span style="color:var(--text-muted); font-size:11px;">Data: ${safeDate || 'Brak'}</span>
                                     <span style="color:var(--text-muted); font-size:10px;">${safeDev || 'Aparat'}</span>
@@ -2520,6 +2697,7 @@
 
             let category = '';
             let series = '';
+            let subtype = ''; // Nowe dla wariantów
 
             if (selectSeries === 'CUSTOM') {
                 category = document.getElementById('sketch-custom-category').value;
@@ -2529,6 +2707,9 @@
                     let parsed = JSON.parse(selectSeries);
                     category = parsed.cat;
                     series = parsed.name;
+                    if (document.getElementById('sketch-subtype-group').style.display !== 'none') {
+                        subtype = document.getElementById('sketch-subtype').value;
+                    }
                 } catch(e) {
                     series = selectSeries;
                     category = 'Inne';
@@ -2557,7 +2738,8 @@
             const finalLng = selectedPhotoLatLng ? selectedPhotoLatLng.lng : 21.0022;
 
             let newPhoto = { 
-                category, series, number, carrier, painting, date, url: uploadedImageDataUrl || 'https://via.placeholder.com/400x250/151518/ff9e00?text=Tabor', 
+                category, series, subtype, number, carrier, painting, date, 
+                url: uploadedImageDataUrl || 'https://via.placeholder.com/400x250/151518/ff9e00?text=Tabor', 
                 desc, lat: finalLat, lng: finalLng,
                 visibility: visibility, device: device
             };
@@ -2572,10 +2754,12 @@
             uploadedImageDataUrl = '';
             document.getElementById('sketch-preview-img').style.display = 'none';
             document.getElementById('sketch-upload-placeholder').style.display = 'block';
-            showToast(`Zapisano ${series}-${number} w Chmurze!`, 'success');
+            
+            let nameToNotify = subtype ? `${series} (${subtype}) ${number}` : `${series} ${number}`;
+            showToast(`Zapisano ${nameToNotify} w Chmurze!`, 'success');
             
             if (visibility === 'public') {
-                notifyFriends(`Dodał(a) nowe zdjęcie taboru: ${series} ${number}`, 'photo');
+                notifyFriends(`Dodał(a) nowe zdjęcie taboru: ${nameToNotify}`, 'photo');
             }
         }
 
@@ -2586,10 +2770,12 @@
             
             userData.photos.forEach((p, idx) => {
                 let card = document.createElement('div'); card.className = 'photo-card';
+                let subInfo = p.subtype ? `<span style="font-size:11px; color:var(--text-muted);">(${escapeHTML(p.subtype)})</span> ` : '';
+                
                 card.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
-                        <div><strong style="color:var(--accent-yellow); font-size:14px;">${escapeHTML(p.series)} ${escapeHTML(p.number)}</strong> <span style="color:var(--accent-cyan);">[${escapeHTML(p.carrier) || 'Brak'}]</span>
+                        <div><strong style="color:var(--accent-yellow); font-size:14px;">${escapeHTML(p.series)} ${subInfo}${escapeHTML(p.number)}</strong> <span style="color:var(--accent-cyan);">[${escapeHTML(p.carrier) || 'Brak'}]</span>
                         <span style="color:var(--text-muted);">• ${escapeHTML(p.painting) || 'Standardowe'}</span><br>
                         <span style="color:var(--text-muted); font-size:11px;">Data: ${escapeHTML(p.date)} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${escapeHTML(p.device) || 'Aparat'}</span></div></div>
                     <button class="btn-danger" onclick="removePhoto(${idx})">Usuń</button>`;
@@ -2693,10 +2879,12 @@
 
             targetPhotos.forEach(p => {
                 let div = document.createElement('div'); div.className = 'photo-card'; div.style.marginBottom = "0";
+                let subInfo = p.subtype ? `<span style="font-size:12px; color:var(--text-muted);">(${escapeHTML(p.subtype)})</span> ` : '';
+                
                 div.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:100px; height:70px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
-                        <div><strong style="color:var(--accent-yellow); font-size:15px;">${escapeHTML(p.series)} ${escapeHTML(p.number)}</strong><br>
+                        <div><strong style="color:var(--accent-yellow); font-size:15px;">${escapeHTML(p.series)} ${subInfo}${escapeHTML(p.number)}</strong><br>
                         <span style="color:var(--accent-cyan); font-size:11px;">[${escapeHTML(p.carrier) || 'Brak'}]</span> • <span style="color:var(--text-muted); font-size:11px;">${escapeHTML(p.painting) || 'Standardowe'} • ${escapeHTML(p.device) || 'Aparat'} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Zatajone</span>' : 'Publiczne'}</span></div></div>`;
                 photosCont.appendChild(div);
             });
@@ -2732,7 +2920,7 @@
             document.getElementById('segment-selector-box').style.display = 'block';
         }
 
-        // POPRAWA PRZYCISKU TRASOWANIA - DODANO BLOK TRY...FINALLY
+        // POPRAWA PRZYCISKU TRASOWANIA - TRY...FINALLY
         async function addTraveledSegment() {
             if (!activeSelectedLine) return;
             let startId = parseInt(document.getElementById('select-start-station').value);
@@ -2752,7 +2940,6 @@
                 saveUserDataToStorage(); updateRidesUI();
                 showToast(`Dodano przejazd (${routeResult.distance} km)!`, 'success');
                 
-                // Powiadomienie znajomych
                 notifyFriends(`Dodał(a) nowy odcinek trasy: ${activeSelectedLine.code}`, 'ride');
             } catch (e) {
                 showToast("Błąd przy pobieraniu trasy: " + e.message, "error");
@@ -3069,7 +3256,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.0.8.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.0.9", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
