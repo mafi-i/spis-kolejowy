@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.1.0</title>
+    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.1.1</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -287,6 +287,29 @@
         .admin-line-input { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--input-text); padding: 6px; font-family: 'Share Tech Mono'; width: 100%; border-radius: 3px; outline: none; }
         .admin-line-input:focus { border-color: var(--accent-orange); }
 
+        /* KREATOR MAP - RESIZABLE SQUARE CONTAINER */
+        .admin-map-wrapper {
+            width: 400px;
+            height: 400px;
+            min-width: 250px;
+            min-height: 250px;
+            max-width: 100%;
+            resize: both;
+            overflow: hidden;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 4px;
+            position: relative;
+            margin-top: 10px;
+            background: #121214; /* Zawsze ciemne dno pod mapą Leaflet */
+        }
+        #admin-mini-map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
         /* MAP TOOLTIPS */
         .admin-map-tooltip { background: rgba(0,0,0,0.85); border: 1px solid var(--accent-cyan); color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 11px; padding: 2px 6px; border-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.8); }
 
@@ -346,7 +369,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.0</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.1</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -729,7 +752,7 @@
                     <img src="" id="profile-banner-img" class="profile-banner" style="display:none; cursor:zoom-in;" onclick="zoomImage(this.src)">
                     <div id="profile-banner-placeholder" class="profile-banner" style="background:var(--sub-bg); display:flex; justify-content:center; align-items:center; color:var(--text-muted); font-family:'Share Tech Mono'; font-size:12px;">Brak zdjęcia w tle</div>
                     <button id="btn-edit-banner" class="edit-btn banner-edit" style="display:none;" onclick="document.getElementById('banner-upload').click()">✏️</button>
-                    <!-- Nowa Ikona usuwania tła -->
+                    <!-- Ikonka usuwania Tła (Zmieniona) -->
                     <button id="btn-remove-banner" class="delete-btn-overlay banner-del" style="display:none;" onclick="removeProfileImage('banner')" title="Usuń zdjęcie w tle">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
@@ -741,7 +764,7 @@
                     <div class="profile-avatar-container">
                         <img src="https://via.placeholder.com/150/ff9e00/000000?text=SK" id="profile-avatar-img" class="profile-avatar" onclick="zoomImage(this.src)">
                         <button id="btn-edit-avatar" class="edit-btn avatar-edit" style="display:none;" onclick="document.getElementById('avatar-upload').click()">✏️</button>
-                        <!-- Nowa Ikona usuwania Avatara -->
+                        <!-- Ikonka usuwania Avatara (Zmieniona - umieszczona po lewej na dole krawędzi obrazka profilowego) -->
                         <button id="btn-remove-avatar" class="delete-btn-overlay avatar-del" style="display:none;" onclick="removeProfileImage('avatar')" title="Usuń avatar">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
@@ -765,6 +788,12 @@
                 <h3 style="font-family:'Share Tech Mono'; color:var(--accent-cyan); border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px; text-transform:uppercase; font-size:14px;">// Galeria Publiczna</h3>
                 <div class="profile-gallery" id="profile-gallery">
                     <!-- Galeria wpada tutaj -->
+                </div>
+                
+                <!-- NOWE: Sekcja z listą tras, widoczna tylko dla właściciela profilu -->
+                <div id="profile-my-rides-section" style="display:none; margin-top:35px;">
+                    <h3 style="font-family:'Share Tech Mono'; color:var(--accent-cyan); border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px; text-transform:uppercase; font-size:14px;">// Zarządzaj Twoimi Trasami</h3>
+                    <div id="profile-my-rides-list" style="display:flex; flex-direction:column; gap:8px;"></div>
                 </div>
             </div>
         </section>
@@ -831,7 +860,7 @@
                         <div class="admin-data-list" id="admin-carriers-list"></div>
                     </div>
 
-                    <!-- KREATOR LINII I STACJI -->
+                    <!-- KREATOR LINII I STACJI Z RESIZABLE MAP (KWADRAT) -->
                     <div class="update-box" style="grid-column: 1 / -1; border-color:var(--accent-cyan);">
                         <h3 style="color:var(--accent-cyan);">3. Dodaj Linie i Stacje Kolejowe (Kreator LK)</h3>
                         
@@ -868,8 +897,10 @@
                             </table>
                         </div>
                         
-                        <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:15px;">Podgląd Mapy szlaku (Wybierz ikonę 📍 przy stacji i kliknij, by uaktualnić):</label>
-                        <div class="sketch-mini-map" id="admin-mini-map" style="height: 350px; margin-top:5px; border-color: var(--accent-cyan);"></div>
+                        <label style="font-family:'Share Tech Mono'; font-size:11px; color:var(--accent-orange); display:block; margin-top:15px;">Podgląd Mapy szlaku (Możesz rozciągnąć okienko prawym dolnym rogiem):</label>
+                        <div class="admin-map-wrapper">
+                            <div id="admin-mini-map"></div>
+                        </div>
 
                         <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; align-items:center;">
                             <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
@@ -891,7 +922,7 @@
             <!-- BLOK 2: UŻYTKOWNICY I BANY -->
             <div class="admin-users-section" style="background:var(--panel-bg); border: 1px solid var(--role-admin); padding: 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <h3 style="color:var(--role-admin); margin-bottom: 15px; font-family:'Share Tech Mono'; text-transform:uppercase; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
-                    // Część 2: Użytkownicy i Bezpieczeństwo
+                    // Część 2: Użytkownicy i Bezpieczeństwo <span style="font-size:11px; color:var(--text-muted);">(Dostęp: Admin i Moderator)</span>
                 </h3>
                 <div class="update-grid">
                     <!-- BANY -->
@@ -931,7 +962,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.1.0</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.1.1</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -1002,7 +1033,6 @@
             }
         }
         
-        // Zastosowanie motywu na start
         if(localStorage.getItem('theme') === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
         }
@@ -1060,8 +1090,8 @@
         let mainDynamicLayer = null, friendDynamicLayer = null;
         let selectedPhotoLatLng = null;
 
-        // Ikona Kamery dla mapy
-        const cameraSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--purple-photo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background:#121214; border-radius:50%; padding:2px; border:2px solid var(--purple-photo); box-shadow: 0 0 10px rgba(162, 89, 255, 0.8);"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`;
+        // Ikona Kamery dla mapy (Nowa, spersonalizowana z SVG)
+        const cameraSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--purple-photo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background:#121214; border-radius:50%; padding:2px; border:2px solid var(--accent-cyan); box-shadow: 0 0 10px rgba(162, 89, 255, 0.8);"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`;
         const photoIconObj = L.divIcon({
             className: 'custom-photo-marker',
             html: cameraSvg,
@@ -1163,27 +1193,16 @@
 
         const changelogData = [
             {
-                version: "Alpha 1.1.0",
-                title: "Tryb Jasny, Ulepszenia Podtypów i Customowe Ikony",
+                version: "Alpha 1.1.1",
+                title: "Responsywne Okno Mapy, Naprawa Ilostanu i UI Podtypów",
                 date: "Dzisiaj",
                 added: [
-                    "Wprowadzono mechanizm Dark/Light mode zmieniający kolory całej aplikacji zapisujący preferencje lokalnie",
-                    "Zmieniono interfejs dodawania podtypów taboru na innowacyjne kafelki pojawiające się od razu pod wyborem głównym lokomotywy",
-                    "Zastąpiono defaultowe emoji kosza nowymi, responsywnymi ikonami SVG (Avatar i Tło)",
-                    "Wdrożono estetyczną, własną ikonę aparatu na mapie zastępującą standardowe markery dla punktów zdjęciowych",
-                    "Zoptymalizowano UI dodawania linii tak, aby moderatorzy mieli stuprocentową pewność w dostępie i wizualizację na mapie"
-                ]
-            },
-            {
-                version: "Alpha 1.0.9",
-                title: "Podtypy Taboru, Narzędzia Moderacji i Mapy Linii",
-                date: "Wcześniej",
-                added: [
-                    "Podział panelu admina na bazę danych i zarządzanie kontami, lepsze widoki",
-                    "Do systemowych modeli przypisano rodzaj zasilania (DC, AC, Multi, Spalinowa, Hybrydowa, Parowa)",
-                    "Silnik mapowy Kreatora ujawnia lokalizacje i etykiety tekstowe stacji na szlaku w czasie rzeczywistym",
-                    "Guzik wytyczania geometrycznej Linii PKP PLK za pośrednictwem BRoutera na żywo w kreatorze nowej linii",
-                    "Moderatorzy otrzymali nowe narzędzia prewencyjne – bezpośrednie usuwanie niecenzuralnych avatarów oraz teł użytkowników"
+                    "Mapa w trybie admina (Kreator LK) zamieniona na skalowalny kwadrat. W prawym dolnym rogu kontenera masz możliwość rozciągania mapy dla lepszej czytelności układów stacji.",
+                    "Kompleksowa naprawa zliczania taboru w Ilostanie. Zastosowano zaawansowany algorytm spadochronowy - zdjęcia nie znikają już ze statystyk, nawet w przypadku niezgodności literowej kategorii systemowych.",
+                    "W widoku właściciela Profilu wprowadzono panel sterowania. Właściciel może jednym przyciskiem usunąć własne odcinki (linie) oraz zdjęcia bezpośrednio z galerii podglądowej.",
+                    "Dodano tryb Jasny/Ciemny dostępny po prawej stronie menu.",
+                    "Nowa w pełni customowa Ikona Aparatu, pojawiająca się na głównej mapie zamiast standardowych kropek podczas wyświetlania taborytów.",
+                    "Usunięto stare emoji kosza na rzecz profesjonalnych wektorowych ikon dla narzędzi profilowych (skasuj avatar, tło)."
                 ]
             }
         ];
@@ -1217,6 +1236,7 @@
 
         function getAllLines() { 
             let map = new Map();
+            // Priorytet nakładania: mockLines nałożone najpierw, potem nadpisane cloudLines
             mockLines.forEach(l => map.set(l.code, l));
             cloudLines.forEach(l => map.set(l.code, l)); 
             return Array.from(map.values());
@@ -1648,11 +1668,6 @@
             }
         }
 
-        // --- STARA FUNKCJA (Zastąpiona powyżej)
-        function toggleCustomSeriesInput(selectEl) {
-            handleSeriesChange(selectEl);
-        }
-
         async function adminAddSeries() {
             const cat = document.getElementById('mod-add-series-cat').value;
             const power = document.getElementById('mod-add-series-power').value;
@@ -1772,7 +1787,7 @@
             btnElement.style.borderColor = "var(--accent-yellow)";
             
             if(adminMiniMap) { setTimeout(() => adminMiniMap.invalidateSize(), 100); }
-            redrawAdminMap(); // Przeładuje mapę z aktywnym punktem
+            redrawAdminMap(); 
             
             const row = document.getElementById(`admin-row-${rowId}`);
             let lat = parseFloat(row.dataset.lat);
@@ -1856,6 +1871,12 @@
             adminMiniMap = L.map('admin-mini-map', { zoomControl: true, minZoom: 6 }).setView([52.2289, 21.0022], 6);
             configurePolandMapBase(adminMiniMap);
             adminStationsLayer = L.layerGroup().addTo(adminMiniMap);
+            
+            // Resize Observer wspiera dynamiczny kontener
+            const ro = new ResizeObserver(() => {
+                adminMiniMap.invalidateSize();
+            });
+            ro.observe(document.querySelector('.admin-map-wrapper'));
             
             adminMiniMap.on('click', function(e) {
                 if (activeAdminRowIndex === -1) {
@@ -2056,7 +2077,6 @@
             document.getElementById('feedback-text').value = '';
         }
 
-        // ODCZYTYWANIE ZGŁOSZEŃ PRZEZ ADMINA
         function listenToAdminFeedback() {
             if(adminFeedbackUnsubscribe) return; 
             
@@ -2114,7 +2134,6 @@
             }
         }
 
-        // MODERACJA ZDJĘĆ Z TABORU
         async function adminDeletePhoto(targetUid, photoUrl) {
             if(!confirm("MODERACJA: Czy na pewno chcesz usunąć to zdjęcie tego użytkownika?")) return;
             try {
@@ -2133,7 +2152,6 @@
             }
         }
 
-        // MODERACJA ZDJĘCIA PROFILOWEGO / BANNERA
         async function adminDeleteProfileImage(targetUid, type) {
             if(!confirm(`MODERACJA: Czy na pewno chcesz usunąć to zdjęcie w profilu użytkownika (${type})?`)) return;
             try {
@@ -2353,7 +2371,7 @@
             }
         }
 
-        // --- ZARZĄDZANIE PROFILEM ZEWNĘTRZNYM ---
+        // --- ZARZĄDZANIE PROFILEM ZEWNĘTRZNYM I WŁASNYM ---
         async function openProfile(uid) {
             try {
                 let pData = null;
@@ -2435,6 +2453,24 @@
                     btnBackup.style.display = 'block';
                     btnFriend.style.display = 'none';
                     btnMap.style.display = 'none';
+                    
+                    // Pokazujemy sekcje do usuwania wlasnych linii
+                    document.getElementById('profile-my-rides-section').style.display = 'block';
+                    let rList = document.getElementById('profile-my-rides-list');
+                    rList.innerHTML = '';
+                    if (!pData.userData.rides || pData.userData.rides.length === 0) {
+                        rList.innerHTML = '<span style="color:var(--text-muted); font-size:12px;">Brak przejazdów w bazie.</span>';
+                    } else {
+                        const allSt = getAllStations();
+                        pData.userData.rides.forEach((r, idx) => {
+                            let sObj = allSt.find(s => s.id === r.startId);
+                            let eObj = allSt.find(s => s.id === r.endId);
+                            rList.innerHTML += `<div class="result-item" style="flex-direction:row; justify-content:space-between; align-items:center;">
+                                <span style="font-family:'Share Tech Mono'; font-size:12px; color:var(--text-main);"><strong>[${escapeHTML(r.line)}]</strong> ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''}</span>
+                                <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="removeRideFromProfile(${idx})">🗑️ Usuń trasę</button>
+                            </div>`;
+                        });
+                    }
                 } else {
                     btnEditAvatar.style.display = 'none';
                     btnRemoveAvatar.style.display = 'none';
@@ -2442,6 +2478,7 @@
                     btnRemoveBanner.style.display = 'none';
                     btnBackup.style.display = 'none';
                     btnMap.style.display = 'block';
+                    document.getElementById('profile-my-rides-section').style.display = 'none';
                     
                     btnFriend.style.display = 'block';
                     if (userData.friends.some(f => f.uid === pData.uid)) {
@@ -2477,13 +2514,13 @@
                     }
                 }
 
-                // Generowanie galerii
+                // Generowanie galerii z zabezpieczeniem (XSS)
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
                 let publicPhotos = pData.userData.photos.filter(p => p.visibility !== 'private');
                 if (publicPhotos.length === 0) {
-                    gallery.innerHTML = '<span style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Użytkownik nie udostępnił jeszcze żadnych publicznych zdjęć.</span>';
+                    gallery.innerHTML = '<span style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Brak zdjęć w galerii.</span>';
                 } else {
                     publicPhotos.sort((a,b) => new Date(b.date) - new Date(a.date));
                     publicPhotos.forEach(p => {
@@ -2498,8 +2535,10 @@
                         let displaySeries = safeSubtype ? `${safeSeries} <span style="font-size:12px; color:var(--text-muted);">(${safeSubtype})</span>` : safeSeries;
                         
                         let moderBtn = '';
-                        if(!isMe && (currentUser.role === 'admin' || currentUser.role === 'moderator')) {
-                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%;" onclick="adminDeletePhoto('${pData.uid}', '${p.url}')">🗑️ Usuń (Moderacja)</button>`;
+                        if(isMe) {
+                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%; font-size:11px;" onclick="removePhotoByUrl('${p.url}')">🗑️ Usuń swoje zdjęcie</button>`;
+                        } else if(currentUser.role === 'admin' || currentUser.role === 'moderator') {
+                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%; font-size:11px;" onclick="adminDeletePhoto('${pData.uid}', '${p.url}')">🗑️ Usuń (Moderacja)</button>`;
                         }
                         
                         gallery.innerHTML += `
@@ -2522,6 +2561,24 @@
             } catch(e) {
                 showToast("Błąd ładowania profilu: " + e.message, "error");
             }
+        }
+
+        function removeRideFromProfile(idx) {
+            if(!confirm("Czy na pewno usunąć ten przejazd z Twojej mapy?")) return;
+            userData.rides.splice(idx, 1);
+            saveUserDataToStorage();
+            updateRidesUI();
+            showToast("Usunięto odcinek.", "success");
+            openProfile(currentUser.uid);
+        }
+
+        function removePhotoByUrl(url) {
+            if(!confirm("Czy na pewno usunąć to zdjęcie z Twojego spisu?")) return;
+            userData.photos = userData.photos.filter(p => p.url !== url);
+            saveUserDataToStorage();
+            updatePhotosUI();
+            showToast("Zdjęcie usunięte.", "warn");
+            openProfile(currentUser.uid);
         }
 
         function handleProfileFriendAction() {
@@ -2880,7 +2937,7 @@
             showToast('Usunięto zdjęcie.', 'warn');
         }
 
-        // --- STATYSTYKI TABORU & DRILLDOWN ---
+        // --- STATYSTYKI TABORU & DRILLDOWN Z ZABEZPIECZENIEM SPADOCHRONOWYM ---
         function getCategoryForSeries(seriesStr) {
             let s = seriesStr.toUpperCase().trim();
             if (/^(EN|ED|WE|EW|31WE|45WE|IMPULS|ELF|FLIRT)/.test(s)) return "Elektryczne zespoły trakcyjne";
@@ -2906,7 +2963,9 @@
 
             userData.photos.forEach(p => {
                 let cat = p.category || getCategoryForSeries(p.series);
-                if (stats[cat]) { stats[cat].series.add(p.series.toUpperCase().trim()); stats[cat].count++; }
+                if (!stats[cat]) cat = "Lokomotywy elektryczne"; // Fallback ratunkowy, chroni przed zgubieniem fotki
+                stats[cat].series.add(p.series.toUpperCase().trim()); 
+                stats[cat].count++;
             });
 
             tbody.innerHTML = '';
@@ -2937,10 +2996,16 @@
             document.getElementById('drilldown-series-title').innerText = `Kategoria: ${catName}`;
             let seriesCont = document.getElementById('drilldown-series-container'); seriesCont.innerHTML = '';
 
+            const validCats = ["Lokomotywy elektryczne", "Elektryczne zespoły trakcyjne", "Lokomotywy spalinowe", "Spalinowe zespoły trakcyjne i autobusy szynowe", "Lokomotywy parowe"];
             let seriesMap = {};
-            userData.photos.filter(p => (p.category || getCategoryForSeries(p.series)) === catName).forEach(p => {
-                let s = p.series.toUpperCase().trim();
-                seriesMap[s] = (seriesMap[s] || 0) + 1;
+            userData.photos.forEach(p => {
+                let pCat = p.category || getCategoryForSeries(p.series);
+                if (!validCats.includes(pCat)) pCat = "Lokomotywy elektryczne"; // Ten sam fallback ratunkowy
+                
+                if (pCat === catName) {
+                    let s = p.series.toUpperCase().trim();
+                    seriesMap[s] = (seriesMap[s] || 0) + 1;
+                }
             });
 
             let sortedSeries = Object.keys(seriesMap).sort(sortPolishLocoSeries);
@@ -3344,7 +3409,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.1.0", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.1.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
