@@ -2369,10 +2369,16 @@
 
             if (viewName === 'mapa' && map) setTimeout(() => { map.invalidateSize(); renderMapDynamicElements(map, mainDynamicLayer, userData); }, 200);
             if (viewName === 'zdjecia') { initMiniMap(); setTimeout(() => { if (miniMap) miniMap.invalidateSize(); }, 200); }
-            if (viewName === 'admin' && currentUser.role === 'admin') {
-                loadAdminUsers();
-                initAdminMiniMap();
-                setTimeout(() => { if(adminMiniMap) adminMiniMap.invalidateSize(); redrawAdminMap(); }, 200);
+            
+            // NAPRAWA: Zezwolenie moderatorom na inicjalizację i odświeżanie mapy w kreatorze
+            if (viewName === 'admin' && currentUser) {
+                if (currentUser.role === 'admin') {
+                    loadAdminUsers();
+                }
+                if (currentUser.role === 'admin' || currentUser.role === 'moderator') {
+                    initAdminMiniMap();
+                    setTimeout(() => { if(adminMiniMap) adminMiniMap.invalidateSize(); redrawAdminMap(); }, 200);
+                }
             }
         }
 
@@ -3110,18 +3116,38 @@
         function updateRidesUI() {
             let container = document.getElementById('user-rides-list');
             refreshStatsAndRank();
-            if (userData.rides.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak przejazdów. Dodaj je powyżej.</span>`; return; }
-            container.innerHTML = '';
+            if (userData.rides.length === 0) { 
+                container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak przejazdów. Dodaj je powyżej.</span>`; 
+                return; 
+            }
+            
+            // NOWOŚĆ: Główny przycisk do usunięcia wszystkich linii z mapy użytkownika
+            container.innerHTML = `<div style="margin-bottom:10px;"><button class="btn-danger" style="width:100%; padding:8px; font-size:12px;" onclick="clearAllUserRides()">🗑️ Usuń WSZYSTKIE swoje przejazdy (Wyczyść mapę)</button></div>`;
             
             const allSt = getAllStations();
             userData.rides.forEach((r, idx) => {
                 let sObj = allSt.find(s => s.id === r.startId); let eObj = allSt.find(s => s.id === r.endId);
                 let badge = document.createElement('div'); badge.className = 'ride-badge';
-                badge.innerHTML = `<span><strong>[${escapeHTML(r.line)}]</strong> ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''} <span style="color:var(--accent-cyan);">(${r.distanceKm} km)</span></span> <button class="btn-danger" onclick="removeRide(${idx})">Usuń</button>`;
+                badge.innerHTML = `<span><strong>[${escapeHTML(r.line)}]</strong> ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''} <span style="color:var(--accent-cyan);">(${r.distanceKm} km)</span></span> <button class="btn-danger" onclick="removeRide(${idx})">Usuń odcinek</button>`;
                 container.appendChild(badge);
             });
         }
-        function removeRide(idx) { userData.rides.splice(idx, 1); saveUserDataToStorage(); updateRidesUI(); showToast('Usunięto odcinek.', 'warn'); }
+        
+        function removeRide(idx) { 
+            userData.rides.splice(idx, 1); 
+            saveUserDataToStorage(); 
+            updateRidesUI(); 
+            showToast('Usunięto odcinek z mapy.', 'warn'); 
+        }
+
+        // NOWA FUNKCJA: Usuwanie wszystkich dodanych linii użytkownika
+        function clearAllUserRides() {
+            if(!confirm("⚠️ UWAGA! Czy na pewno chcesz trwale usunąć wszystkie swoje przejechane odcinki linii i wyczyścić z nich mapę?")) return;
+            userData.rides = [];
+            saveUserDataToStorage();
+            updateRidesUI();
+            showToast('Wszystkie przejazdy (linie) zostały usunięte z Twojego profilu.', 'success');
+        }
 
         function searchStationsOnly() {
             let query = document.getElementById('station-search-input').value.toLowerCase();
