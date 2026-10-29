@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.5 Cloud + Alpha 1.1.1</title>
+    <title>Spis // Kolejowy v4.6 Cloud + Alpha 1.1.2</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -369,7 +370,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.1</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.2</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -962,7 +963,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.1.1</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.1.2</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -1193,9 +1194,18 @@
 
         const changelogData = [
             {
+                version: "Alpha 1.1.2",
+                title: "Fioletowe trasy i poprawki stabilności",
+                date: "Dzisiaj",
+                added: [
+                    "Zmiana koloru generowanej trasy w kreatorze (BRouter) na fioletowy, dla lepszej widoczności i spójności z motywem.",
+                    "Pełna poprawka wsparcia zagnieżdżonych współrzędnych Firebase, zapobiegająca awariom zapisu profili."
+                ]
+            },
+            {
                 version: "Alpha 1.1.1",
                 title: "Responsywne Okno Mapy, Naprawa Ilostanu i UI Podtypów",
-                date: "Dzisiaj",
+                date: "Wcześniej",
                 added: [
                     "Mapa w trybie admina (Kreator LK) zamieniona na skalowalny kwadrat. W prawym dolnym rogu kontenera masz możliwość rozciągania mapy dla lepszej czytelności układów stacji.",
                     "Kompleksowa naprawa zliczania taboru w Ilostanie. Zastosowano zaawansowany algorytm spadochronowy - zdjęcia nie znikają już ze statystyk, nawet w przypadku niezgodności literowej kategorii systemowych.",
@@ -1858,7 +1868,10 @@
                 let track = rawCoords.map(c => [c[1], c[0]]);
                 
                 if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
-                adminLinePolyline = L.polyline(track, { color: '#ff9e00', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
+                
+                // ZMIENIONO KOLOR NA FIOLETOWY (#a259ff)
+                adminLinePolyline = L.polyline(track, { color: '#a259ff', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
+                
                 adminMiniMap.fitBounds(adminLinePolyline.getBounds());
                 showToast("Trasa geometryczna wygenerowana na mapie!", "success");
             } catch(e) {
@@ -3440,7 +3453,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.1.1", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.1.2", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
