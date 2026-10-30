@@ -596,7 +596,10 @@
                     <div class="sketch-row">
                         <div class="form-group">
                             <label>Przewoźnik:</label>
-                            <input type="text" id="sketch-carrier-select" list="sketch-carrier-list" placeholder="np. PKP Intercity, wpisz by wyszukać...">
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <img id="sketch-carrier-logo-preview" src="" style="width:30px; height:30px; border-radius:4px; display:none; background:var(--border-color);">
+                                <input type="text" id="sketch-carrier-select" list="sketch-carrier-list" placeholder="np. PKP Intercity, wpisz by wyszukać..." style="flex:1;" oninput="updateCarrierLogoPreview(this.value)">
+                            </div>
                             <datalist id="sketch-carrier-list"></datalist>
                         </div>
                         
@@ -841,10 +844,10 @@
                         <h3 style="color:var(--accent-cyan);">2. Dodaj Przewoźników</h3>
                         <div class="form-group">
                             <label>Nazwa przewoźnika:</label>
-                            <div class="row-flex">
-                                <input type="text" id="mod-add-carrier-value" style="flex:1;" placeholder="np. Koleje Małopolskie">
-                                <button class="btn-small" style="background:var(--accent-cyan);" onclick="adminAddGlobalData('carriers')">Dodaj</button>
-                            </div>
+                            <input type="text" id="mod-add-carrier-value" style="flex:1; margin-bottom:5px;" placeholder="np. Koleje Małopolskie">
+                            <label>Logo (opcjonalnie):</label>
+                            <input type="file" id="mod-add-carrier-logo" accept="image/*" style="margin-bottom:5px;">
+                            <button class="btn-small" style="background:var(--accent-cyan);" onclick="adminAddCarrierWithLogo()">Dodaj z logiem</button>
                         </div>
                         <div class="admin-data-list" id="admin-carriers-list"></div>
                     </div>
@@ -889,6 +892,9 @@
                             <div id="admin-mini-map"></div>
                         </div>
 
+                        <label style="color:var(--text-muted); font-size:12px; margin-top:10px; display:block;">
+                            <input type="checkbox" id="admin-force-straight"> Wymuś linie proste (dla zlikwidowanych/nieprzejezdnych szlaków)
+                        </label>
                         <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; align-items:center;">
                             <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
                             <button class="btn-small" style="background:#ff9e00; padding:8px;" onclick="adminGenerateRoute()">[ Przelicz i Rysuj Trasę (BRouter) ]</button>
@@ -1566,7 +1572,7 @@
                     const dl = document.getElementById('sketch-carrier-list');
                     if(dl) {
                         dl.innerHTML = '';
-                        let merged = [...new Set([...defaultCarriers, ...cloudCarriers])];
+                        let merged = [...new Set([...defaultCarriers, ...cloudCarriers.map(c => typeof c === 'object' ? c.name : c)])];
                         merged.sort((a,b) => a.localeCompare(b, 'pl'));
                         merged.forEach(c => dl.innerHTML += `<option value="${escapeHTML(c)}"></option>`);
                     }
@@ -1666,9 +1672,14 @@
             }
             if(carriersList) {
                 carriersList.innerHTML = '';
-                [...cloudCarriers].sort((a,b)=>a.localeCompare(b,'pl')).forEach(c => {
-                    let safeC = escapeHTML(c);
-                    carriersList.innerHTML += `<div class="admin-data-item"><span>${safeC}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${safeC}')">Usuń</button></div>`;
+                [...cloudCarriers].sort((a,b)=>{
+                    let na = typeof a === 'object' ? a.name : a;
+                    let nb = typeof b === 'object' ? b.name : b;
+                    return na.localeCompare(nb,'pl');
+                }).forEach(c => {
+                    let safeC = escapeHTML(typeof c === 'object' ? c.name : c);
+                    let logoThumb = (typeof c === 'object' && c.logo) ? `<img src="${c.logo}" style="width:20px; height:20px; border-radius:3px; object-fit:cover;">` : '';
+                    carriersList.innerHTML += `<div class="admin-data-item"><span style="display:flex; align-items:center; gap:6px;">${logoThumb}${safeC}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${safeC}')">Usuń</button></div>`;
                 });
             }
             if(linesList) {
@@ -1769,6 +1780,58 @@
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
+        async function adminAddCarrierWithLogo() {
+            const val = document.getElementById('mod-add-carrier-value').value.trim();
+            const fileInput = document.getElementById('mod-add-carrier-logo');
+            if (!val) return;
+            let newCarrier = { name: val, logo: "" };
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const img = new Image();
+                    img.onload = async function() {
+                        const cvs = document.createElement('canvas');
+                        cvs.width = 100; cvs.height = 100;
+                        const ctx = cvs.getContext('2d');
+                        ctx.drawImage(img, 0, 0, 100, 100);
+                        newCarrier.logo = cvs.toDataURL('image/png', 0.9);
+                        await saveCarrierToCloud(newCarrier);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await saveCarrierToCloud(newCarrier);
+            }
+        }
+
+        async function saveCarrierToCloud(carrierObj) {
+            let existing = cloudCarriers;
+            if(existing.map(e => typeof e === 'object' ? e.name.toLowerCase() : e.toLowerCase()).includes(carrierObj.name.toLowerCase())) {
+                showToast("Taki przewoźnik już istnieje!", "warn"); return;
+            }
+            try {
+                await db.collection('globalData').doc('lists').set({
+                    carriers: firebase.firestore.FieldValue.arrayUnion(carrierObj)
+                }, { merge: true });
+                showToast("Dodano przewoźnika do bazy!", "success");
+                document.getElementById('mod-add-carrier-value').value = '';
+                if (document.getElementById('mod-add-carrier-logo')) document.getElementById('mod-add-carrier-logo').value = '';
+            } catch(e) { showToast("Błąd: " + e.message, "error"); }
+        }
+        
+        function updateCarrierLogoPreview(carrierName) {
+            let logoImg = document.getElementById('sketch-carrier-logo-preview');
+            let carrierData = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === carrierName);
+            if (carrierData && typeof carrierData === 'object' && carrierData.logo) {
+                logoImg.src = carrierData.logo;
+                logoImg.style.display = 'block';
+            } else {
+                logoImg.style.display = 'none';
+            }
+        }
+
         async function adminAddGlobalData(type) {
             const inputId = 'mod-add-carrier-value';
             const val = document.getElementById(inputId).value.trim();
@@ -1791,8 +1854,13 @@
         async function adminRemoveGlobalData(type, val) {
             if(!confirm(`Na pewno usunąć "${val}" z bazy?`)) return;
             try {
+                let toRemove = val;
+                if (type === 'carriers') {
+                    let objMatch = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === val);
+                    if(objMatch) toRemove = objMatch;
+                }
                 await db.collection('globalData').doc('lists').update({
-                    [type]: firebase.firestore.FieldValue.arrayRemove(val)
+                    [type]: firebase.firestore.FieldValue.arrayRemove(toRemove)
                 });
                 showToast("Usunięto.", "success");
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
@@ -1970,6 +2038,16 @@
             
             if (points.length < 2) { showToast("Potrzebujesz co najmniej 2 stacji na mapie (Z pinezkami)!", "warn"); return; }
             
+            let forceStraight = document.getElementById('admin-force-straight') && document.getElementById('admin-force-straight').checked;
+            if (forceStraight) {
+                if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
+                let track = points.map(p => [p.lat, p.lng]);
+                adminLinePolyline = L.polyline(track, { color: '#a259ff', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
+                adminMiniMap.fitBounds(adminLinePolyline.getBounds());
+                showToast("Narysowano trasę w linii prostej (ominięto BRouter).", "info");
+                return;
+            }
+
             showToast("Generowanie Linii przez BRouter...", "info");
             let lonlats = points.map(p => `${p.lng},${p.lat}`).join('|');
             let url = `https://brouter.de/brouter?lonlats=${lonlats}&profile=rail&alternativeidx=0&format=geojson`;
@@ -2969,14 +3047,14 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const maxWidth = 1280, maxHeight = 960;
+                    const maxWidth = 1920, maxHeight = 1080;
                     let width = img.width, height = img.height;
                     if (width > height) { if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; } } 
                     else { if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; } }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    uploadedImageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    uploadedImageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
                     showPreviewImage(uploadedImageDataUrl);
                     showToast(`Skompresowano zdjęcie (${width}x${height}px)`);
                 };
@@ -3096,10 +3174,12 @@
                 let card = document.createElement('div'); card.className = 'photo-card';
                 let subInfo = p.subtype ? `<span style="font-size:11px; color:var(--text-muted);">(${escapeHTML(p.subtype)})</span> ` : '';
                 
+                let carrierData = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === p.carrier);
+                let logoHTML = (carrierData && typeof carrierData === 'object' && carrierData.logo) ? `<img src="${carrierData.logo}" style="width:20px; height:20px; border-radius:3px; vertical-align:middle; margin-right:5px;">` : '';
                 card.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
-                        <div><strong style="color:var(--accent-yellow); font-size:14px;">${escapeHTML(p.series)} ${subInfo}${escapeHTML(p.number)}</strong> <span style="color:var(--accent-cyan);">[${escapeHTML(p.carrier) || 'Brak'}]</span>
+                        <div><strong style="color:var(--accent-yellow); font-size:14px;">${escapeHTML(p.series)} ${subInfo}${escapeHTML(p.number)}</strong> <span style="color:var(--accent-cyan);">${logoHTML}[${escapeHTML(p.carrier) || 'Brak'}]</span>
                         <span style="color:var(--text-muted);">• ${escapeHTML(p.painting) || 'Standardowe'}</span><br>
                         <span style="color:var(--text-muted); font-size:11px;">Data: ${escapeHTML(p.date)} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${escapeHTML(p.device) || 'Aparat'}</span></div></div>
                     <button class="btn-danger" onclick="removePhoto(${idx})">Usuń</button>`;
@@ -3353,7 +3433,19 @@
         function removeStation(index) { userData.visitedStations.splice(index, 1); saveUserDataToStorage(); updateVisitedStationsUI(); showToast('Usunięto stację.', 'warn'); }
 
         function refreshStatsAndRank() {
-            const totalKm = calculateTotalKm(userData.rides);
+            const currentYear = new Date().getFullYear().toString();
+            let totalKm = 0;
+            let yearKm = 0;
+
+            if (userData.rides && userData.rides.length > 0) {
+                userData.rides.forEach(r => {
+                    totalKm += (r.distanceKm || 0);
+                    if (r.date && r.date.startsWith(currentYear)) {
+                        yearKm += (r.distanceKm || 0);
+                    }
+                });
+            }
+
             const allSt = getAllStations();
             const statStationsEl = document.getElementById('stat-stations');
             if (statStationsEl) {
@@ -3362,7 +3454,22 @@
             const statRidesEl = document.getElementById('stat-rides');
             if (statRidesEl) statRidesEl.innerText = userData.rides.length;
             const statKmEl = document.getElementById('stat-km');
-            if (statKmEl) statKmEl.innerText = `${totalKm} km`;
+            if (statKmEl) statKmEl.innerHTML = `${yearKm} km <br><span style="font-size:12px; color:var(--text-muted); text-transform:none;">(Całe życie: ${totalKm} km)</span>`;
+            
+            const modalFriendKm = document.getElementById('modal-friend-km');
+            if (modalFriendKm && currentlyViewedProfile && currentlyViewedProfile.userData) {
+                 let fTotalKm = 0;
+                 let fYearKm = 0;
+                 if (currentlyViewedProfile.userData.rides) {
+                     currentlyViewedProfile.userData.rides.forEach(r => {
+                         fTotalKm += (r.distanceKm || 0);
+                         if (r.date && r.date.startsWith(currentYear)) {
+                             fYearKm += (r.distanceKm || 0);
+                         }
+                     });
+                 }
+                 modalFriendKm.innerHTML = `${fYearKm} km <br><span style="font-size:11px; color:var(--text-muted); text-transform:none;">(Całe życie: ${fTotalKm} km)</span>`;
+            }
         }
 
         function populatePhotoStations() {
