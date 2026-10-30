@@ -597,10 +597,12 @@
                         <div class="form-group">
                             <label>Przewoźnik:</label>
                             <div style="display:flex; gap:10px; align-items:center;">
-                                <img id="sketch-carrier-logo-preview" src="" style="width:30px; height:30px; border-radius:4px; display:none; background:var(--border-color);">
-                                <input type="text" id="sketch-carrier-select" list="sketch-carrier-list" placeholder="np. PKP Intercity, wpisz by wyszukać..." style="flex:1;" oninput="updateCarrierLogoPreview(this.value)">
+                                <img id="sketch-carrier-logo-preview" src="" style="height:36px; width:auto; max-width:150px; border-radius:4px; display:none; background:var(--border-color); object-fit:contain;">
+                                <div style="position: relative; flex: 1;">
+                                    <input type="text" id="sketch-carrier-select" autocomplete="off" placeholder="np. PKP Intercity, wpisz by wyszukać..." style="width:100%; box-sizing:border-box;" oninput="filterCustomCarrierDropdown(); updateCarrierLogoPreview(this.value)" onclick="toggleCarrierDropdown(true)">
+                                    <div id="custom-carrier-dropdown" class="results-list" style="position:absolute; top:100%; left:0; right:0; z-index:100; display:none; max-height:200px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--accent-cyan); box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></div>
+                                </div>
                             </div>
-                            <datalist id="sketch-carrier-list"></datalist>
                         </div>
                         
                         <div class="form-group">
@@ -845,9 +847,16 @@
                         <div class="form-group">
                             <label>Nazwa przewoźnika:</label>
                             <input type="text" id="mod-add-carrier-value" style="flex:1; margin-bottom:5px;" placeholder="np. Koleje Małopolskie">
-                            <label>Logo (opcjonalnie):</label>
-                            <input type="file" id="mod-add-carrier-logo" accept="image/*" style="margin-bottom:5px;">
-                            <button class="btn-small" style="background:var(--accent-cyan);" onclick="adminAddCarrierWithLogo()">Dodaj z logiem</button>
+                            <label>Logo (opcjonalnie - upuść tutaj lub kliknij):</label>
+                            <div class="sketch-upload-area" id="admin-carrier-drop-zone" style="height: 100px; padding: 10px; margin-bottom:5px;" onclick="document.getElementById('mod-add-carrier-logo').click()">
+                                <div id="admin-carrier-upload-placeholder">
+                                    <div style="font-size: 20px; color: var(--accent-yellow);">⬇</div>
+                                    <span style="font-family:'Share Tech Mono'; font-size:10px; color:var(--accent-cyan);">Przeciągnij logo (zostanie dostosowane)</span>
+                                </div>
+                                <img id="admin-carrier-logo-preview" style="max-height:100%; width:auto; object-fit:contain; display:none; border-radius:4px;">
+                            </div>
+                            <input type="file" id="mod-add-carrier-logo" accept="image/*" class="hidden-upload" onchange="handleAdminCarrierLogoSelect(event)">
+                            <button class="btn-small" style="background:var(--accent-cyan);" onclick="adminAddCarrierWithLogo()">Dodaj przewoźnika do bazy</button>
                         </div>
                         <div class="admin-data-list" id="admin-carriers-list"></div>
                     </div>
@@ -1569,12 +1578,33 @@
                     cloudCarriers = data.carriers || [];
                     cloudSeries = data.series || [];
                     
-                    const dl = document.getElementById('sketch-carrier-list');
+                    const dl = document.getElementById('custom-carrier-dropdown');
                     if(dl) {
                         dl.innerHTML = '';
-                        let merged = [...new Set([...defaultCarriers, ...cloudCarriers.map(c => typeof c === 'object' ? c.name : c)])];
-                        merged.sort((a,b) => a.localeCompare(b, 'pl'));
-                        merged.forEach(c => dl.innerHTML += `<option value="${escapeHTML(c)}"></option>`);
+                        let mergedCarriers = [];
+                        let existingNames = new Set();
+                        
+                        cloudCarriers.forEach(c => {
+                            let name = typeof c === 'object' ? c.name : c;
+                            if(!existingNames.has(name)) {
+                                existingNames.add(name);
+                                mergedCarriers.push(typeof c === 'object' ? c : { name: c, logo: '' });
+                            }
+                        });
+                        
+                        defaultCarriers.forEach(c => {
+                            if(!existingNames.has(c)) {
+                                existingNames.add(c);
+                                mergedCarriers.push({ name: c, logo: '' });
+                            }
+                        });
+                        
+                        mergedCarriers.sort((a,b) => a.name.localeCompare(b.name, 'pl'));
+                        
+                        mergedCarriers.forEach(c => {
+                            let logoHTML = c.logo ? `<img src="${c.logo}" style="height:20px; width:auto; max-width:60px; object-fit:contain; border-radius:2px;">` : `<div style="width:20px; height:20px; display:inline-block;"></div>`;
+                            dl.innerHTML += `<div class="result-item" style="flex-direction:row; align-items:center; gap:8px;" onclick="selectCarrier('${escapeHTML(c.name)}')">${logoHTML} <span>${escapeHTML(c.name)}</span></div>`;
+                        });
                     }
 
                     const sl = document.getElementById('sketch-series');
@@ -1614,10 +1644,10 @@
                     
                     renderAdminLists();
                 } else {
-                    const dl = document.getElementById('sketch-carrier-list');
+                    const dl = document.getElementById('custom-carrier-dropdown');
                     if(dl) {
                         dl.innerHTML = '';
-                        defaultCarriers.forEach(c => dl.innerHTML += `<option value="${escapeHTML(c)}"></option>`);
+                        defaultCarriers.forEach(c => dl.innerHTML += `<div class="result-item" onclick="selectCarrier('${escapeHTML(c)}')"><div style="width:20px; height:20px; display:inline-block;"></div><span>${escapeHTML(c)}</span></div>`);
                     }
                 }
             });
@@ -1780,30 +1810,52 @@
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
+        let adminUploadedCarrierLogo = "";
+
+        function processAdminCarrierLogo(file) {
+            if (!file.type.startsWith('image/')) { showToast('To nie jest obraz!', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxHeight = 100;
+                    const maxWidth = 250;
+                    let width = img.width, height = img.height;
+                    
+                    if (width > height) { 
+                        if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; } 
+                    } else { 
+                        if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; } 
+                    }
+                    
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    adminUploadedCarrierLogo = canvas.toDataURL('image/png', 0.95);
+                    
+                    document.getElementById('admin-carrier-logo-preview').src = adminUploadedCarrierLogo;
+                    document.getElementById('admin-carrier-logo-preview').style.display = 'block';
+                    document.getElementById('admin-carrier-upload-placeholder').style.display = 'none';
+                    showToast('Logo przewoźnika gotowe!');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleAdminCarrierLogoSelect(event) {
+            let file = event.target.files[0];
+            if (file) processAdminCarrierLogo(file);
+        }
+
         async function adminAddCarrierWithLogo() {
             const val = document.getElementById('mod-add-carrier-value').value.trim();
-            const fileInput = document.getElementById('mod-add-carrier-logo');
-            if (!val) return;
-            let newCarrier = { name: val, logo: "" };
-            if (fileInput && fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const img = new Image();
-                    img.onload = async function() {
-                        const cvs = document.createElement('canvas');
-                        cvs.width = 100; cvs.height = 100;
-                        const ctx = cvs.getContext('2d');
-                        ctx.drawImage(img, 0, 0, 100, 100);
-                        newCarrier.logo = cvs.toDataURL('image/png', 0.9);
-                        await saveCarrierToCloud(newCarrier);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                await saveCarrierToCloud(newCarrier);
-            }
+            if (!val) { showToast('Wpisz nazwę przewoźnika!', 'warn'); return; }
+            
+            let newCarrier = { name: val, logo: adminUploadedCarrierLogo };
+            await saveCarrierToCloud(newCarrier);
         }
 
         async function saveCarrierToCloud(carrierObj) {
@@ -1817,6 +1869,11 @@
                 }, { merge: true });
                 showToast("Dodano przewoźnika do bazy!", "success");
                 document.getElementById('mod-add-carrier-value').value = '';
+                adminUploadedCarrierLogo = '';
+                let preview = document.getElementById('admin-carrier-logo-preview');
+                let placeholder = document.getElementById('admin-carrier-upload-placeholder');
+                if (preview) preview.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
                 if (document.getElementById('mod-add-carrier-logo')) document.getElementById('mod-add-carrier-logo').value = '';
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
@@ -3761,8 +3818,49 @@
             setTimeout(() => { toast.remove(); }, 3500);
         }
 
+        // --- DROPDOWN PRZEWOŹNIKA HELPERS ---
+        function toggleCarrierDropdown(show) {
+            const dropdown = document.getElementById('custom-carrier-dropdown');
+            if(dropdown) dropdown.style.display = show ? 'block' : 'none';
+            if(show) filterCustomCarrierDropdown();
+        }
+        function selectCarrier(name) {
+            document.getElementById('sketch-carrier-select').value = name;
+            updateCarrierLogoPreview(name);
+            toggleCarrierDropdown(false);
+        }
+        function filterCustomCarrierDropdown() {
+            const input = document.getElementById('sketch-carrier-select');
+            const filter = input.value.toLowerCase();
+            const dropdown = document.getElementById('custom-carrier-dropdown');
+            if(!dropdown) return;
+            const items = dropdown.getElementsByClassName('result-item');
+            for(let i=0; i<items.length; i++) {
+                let text = items[i].innerText.toLowerCase();
+                if(text.indexOf(filter) > -1) items[i].style.display = 'flex';
+                else items[i].style.display = 'none';
+            }
+        }
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('sketch-carrier-select');
+            const dropdown = document.getElementById('custom-carrier-dropdown');
+            if(container && dropdown && !container.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
         // START
         window.addEventListener('DOMContentLoaded', () => {
+            const adminCarrierDropZone = document.getElementById('admin-carrier-drop-zone');
+            if (adminCarrierDropZone) {
+                adminCarrierDropZone.addEventListener('dragover', (e) => { e.preventDefault(); adminCarrierDropZone.style.borderColor = 'var(--accent-cyan)'; });
+                adminCarrierDropZone.addEventListener('dragleave', (e) => { e.preventDefault(); adminCarrierDropZone.style.borderColor = 'var(--accent-yellow)'; });
+                adminCarrierDropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    adminCarrierDropZone.style.borderColor = 'var(--accent-yellow)';
+                    if (e.dataTransfer.files.length > 0) processAdminCarrierLogo(e.dataTransfer.files[0]);
+                });
+            }
             renderChangelogUI();
             const dropZone = document.getElementById('sketch-drop-zone');
             if (dropZone) {
