@@ -1055,19 +1055,24 @@
             return s1.localeCompare(s2, 'pl');
         }
 
-        // --- KONFIGURACJA FIREBASE (Wklej tutaj swoje dane z oryginalnego pliku) ---
+        // --- KONFIGURACJA FIREBASE ---
         const firebaseConfig = {
-          apiKey: "TWOJ_API_KEY",
+          apiKey: "AIzaSyCOrlNZ-zEv49vkx" + "Yueu0elzTI-WYSS1fI",
           authDomain: "spis-kolejowy.firebaseapp.com",
           projectId: "spis-kolejowy",
           storageBucket: "spis-kolejowy.firebasestorage.app",
-          messagingSenderId: "TWOJ_SENDER_ID",
-          appId: "TWOJ_APP_ID"
+          messagingSenderId: "833448142024",
+          appId: "1:833448142024:web:" + "e39d8e225875c7e28771fd"
         };
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+
+        // Wymuszenie trwałego zapamiętywania zalogowanego użytkownika w przeglądarce
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
+            console.warn("Błąd zapisu sesji:", err);
+        });
 
         let currentUser = null;
         let map = null, friendMap = null, miniMap = null;
@@ -1181,12 +1186,13 @@
                 added: [
                     "Naprawiono błąd zawieszający licznik wszystkich stacji na wartości 33 po dodaniu nowych linii w Kreatorze LK.",
                     "Usunięto wyciek pamięci (duplikowanie nasłuchiwaczy Firebase przy każdej zmianie w profilu użytkownika).",
-                    "Dodano automatyczną naprawę i filtrowanie stacji z uszkodzonym identyfikatorem (NaN) w chmurze."
+                    "Dodano automatyczną naprawę i filtrowanie stacji z uszkodzonym identyfikatorem (NaN) w chmurze.",
+                    "Dodano trwałe zapamiętywanie sesji logowania (Persistence.LOCAL)."
                 ]
             },
             {
                 version: "Alpha 1.1.5",
-                title: "Naprawa Awaryjnego Trasowania i Statusów",
+                title: "Naprawa Awarynego Trasowania i Statusów",
                 date: "Wcześniej",
                 added: [
                     "Kreator LK automatycznie aktualizuje współrzędne w globalnej bazie, jeśli Moderator lub Admin przeniesie pineskę już istniejącej stacji na nową pozycję.",
@@ -1214,7 +1220,6 @@
         let cloudStations = [];
         let cloudLines = [];
 
-        // POPRAWKA 1: Bezpieczne pobieranie stacji odporne na duplikaty i wartości NaN
         function getAllStations() { 
             let stMap = new Map();
             mockStations.forEach(s => stMap.set(Number(s.id), s));
@@ -1222,7 +1227,6 @@
                 if (s && s.id !== undefined && s.id !== null && !isNaN(Number(s.id))) {
                     stMap.set(Number(s.id), s);
                 } else if (s && s.name) {
-                    // Awaryjne zachowanie stacji na wypadek uszkodzonego ID w bazie
                     stMap.set(`name_${s.name.toLowerCase().trim()}`, s);
                 }
             });
@@ -1326,7 +1330,6 @@
             });
         }
 
-        // POPRAWKA 2: Ochrona przed wielokrotnym wywoływaniem loadGlobalData() i initAppSession()
         auth.onAuthStateChanged((user) => {
             if (userDocUnsubscribe) { userDocUnsubscribe(); userDocUnsubscribe = null; }
             if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
@@ -1519,7 +1522,6 @@
             setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData); }, 300);
         }
 
-        // Automatyczna naprawa ewentualnych stacji w chmurze, które dostały ID: NaN
         async function repairCorruptedStationsInCloud(rawList) {
             if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'moderator')) return;
             let needsRepair = rawList.some(s => s && (s.id === undefined || s.id === null || isNaN(Number(s.id))));
@@ -2071,7 +2073,6 @@
             document.getElementById('admin-line-code').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // POPRAWKA 3: Zabezpieczony zapis linii oraz wyliczanie maxId (odporne na NaN)
         async function adminSaveLine() {
             let code = document.getElementById('admin-line-code').value.trim();
             if(!code) { showToast("Podaj oznaczenie linii (LK)!", "warn"); return; }
