@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.5</title>
+    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.6</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -222,12 +222,10 @@
         .sketch-preview-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
         .sketch-upload-icon { font-size: 32px; color: var(--accent-yellow); margin-bottom: 10px; }
         
-        /* NOWE: Style dla podtypów tablicowych (Pills) */
         .subtype-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; font-size: 12px; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
         .subtype-btn:hover { border-color: var(--accent-cyan); }
         .subtype-btn.active { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); font-weight: bold; }
         
-        /* Wyeksponowany SELECT dla modelu */
         #sketch-series { padding: 12px; font-size: 14px; background-color: var(--input-bg); }
 
         /* CUSTOM CHECKBOXES FOR RADIO BUTTONS */
@@ -300,7 +298,7 @@
             border-radius: 4px;
             position: relative;
             margin-top: 10px;
-            background: #121214; /* Zawsze ciemne dno pod mapą Leaflet */
+            background: #121214;
         }
         #admin-mini-map {
             width: 100%;
@@ -336,7 +334,6 @@
         .edit-btn { position: absolute; background: var(--accent-cyan); color: #000; border: 2px solid var(--panel-bg); border-radius: 50%; width: 34px; height: 34px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 20; transition: 0.2s; font-size:14px; }
         .edit-btn:hover { background: var(--accent-yellow); transform: scale(1.1); }
         
-        /* Ikonki do usuwania na profilu */
         .delete-btn-overlay { position: absolute; background: rgba(255, 77, 77, 0.9); color: #fff; border: 2px solid var(--panel-bg); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 20; transition: 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
         .delete-btn-overlay:hover { background: #ff2a2a; transform: scale(1.1); }
         
@@ -356,7 +353,6 @@
 
         .hidden-upload { display: none; }
         
-        /* Nowa ikona kamery na mapie */
         .custom-photo-marker svg { background: #121214; border-radius: 50%; padding: 2px; border: 2px solid var(--purple-photo); box-shadow: 0 0 10px rgba(162, 89, 255, 0.9); }
     </style>
 </head>
@@ -369,7 +365,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.5</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.6</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -385,7 +381,6 @@
         </div>
 
         <div class="user-profile-wrapper" id="user-profile-wrapper">
-            <!-- Skrót do profilu -->
             <button class="user-profile-btn" onclick="if(currentUser) openProfile(currentUser.uid);">
                 <div style="position: relative;">
                     <img src="https://via.placeholder.com/38/ff9e00/000000?text=SK" alt="Avatar" class="user-avatar" id="nav-user-avatar">
@@ -580,7 +575,6 @@
                         </div>
                     </div>
                     
-                    <!-- NOWE: Panel Podtypów z boku/pod selectem -->
                     <div id="dynamic-subtypes-container" style="display:none; background:rgba(255, 158, 0, 0.05); border:1px solid var(--accent-orange); padding:10px; border-radius:4px;">
                         <label style="color:var(--accent-orange); font-size:11px; margin-bottom:6px; display:block; font-weight:bold;">Wybierz wariant / podtyp (Wymagane):</label>
                         <div id="dynamic-subtypes-buttons" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
@@ -784,11 +778,8 @@
             
             <div style="padding: 20px;">
                 <h3 style="font-family:'Share Tech Mono'; color:var(--accent-cyan); border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px; text-transform:uppercase; font-size:14px;">// Galeria Publiczna</h3>
-                <div class="profile-gallery" id="profile-gallery">
-                    <!-- Galeria wpada tutaj -->
-                </div>
+                <div class="profile-gallery" id="profile-gallery"></div>
                 
-                <!-- NOWE: Sekcja z listą tras, widoczna tylko dla właściciela profilu -->
                 <div id="profile-my-rides-section" style="display:none; margin-top:35px;">
                     <h3 style="font-family:'Share Tech Mono'; color:var(--accent-cyan); border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px; text-transform:uppercase; font-size:14px;">// Zarządzaj Twoimi Trasami</h3>
                     <div id="profile-my-rides-list" style="display:flex; flex-direction:column; gap:8px;"></div>
@@ -889,9 +880,7 @@
                                         <th style="width:75px;">Lokalizacja</th>
                                     </tr>
                                 </thead>
-                                <tbody id="admin-line-tbody">
-                                    <!-- Dynamic rows go here -->
-                                </tbody>
+                                <tbody id="admin-line-tbody"></tbody>
                             </table>
                         </div>
                         
@@ -960,7 +949,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.1.5</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.1.6</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -1010,7 +999,7 @@
         </div>
     </div>
 
-    <!-- NOWY MODAL: POWIĘKSZANIE ZDJĘĆ -->
+    <!-- MODAL POWIĘKSZANIA ZDJĘĆ -->
     <div class="modal-overlay" id="image-zoom-modal" onclick="closeZoomModal()">
         <div class="modal-content" style="max-width: 90vw; padding:0; background:transparent; border:none; box-shadow:none; display:flex; justify-content:center; align-items:center;">
             <button class="modal-close" style="top: -40px; right: 0; color:#fff; font-size: 32px;" onclick="closeZoomModal()">&times;</button>
@@ -1044,7 +1033,6 @@
             });
         }
         
-        // ZAAWANSOWANE SORTOWANIE MODELI TABORU (MIESZANE ALFABETYCZNO-CYFROWE)
         function sortPolishLocoSeries(a, b) {
             let s1 = String(a).toUpperCase().trim();
             let s2 = String(b).toUpperCase().trim();
@@ -1067,14 +1055,14 @@
             return s1.localeCompare(s2, 'pl');
         }
 
-        // --- KONFIGURACJA FIREBASE ---
+        // --- KONFIGURACJA FIREBASE (Wklej tutaj swoje dane z oryginalnego pliku) ---
         const firebaseConfig = {
-          apiKey: "AIzaSyCOrlNZ-zEv49vkxYueu0elzTI-WYSS1fI",
+          apiKey: "TWOJ_API_KEY",
           authDomain: "spis-kolejowy.firebaseapp.com",
           projectId: "spis-kolejowy",
           storageBucket: "spis-kolejowy.firebasestorage.app",
-          messagingSenderId: "833448142024",
-          appId: "1:833448142024:web:e39d8e225875c7e28771fd"
+          messagingSenderId: "TWOJ_SENDER_ID",
+          appId: "TWOJ_APP_ID"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -1088,7 +1076,6 @@
         let mainDynamicLayer = null, friendDynamicLayer = null;
         let selectedPhotoLatLng = null;
 
-        // Ikona Kamery dla mapy (Nowa, spersonalizowana z SVG)
         const cameraSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--purple-photo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background:#121214; border-radius:50%; padding:2px; border:2px solid var(--accent-cyan); box-shadow: 0 0 10px rgba(162, 89, 255, 0.8);"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`;
         const photoIconObj = L.divIcon({
             className: 'custom-photo-marker',
@@ -1096,14 +1083,12 @@
             iconSize: [28, 28], iconAnchor: [14, 14]
         });
 
-        // ADMIN MINIMAP
         let adminMiniMap = null;
         let adminStationsLayer = null; 
         let adminLinePolyline = null;  
         let activeAdminRowIndex = -1;
         let adminRowCounter = 0;
 
-        // POWIADOMIENIA BADGE
         let unreadRequests = 0;
         let unreadNotifications = 0;
 
@@ -1186,37 +1171,32 @@
         ];
 
         let userData = { visitedStations: [], rides: [], photos: [], friends: [], pendingRequests: [] };
-        
-        let globalSelectedSubtype = ''; // Przechowuje wybrany przez użytkownika podtyp
+        let globalSelectedSubtype = '';
 
         const changelogData = [
             {
-                version: "Alpha 1.1.5",
-                title: "Naprawa Awaryjnego Trasowania i Statusów",
+                version: "Alpha 1.1.6",
+                title: "Naprawa Synchronizacji Stacji i Zarządzania Listenerami",
                 date: "Dzisiaj",
                 added: [
-                    "Kreator LK automatycznie aktualizuje współrzędne w globalnej bazie, jeśli Moderator lub Admin przeniesie pineskę już istniejącej stacji na nową pozycję (priorytet najnowszej zmiany).",
-                    "Poprawiono trasowanie - w przypadku gdy serwery BRouter nie są w stanie połączyć stacji wzdłuż torów, system awaryjnie narysuje fioletową linię prostą łączącą wszystkie zaznaczone stacje (wcześniej je omijał).",
-                    "Naprawiono zliczanie globalnej ilości stacji - licznik u użytkownika odświeża się natychmiast po zmianach administracyjnych."
+                    "Naprawiono błąd zawieszający licznik wszystkich stacji na wartości 33 po dodaniu nowych linii w Kreatorze LK.",
+                    "Usunięto wyciek pamięci (duplikowanie nasłuchiwaczy Firebase przy każdej zmianie w profilu użytkownika).",
+                    "Dodano automatyczną naprawę i filtrowanie stacji z uszkodzonym identyfikatorem (NaN) w chmurze."
                 ]
             },
             {
-                version: "Alpha 1.1.3",
-                title: "Drag & Drop LK i Fioletowe Trasy",
+                version: "Alpha 1.1.5",
+                title: "Naprawa Awaryjnego Trasowania i Statusów",
                 date: "Wcześniej",
                 added: [
-                    "Dodano funkcję przeciągania (drag & drop) wierszy stacji w Kreatorze LK dla Administratorów i Moderatorów. Pozwala to na łatwą zmianę kolejności stacji.",
-                    "Zmiana koloru generowanej trasy w kreatorze (BRouter) na fioletowy, dla lepszej widoczności i spójności z motywem.",
-                    "Wprowadzono licznik wszystkich zapisanych w bazie linii (w kolorze limonkowym) widoczny dla Administracji w Kreatorze.",
-                    "Pełna poprawka wsparcia zagnieżdżonych współrzędnych Firebase, zapobiegająca awariom zapisu profili.",
-                    "Użytkownicy otrzymali nowy czerwony przycisk do szybkiego czyszczenia całej swojej mapy tras (masowe usuwanie)."
+                    "Kreator LK automatycznie aktualizuje współrzędne w globalnej bazie, jeśli Moderator lub Admin przeniesie pineskę już istniejącej stacji na nową pozycję.",
+                    "Poprawiono trasowanie - w przypadku gdy serwery BRouter nie są w stanie połączyć stacji wzdłuż torów, system awaryjnie narysuje fioletową linię prostą."
                 ]
             }
         ];
 
         let uploadedImageDataUrl = "";
         
-        // --- DANE GLOBALNE PRZEWOŹNIKÓW BAZOWYCH ---
         const defaultCarriers = [
             "Arriva RP", "Captrain Polska", "CD Cargo Poland", "CTL Logistics",
             "DB Cargo Polska", "Ecco Rail", "EPL", "Freightliner PL",
@@ -1234,24 +1214,35 @@
         let cloudStations = [];
         let cloudLines = [];
 
+        // POPRAWKA 1: Bezpieczne pobieranie stacji odporne na duplikaty i wartości NaN
         function getAllStations() { 
-            let map = new Map();
-            mockStations.forEach(s => map.set(s.id, s));
-            cloudStations.forEach(s => map.set(s.id, s));
-            return Array.from(map.values());
+            let stMap = new Map();
+            mockStations.forEach(s => stMap.set(Number(s.id), s));
+            cloudStations.forEach(s => {
+                if (s && s.id !== undefined && s.id !== null && !isNaN(Number(s.id))) {
+                    stMap.set(Number(s.id), s);
+                } else if (s && s.name) {
+                    // Awaryjne zachowanie stacji na wypadek uszkodzonego ID w bazie
+                    stMap.set(`name_${s.name.toLowerCase().trim()}`, s);
+                }
+            });
+            return Array.from(stMap.values());
         }
 
         function getAllLines() { 
-            let map = new Map();
-            // Priorytet nakładania: mockLines nałożone najpierw, potem nadpisane cloudLines
-            mockLines.forEach(l => map.set(l.code, l));
-            cloudLines.forEach(l => map.set(l.code, l)); 
-            return Array.from(map.values());
+            let lMap = new Map();
+            mockLines.forEach(l => lMap.set(l.code, l));
+            cloudLines.forEach(l => lMap.set(l.code, l)); 
+            return Array.from(lMap.values());
         }
 
         // --- AUTH OBSŁUGA Z FIREBASE ---
         let userDocUnsubscribe = null;
         let adminFeedbackUnsubscribe = null;
+        let globalListsUnsub = null;
+        let globalStationsUnsub = null;
+        let globalLinesUnsub = null;
+        let sessionInitialized = false;
         let currentlyViewedProfile = null; 
 
         function switchAuthTab(tab) {
@@ -1335,6 +1326,7 @@
             });
         }
 
+        // POPRAWKA 2: Ochrona przed wielokrotnym wywoływaniem loadGlobalData() i initAppSession()
         auth.onAuthStateChanged((user) => {
             if (userDocUnsubscribe) { userDocUnsubscribe(); userDocUnsubscribe = null; }
             if (adminFeedbackUnsubscribe) { adminFeedbackUnsubscribe(); adminFeedbackUnsubscribe = null; }
@@ -1361,14 +1353,33 @@
                             createdAt: data.createdAt
                         };
                         userData = data.userData || { visitedStations: [], rides: [], photos: [], friends: [] };
-                        loadGlobalData();
-                        initAppSession();
+                        
+                        if (!sessionInitialized) {
+                            sessionInitialized = true;
+                            loadGlobalData();
+                            initAppSession();
+                        } else {
+                            document.getElementById('user-display-name').innerText = currentUser.username;
+                            document.getElementById('nav-user-avatar').src = currentUser.avatar;
+                            updateVisitedStationsUI();
+                            updateRidesUI();
+                            updatePhotosUI();
+                            renderFriendsUI();
+                            refreshStatsAndRank();
+                            if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData);
+                        }
+                        
                         checkPendingRequests(data.pendingRequests || []);
                         renderNotifications(data.notifications || []);
                     }
                 });
             } else {
                 currentUser = null;
+                sessionInitialized = false;
+                if (globalListsUnsub) { globalListsUnsub(); globalListsUnsub = null; }
+                if (globalStationsUnsub) { globalStationsUnsub(); globalStationsUnsub = null; }
+                if (globalLinesUnsub) { globalLinesUnsub(); globalLinesUnsub = null; }
+
                 document.getElementById('main-content').style.display = 'none';
                 document.getElementById('nav-menu').style.display = 'none';
                 document.getElementById('user-profile-wrapper').style.display = 'none';
@@ -1508,9 +1519,43 @@
             setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData); }, 300);
         }
 
-        // --- GLOBALNE DANE (Zasilanie i Nowe Podtypy) ---
+        // Automatyczna naprawa ewentualnych stacji w chmurze, które dostały ID: NaN
+        async function repairCorruptedStationsInCloud(rawList) {
+            if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'moderator')) return;
+            let needsRepair = rawList.some(s => s && (s.id === undefined || s.id === null || isNaN(Number(s.id))));
+            if (!needsRepair) return;
+
+            let validIds = mockStations.map(s => Number(s.id));
+            rawList.forEach(s => {
+                if (s && s.id !== undefined && s.id !== null && !isNaN(Number(s.id))) {
+                    validIds.push(Number(s.id));
+                }
+            });
+            let maxId = validIds.length > 0 ? Math.max(...validIds) : 100;
+
+            let repairedList = rawList.map(s => {
+                if (s && (s.id === undefined || s.id === null || isNaN(Number(s.id)))) {
+                    maxId++;
+                    return { ...s, id: maxId };
+                }
+                return { ...s, id: Number(s.id) };
+            });
+
+            try {
+                await db.collection('globalData').doc('stations').set({ list: repairedList }, { merge: true });
+                showToast("Automatycznie naprawiono indeksy stacji w chmurze!", "success");
+            } catch (e) {
+                console.warn("Błąd auto-naprawy stacji:", e);
+            }
+        }
+
+        // --- GLOBALNE DANE ---
         function loadGlobalData() {
-            db.collection('globalData').doc('lists').onSnapshot(doc => {
+            if (globalListsUnsub) globalListsUnsub();
+            if (globalStationsUnsub) globalStationsUnsub();
+            if (globalLinesUnsub) globalLinesUnsub();
+
+            globalListsUnsub = db.collection('globalData').doc('lists').onSnapshot(doc => {
                 if(doc.exists) {
                     const data = doc.data();
                     cloudCarriers = data.carriers || [];
@@ -1569,15 +1614,21 @@
                 }
             });
 
-            db.collection('globalData').doc('stations').onSnapshot(doc => {
-                if (doc.exists) cloudStations = doc.data().list || [];
+            globalStationsUnsub = db.collection('globalData').doc('stations').onSnapshot(doc => {
+                if (doc.exists) {
+                    let rawList = doc.data().list || [];
+                    cloudStations = rawList;
+                    repairCorruptedStationsInCloud(rawList);
+                }
                 populatePhotoStations();
-                refreshStatsAndRank(); // Wymuszenie aktualizacji głównego licznika stacji
+                updateVisitedStationsUI();
+                refreshStatsAndRank();
             });
 
-            db.collection('globalData').doc('lines').onSnapshot(doc => {
+            globalLinesUnsub = db.collection('globalData').doc('lines').onSnapshot(doc => {
                 if (doc.exists) cloudLines = doc.data().list || [];
                 renderAdminLists();
+                refreshStatsAndRank();
             });
         }
 
@@ -1637,7 +1688,6 @@
             }
         }
 
-        // --- ZARZĄDZANIE UI PODTYPÓW (KAFELKI) ---
         function handleSeriesChange(selectEl) {
             const customGroup = document.getElementById('custom-series-group');
             const subtypeContainer = document.getElementById('dynamic-subtypes-container');
@@ -1661,7 +1711,6 @@
                             btn.className = 'subtype-btn';
                             btn.innerText = safeSt;
                             btn.onclick = (e) => {
-                                // Usuń active z innych
                                 document.querySelectorAll('#dynamic-subtypes-buttons .subtype-btn').forEach(b => b.classList.remove('active'));
                                 btn.classList.add('active');
                                 globalSelectedSubtype = safeSt;
@@ -1806,7 +1855,6 @@
             row.dataset.lat = existingLat;
             row.dataset.lng = existingLng;
             
-            // Rejestracja zdarzeń Drag & Drop
             row.draggable = true;
             row.addEventListener('dragstart', handleDragStart);
             row.addEventListener('dragover', handleDragOver);
@@ -1844,7 +1892,7 @@
             row.querySelector('.branches-input').value = branches;
             
             tbody.appendChild(row);
-            redrawAdminMap(); // Rysuj nowo wczytane dane na mapie
+            redrawAdminMap();
         }
 
         function removeAdminRow(btn) {
@@ -1938,7 +1986,6 @@
                 adminMiniMap.fitBounds(adminLinePolyline.getBounds());
                 showToast("Trasa geometryczna wygenerowana na mapie!", "success");
             } catch(e) {
-                // FALLBACK jeśli brouter się zawiesi lub odrzuci punkty - Rysuje fioletowe proste linie
                 showToast("BRouter odrzucił trasę (zbyt dalekie punkty). Rysuję linie proste.", "warn");
                 if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
                 let fallbackTrack = points.map(p => [p.lat, p.lng]);
@@ -1953,7 +2000,6 @@
             configurePolandMapBase(adminMiniMap);
             adminStationsLayer = L.layerGroup().addTo(adminMiniMap);
             
-            // Resize Observer wspiera dynamiczny kontener
             const ro = new ResizeObserver(() => {
                 adminMiniMap.invalidateSize();
             });
@@ -2008,7 +2054,7 @@
             const allSt = getAllStations();
             
             line.stations.forEach((sId, index) => {
-                let st = allSt.find(s => s.id === sId);
+                let st = allSt.find(s => Number(s.id) === Number(sId));
                 let stName = st ? st.name : 'Nieznana stacja';
                 let stLat = st && st.lat ? st.lat : '';
                 let stLng = st && st.lng ? st.lng : '';
@@ -2025,6 +2071,7 @@
             document.getElementById('admin-line-code').scrollIntoView({ behavior: 'smooth' });
         }
 
+        // POPRAWKA 3: Zabezpieczony zapis linii oraz wyliczanie maxId (odporne na NaN)
         async function adminSaveLine() {
             let code = document.getElementById('admin-line-code').value.trim();
             if(!code) { showToast("Podaj oznaczenie linii (LK)!", "warn"); return; }
@@ -2036,14 +2083,14 @@
             let endName = document.getElementById('admin-line-end').value.trim() || 'Koniec';
             let lineName = `${startName} – ${endName}`;
 
-            let newStationsToAdd = [];
             let lineStationIds = [];
             let extendedData = [];
             
             let allExistingSt = getAllStations();
-            let maxId = allExistingSt.length > 0 ? Math.max(...allExistingSt.map(s => s.id)) : 100;
+            let validIds = allExistingSt.map(s => parseInt(s.id, 10)).filter(id => !isNaN(id));
+            let maxId = validIds.length > 0 ? Math.max(...validIds) : 100;
             
-            let updatedCloudStations = [...cloudStations];
+            let updatedCloudStations = cloudStations.filter(s => s && s.id !== undefined && !isNaN(parseInt(s.id, 10)));
             let stationsChanged = false;
 
             rows.forEach((row, index) => {
@@ -2063,16 +2110,15 @@
                 
                 if(!name) name = `Punkt ${index}`;
 
-                let existing = allExistingSt.find(s => s.name.toLowerCase() === name.toLowerCase());
+                let existing = allExistingSt.find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
                 let stId;
                 
-                if (existing) {
-                    stId = existing.id;
+                if (existing && existing.id && !isNaN(parseInt(existing.id, 10))) {
+                    stId = parseInt(existing.id, 10);
                     lineStationIds.push(stId);
                     
-                    // AKTUALIZACJA - PRIORYTET PINESKI: Jeśli współrzędne się różnią, nadpisujemy
                     if (Math.abs(existing.lat - lat) > 0.00001 || Math.abs(existing.lng - lng) > 0.00001) {
-                        let cIdx = updatedCloudStations.findIndex(s => s.id === stId);
+                        let cIdx = updatedCloudStations.findIndex(s => parseInt(s.id, 10) === stId);
                         if (cIdx !== -1) {
                             updatedCloudStations[cIdx].lat = lat;
                             updatedCloudStations[cIdx].lng = lng;
@@ -2108,6 +2154,7 @@
 
             try {
                 if (stationsChanged) {
+                    cloudStations = updatedCloudStations;
                     await db.collection('globalData').doc('stations').set({
                         list: updatedCloudStations
                     }, { merge: true });
@@ -2122,11 +2169,14 @@
 
                 let updatedLines = cloudLines.filter(l => l.code !== code);
                 updatedLines.push(newLine);
+                cloudLines = updatedLines;
 
                 await db.collection('globalData').doc('lines').set({
                     list: updatedLines
                 }, { merge: true });
 
+                populatePhotoStations();
+                refreshStatsAndRank();
                 showToast(`Zapisano / zaktualizowano linię ${escapeHTML(code)}!`, "success");
                 adminClearLineForm();
             } catch(e) {
@@ -2298,7 +2348,7 @@
             const step = idxStart < idxEnd ? 1 : -1;
             const pointsToVisit = [];
             for (let i = idxStart; i !== idxEnd + step; i += step) {
-                const sObj = allStations.find(s => s.id === line.stations[i]);
+                const sObj = allStations.find(s => Number(s.id) === Number(line.stations[i]));
                 if(sObj && sObj.lat && sObj.lng) pointsToVisit.push(`${sObj.lng},${sObj.lat}`);
             }
 
@@ -2328,7 +2378,6 @@
             }
         }
 
-        // FALLBACK: Rysuje fioletowe linie między stacjami bez użycia BRoutera, zamiast odrzucać trasę
         function getFallbackCoords(startId, endId, lineCode) {
             const allLines = getAllLines();
             const allStations = getAllStations();
@@ -2341,15 +2390,15 @@
                     const step = idxStart < idxEnd ? 1 : -1;
                     const track = [];
                     for (let i = idxStart; i !== idxEnd + step; i += step) {
-                        const st = allStations.find(s => s.id === line.stations[i]);
+                        const st = allStations.find(s => Number(s.id) === Number(line.stations[i]));
                         if (st && st.lat && st.lng) track.push({ lat: st.lat, lng: st.lng });
                     }
                     if (track.length >= 2) return track;
                 }
             }
 
-            const stA = allStations.find(s => s.id === startId);
-            const stB = allStations.find(s => s.id === endId);
+            const stA = allStations.find(s => Number(s.id) === Number(startId));
+            const stB = allStations.find(s => Number(s.id) === Number(endId));
             if (stA && stB) return [{ lat: stA.lat, lng: stA.lng }, { lat: stB.lat, lng: stB.lng }];
             return [];
         }
@@ -2442,8 +2491,8 @@
             if (dataObj.rides && dataObj.rides.length > 0) {
                 dataObj.rides.forEach(ride => {
                     if (ride.geoTrack && ride.geoTrack.length >= 2) {
-                        const sObj = allStations.find(s => s.id == ride.startId);
-                        const eObj = allStations.find(s => s.id == ride.endId);
+                        const sObj = allStations.find(s => Number(s.id) == Number(ride.startId));
+                        const eObj = allStations.find(s => Number(s.id) == Number(ride.endId));
                         L.polyline(ride.geoTrack, { color: '#00b32c', weight: 5, opacity: 1.0, lineCap: 'round', lineJoin: 'round' })
                         .bindPopup(`<b>[${escapeHTML(ride.line)}] ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''}</b><br>Dystans: ${ride.distanceKm} km<br>Środek: ${escapeHTML(ride.transport) || 'Pociąg planowy'}<br>Data: ${escapeHTML(ride.date) || '-'}`)
                         .addTo(layerGroup);
@@ -2453,7 +2502,7 @@
 
             if (dataObj.visitedStations && dataObj.visitedStations.length > 0) {
                 dataObj.visitedStations.forEach(stItem => {
-                    const st = typeof stItem === 'object' ? stItem : allStations.find(s => s.id == stItem);
+                    const st = typeof stItem === 'object' ? stItem : allStations.find(s => Number(s.id) == Number(stItem));
                     if (st && st.lat && st.lng) {
                         L.circleMarker([st.lat, st.lng], { radius: 7, fillColor: '#1756e8', color: '#ffffff', weight: 2, fillOpacity: 1.0 })
                         .bindPopup(`<b>Odwiedzona stacja:</b><br>${escapeHTML(st.name)}`)
@@ -2488,10 +2537,12 @@
             let activeBtn = document.getElementById(`nav-btn-${viewName}`);
             if (activeBtn) activeBtn.classList.add('active');
 
+            if (viewName === 'aktualizacja') {
+                refreshStatsAndRank();
+            }
             if (viewName === 'mapa' && map) setTimeout(() => { map.invalidateSize(); renderMapDynamicElements(map, mainDynamicLayer, userData); }, 200);
             if (viewName === 'zdjecia') { initMiniMap(); setTimeout(() => { if (miniMap) miniMap.invalidateSize(); }, 200); }
             
-            // NAPRAWA: Zezwolenie moderatorom na inicjalizację i odświeżanie mapy w kreatorze
             if (viewName === 'admin' && currentUser) {
                 if (currentUser.role === 'admin') {
                     loadAdminUsers();
@@ -2539,7 +2590,6 @@
                 document.getElementById('profile-nick').innerText = pData.username;
                 document.getElementById('profile-avatar-img').src = pData.avatar;
                 
-                // Set Profile Badge
                 const roleBadge = document.getElementById('profile-role-badge');
                 const roleStr = (pData.role || 'user').toLowerCase();
                 roleBadge.className = 'role-badge'; 
@@ -2574,7 +2624,6 @@
                 const btnMap = document.getElementById('btn-profile-map');
                 const btnBackup = document.getElementById('btn-profile-backup');
                 
-                // Czyścimy stare przyciski moderacyjne przy przełączaniu profilu
                 document.querySelectorAll('.mod-profile-btn').forEach(e => e.remove());
 
                 if (isMe) {
@@ -2586,7 +2635,6 @@
                     btnFriend.style.display = 'none';
                     btnMap.style.display = 'none';
                     
-                    // Pokazujemy sekcje do usuwania wlasnych linii
                     document.getElementById('profile-my-rides-section').style.display = 'block';
                     let rList = document.getElementById('profile-my-rides-list');
                     rList.innerHTML = '';
@@ -2595,8 +2643,8 @@
                     } else {
                         const allSt = getAllStations();
                         pData.userData.rides.forEach((r, idx) => {
-                            let sObj = allSt.find(s => s.id === r.startId);
-                            let eObj = allSt.find(s => s.id === r.endId);
+                            let sObj = allSt.find(s => Number(s.id) === Number(r.startId));
+                            let eObj = allSt.find(s => Number(s.id) === Number(r.endId));
                             rList.innerHTML += `<div class="result-item" style="flex-direction:row; justify-content:space-between; align-items:center;">
                                 <span style="font-family:'Share Tech Mono'; font-size:12px; color:var(--text-main);"><strong>[${escapeHTML(r.line)}]</strong> ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''}</span>
                                 <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="removeRideFromProfile(${idx})">🗑️ Usuń trasę</button>
@@ -2624,7 +2672,6 @@
                         btnFriend.style.color = "#000";
                     }
 
-                    // MODERACJA AVATARA I TŁA ZEWNĘTRZNA (Nowe ikony i UI)
                     if (currentUser.role === 'admin' || currentUser.role === 'moderator') {
                         let headerBlock = document.getElementById('profile-header-block');
                         
@@ -2646,7 +2693,6 @@
                     }
                 }
 
-                // Generowanie galerii z zabezpieczeniem (XSS)
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
@@ -2751,7 +2797,6 @@
             }, 200);
         }
 
-        
         function removeProfileImage(type) {
             if (!confirm(`Czy na pewno chcesz usunąć ${type === 'avatar' ? 'zdjęcie profilowe' : 'zdjęcie w tle'}?`)) return;
 
@@ -2905,7 +2950,7 @@
             let stId = selectElement.value;
             if(!stId) return;
             let allSt = getAllStations();
-            let stObj = allSt.find(s => s.id == stId);
+            let stObj = allSt.find(s => Number(s.id) == Number(stId));
             if (stObj && stObj.lat && stObj.lng && miniMap) {
                 let newPos = [stObj.lat, stObj.lng];
                 miniMap.setView(newPos, 12);
@@ -3069,7 +3114,7 @@
             showToast('Usunięto zdjęcie.', 'warn');
         }
 
-        // --- STATYSTYKI TABORU & DRILLDOWN Z ZABEZPIECZENIEM SPADOCHRONOWYM ---
+        // --- STATYSTYKI TABORU & DRILLDOWN ---
         function getCategoryForSeries(seriesStr) {
             let s = seriesStr.toUpperCase().trim();
             if (/^(EN|ED|WE|EW|31WE|45WE|IMPULS|ELF|FLIRT)/.test(s)) return "Elektryczne zespoły trakcyjne";
@@ -3095,7 +3140,7 @@
 
             userData.photos.forEach(p => {
                 let cat = p.category || getCategoryForSeries(p.series);
-                if (!stats[cat]) cat = "Lokomotywy elektryczne"; // Fallback ratunkowy, chroni przed zgubieniem fotki
+                if (!stats[cat]) cat = "Lokomotywy elektryczne";
                 stats[cat].series.add(p.series.toUpperCase().trim()); 
                 stats[cat].count++;
             });
@@ -3132,7 +3177,7 @@
             let seriesMap = {};
             userData.photos.forEach(p => {
                 let pCat = p.category || getCategoryForSeries(p.series);
-                if (!validCats.includes(pCat)) pCat = "Lokomotywy elektryczne"; // Ten sam fallback ratunkowy
+                if (!validCats.includes(pCat)) pCat = "Lokomotywy elektryczne";
                 
                 if (pCat === catName) {
                     let s = p.series.toUpperCase().trim();
@@ -3199,7 +3244,7 @@
             
             const allSt = getAllStations();
             line.stations.forEach(sId => {
-                let stObj = allSt.find(s => s.id === sId);
+                let stObj = allSt.find(s => Number(s.id) === Number(sId));
                 if (stObj) { startSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; }
             });
             if (line.stations.length > 1) endSelect.selectedIndex = line.stations.length - 1;
@@ -3242,12 +3287,11 @@
                 return; 
             }
             
-            // NOWOŚĆ: Główny przycisk do usunięcia wszystkich linii z mapy użytkownika
             container.innerHTML = `<div style="margin-bottom:10px;"><button class="btn-danger" style="width:100%; padding:8px; font-size:12px;" onclick="clearAllUserRides()">🗑️ Usuń WSZYSTKIE swoje przejazdy (Wyczyść mapę)</button></div>`;
             
             const allSt = getAllStations();
             userData.rides.forEach((r, idx) => {
-                let sObj = allSt.find(s => s.id === r.startId); let eObj = allSt.find(s => s.id === r.endId);
+                let sObj = allSt.find(s => Number(s.id) === Number(r.startId)); let eObj = allSt.find(s => Number(s.id) === Number(r.endId));
                 let badge = document.createElement('div'); badge.className = 'ride-badge';
                 badge.innerHTML = `<span><strong>[${escapeHTML(r.line)}]</strong> ${sObj ? escapeHTML(sObj.name) : ''} &rarr; ${eObj ? escapeHTML(eObj.name) : ''} <span style="color:var(--accent-cyan);">(${r.distanceKm} km)</span></span> <button class="btn-danger" onclick="removeRide(${idx})">Usuń odcinek</button>`;
                 container.appendChild(badge);
@@ -3261,7 +3305,6 @@
             showToast('Usunięto odcinek z mapy.', 'warn'); 
         }
 
-        // NOWA FUNKCJA: Usuwanie wszystkich dodanych linii użytkownika
         function clearAllUserRides() {
             if(!confirm("⚠️ UWAGA! Czy na pewno chcesz trwale usunąć wszystkie swoje przejechane odcinki linii i wyczyścić z nich mapę?")) return;
             userData.rides = [];
@@ -3281,7 +3324,7 @@
             filtered.forEach(station => {
                 let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong>[${escapeHTML(station.code) || 'Brak'}] ${escapeHTML(station.name)}</strong></span>`;
                 item.onclick = () => {
-                    if (!userData.visitedStations.some(s => typeof s === 'object' ? s.id === station.id : s === station.id)) {
+                    if (!userData.visitedStations.some(s => typeof s === 'object' ? Number(s.id) === Number(station.id) : Number(s) === Number(station.id))) {
                         userData.visitedStations.push(station); saveUserDataToStorage(); updateVisitedStationsUI(); showToast(`Dodano: ${station.name}`);
                     } else showToast('Stacja już znajduje się na liście.', 'warn');
                     resContainer.style.display = 'none';
@@ -3298,7 +3341,7 @@
             
             const allSt = getAllStations();
             userData.visitedStations.forEach((st, idx) => {
-                let sObj = typeof st === 'object' ? st : allSt.find(x => x.id === st);
+                let sObj = typeof st === 'object' ? st : allSt.find(x => Number(x.id) === Number(st));
                 if(sObj) {
                     let badge = document.createElement('div'); badge.className = 'station-badge';
                     badge.innerHTML = `<span>${escapeHTML(sObj.name)}</span> <button class="btn-danger" onclick="removeStation(${idx})">Usuń</button>`;
@@ -3311,9 +3354,14 @@
         function refreshStatsAndRank() {
             const totalKm = calculateTotalKm(userData.rides);
             const allSt = getAllStations();
-            document.getElementById('stat-stations').innerText = `${userData.visitedStations.length} / ${allSt.length}`;
-            document.getElementById('stat-rides').innerText = userData.rides.length;
-            document.getElementById('stat-km').innerText = `${totalKm} km`;
+            const statStationsEl = document.getElementById('stat-stations');
+            if (statStationsEl) {
+                statStationsEl.innerText = `${userData.visitedStations.length} / ${allSt.length}`;
+            }
+            const statRidesEl = document.getElementById('stat-rides');
+            if (statRidesEl) statRidesEl.innerText = userData.rides.length;
+            const statKmEl = document.getElementById('stat-km');
+            if (statKmEl) statKmEl.innerText = `${totalKm} km`;
         }
 
         function populatePhotoStations() {
@@ -3561,7 +3609,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.1.5", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.1.6", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
