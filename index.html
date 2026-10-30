@@ -1836,12 +1836,37 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
+                    // Automatyczne usuwanie jasnego/białego tła
+                    try {
+                        let imgData = ctx.getImageData(0, 0, width, height);
+                        let data = imgData.data;
+                        let cornerPixels = [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]];
+                        let rSum = 0, gSum = 0, bSum = 0;
+                        cornerPixels.forEach(p => {
+                            let idx = (p[1] * width + p[0]) * 4;
+                            rSum += data[idx]; gSum += data[idx + 1]; bSum += data[idx + 2];
+                        });
+                        let avgR = rSum / 4, avgG = gSum / 4, avgB = bSum / 4;
+                        
+                        if (avgR > 215 && avgG > 215 && avgB > 215) {
+                            for (let i = 0; i < data.length; i += 4) {
+                                let r = data[i], g = data[i+1], b = data[i+2];
+                                if (r > 210 && g > 210 && b > 210 && Math.abs(r - g) < 20 && Math.abs(g - b) < 20) {
+                                    data[i + 3] = 0; // Przezroczystość
+                                }
+                            }
+                            ctx.putImageData(imgData, 0, 0);
+                        }
+                    } catch (err) {
+                        console.warn("Błąd usuwania tła:", err);
+                    }
+                    
                     adminUploadedCarrierLogo = canvas.toDataURL('image/png', 0.95);
                     
                     document.getElementById('admin-carrier-logo-preview').src = adminUploadedCarrierLogo;
                     document.getElementById('admin-carrier-logo-preview').style.display = 'block';
                     document.getElementById('admin-carrier-upload-placeholder').style.display = 'none';
-                    showToast('Logo przewoźnika gotowe!');
+                    showToast('Logo gotowe! (Jasne tło usunięto automatycznie)');
                 };
                 img.src = event.target.result;
             };
@@ -3227,12 +3252,25 @@
             globalSelectedSubtype = '';
             document.getElementById('sketch-custom-series').value = '';
             document.getElementById('sketch-station-select').value = '';
+            
+            // Reset radio buttons to default
+            document.querySelector('input[name="photo-visibility"][value="public"]').checked = true;
+            document.querySelector('input[name="photo-device"][value="Aparat"]').checked = true;
+            document.getElementById('sketch-painting-select').value = 'Standardowe';
+            togglePaintingInput(document.getElementById('sketch-painting-select'));
+
+            if (miniMapMarker) {
+                miniMapMarker.setLatLng([52.2289, 21.0022]);
+                selectedPhotoLatLng = miniMapMarker.getLatLng();
+                if (miniMap) miniMap.setView([52.2289, 21.0022], 6);
+            }
+
             uploadedImageDataUrl = '';
             document.getElementById('sketch-preview-img').style.display = 'none';
             document.getElementById('sketch-upload-placeholder').style.display = 'block';
             
             let nameToNotify = subtype ? `${series} (${subtype}) ${number}` : `${series} ${number}`;
-            showToast(`Zapisano ${nameToNotify} w Chmurze!`, 'success');
+            showToast(`Zapisano ${nameToNotify} w Chmurze! Zresetowano formularz.`, 'success');
             
             if (visibility === 'public') {
                 notifyFriends(`Dodał(a) nowe zdjęcie taboru: ${nameToNotify}`, 'photo');
