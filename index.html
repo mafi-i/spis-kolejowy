@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -597,7 +598,7 @@
                         <div class="form-group">
                             <label>Przewoźnik:</label>
                             <div style="display:flex; gap:10px; align-items:center;">
-                                <img id="sketch-carrier-logo-preview" src="" style="height:36px; width:auto; max-width:150px; border-radius:4px; display:none; background:var(--border-color); object-fit:contain;">
+                                <img id="sketch-carrier-logo-preview" src="" style="height:36px; width:auto; max-width:150px; border-radius:4px; display:none; background:var(--border-color); object-fit:contain; flex-shrink:0;">
                                 <div style="position: relative; flex: 1;">
                                     <input type="text" id="sketch-carrier-select" autocomplete="off" placeholder="np. PKP Intercity, wpisz by wyszukać..." style="width:100%; box-sizing:border-box;" oninput="filterCustomCarrierDropdown(); updateCarrierLogoPreview(this.value)" onclick="toggleCarrierDropdown(true)">
                                     <div id="custom-carrier-dropdown" class="results-list" style="position:absolute; top:100%; left:0; right:0; z-index:100; display:none; max-height:200px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--accent-cyan); box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></div>
@@ -1708,7 +1709,7 @@
                     return na.localeCompare(nb,'pl');
                 }).forEach(c => {
                     let safeC = escapeHTML(typeof c === 'object' ? c.name : c);
-                    let logoThumb = (typeof c === 'object' && c.logo) ? `<img src="${c.logo}" style="width:20px; height:20px; border-radius:3px; object-fit:cover;">` : '';
+                    let logoThumb = (typeof c === 'object' && c.logo) ? `<img src="${c.logo}" style="height:20px; width:auto; max-width:80px; border-radius:3px; object-fit:contain; flex-shrink:0;">` : '';
                     carriersList.innerHTML += `<div class="admin-data-item"><span style="display:flex; align-items:center; gap:6px;">${logoThumb}${safeC}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${safeC}')">Usuń</button></div>`;
                 });
             }
@@ -3238,7 +3239,7 @@
                 let subInfo = p.subtype ? `<span style="font-size:11px; color:var(--text-muted);">(${escapeHTML(p.subtype)})</span> ` : '';
                 
                 let carrierData = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === p.carrier);
-                let logoHTML = (carrierData && typeof carrierData === 'object' && carrierData.logo) ? `<img src="${carrierData.logo}" style="width:20px; height:20px; border-radius:3px; vertical-align:middle; margin-right:5px;">` : '';
+                let logoHTML = (carrierData && typeof carrierData === 'object' && carrierData.logo) ? `<img src="${carrierData.logo}" style="height:20px; width:auto; max-width:80px; object-fit:contain; border-radius:3px; vertical-align:middle; margin-right:5px; flex-shrink:0;">` : '';
                 card.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
                         <img src="${p.url}" style="width:75px; height:54px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="zoomImage('${p.url}')">
