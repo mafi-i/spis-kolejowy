@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.7 Cloud + Alpha 1.1.3</title>
+    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.5</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -369,7 +369,7 @@
     <nav class="navbar">
         <a href="#" class="nav-logo" onclick="if(currentUser) switchView('mapa'); return false;">
             <div class="led-board"><span class="led-text">S K</span></div>
-            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.3</span></span>
+            <span class="logo-title">Spis <span class="slash">//</span> Kolejowy <span class="version-badge">Alpha 1.1.5</span></span>
         </a>
 
         <div class="nav-menu" id="nav-menu">
@@ -752,7 +752,6 @@
                     <img src="" id="profile-banner-img" class="profile-banner" style="display:none; cursor:zoom-in;" onclick="zoomImage(this.src)">
                     <div id="profile-banner-placeholder" class="profile-banner" style="background:var(--sub-bg); display:flex; justify-content:center; align-items:center; color:var(--text-muted); font-family:'Share Tech Mono'; font-size:12px;">Brak zdjęcia w tle</div>
                     <button id="btn-edit-banner" class="edit-btn banner-edit" style="display:none;" onclick="document.getElementById('banner-upload').click()">✏️</button>
-                    <!-- Ikonka usuwania Tła (Zmieniona) -->
                     <button id="btn-remove-banner" class="delete-btn-overlay banner-del" style="display:none;" onclick="removeProfileImage('banner')" title="Usuń zdjęcie w tle">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
@@ -764,7 +763,6 @@
                     <div class="profile-avatar-container">
                         <img src="https://via.placeholder.com/150/ff9e00/000000?text=SK" id="profile-avatar-img" class="profile-avatar" onclick="zoomImage(this.src)">
                         <button id="btn-edit-avatar" class="edit-btn avatar-edit" style="display:none;" onclick="document.getElementById('avatar-upload').click()">✏️</button>
-                        <!-- Ikonka usuwania Avatara (Zmieniona - umieszczona po lewej na dole krawędzi obrazka profilowego) -->
                         <button id="btn-remove-avatar" class="delete-btn-overlay avatar-del" style="display:none;" onclick="removeProfileImage('avatar')" title="Usuń avatar">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
@@ -962,7 +960,7 @@
             <button class="modal-close" onclick="document.getElementById('app-info-modal').style.display='none'">&times;</button>
             <h2 style="color:var(--accent-cyan);">// Informacje o Aplikacji</h2>
             <p style="font-family:'Share Tech Mono'; font-size:14px; line-height:1.6; margin-bottom:10px;">
-                <strong>Spis Kolejowy Alpha 1.1.3</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
+                <strong>Spis Kolejowy Alpha 1.1.5</strong> to chmurowy notatnik dla miłośników kolei (Spotterów).<br><br>
                 <span style="color:var(--accent-yellow);">Funkcje:</span><br>
                 • Zaznaczaj przejechane trasy (system automatycznie poprowadzi linię po prawdziwych torach przez BRouter).<br>
                 • Dodawaj upolowany tabor do spisu ze skompresowanym zdjęciem, datą i przewoźnikiem.<br>
@@ -1193,28 +1191,25 @@
 
         const changelogData = [
             {
+                version: "Alpha 1.1.5",
+                title: "Naprawa Awaryjnego Trasowania i Statusów",
+                date: "Dzisiaj",
+                added: [
+                    "Kreator LK automatycznie aktualizuje współrzędne w globalnej bazie, jeśli Moderator lub Admin przeniesie pineskę już istniejącej stacji na nową pozycję (priorytet najnowszej zmiany).",
+                    "Poprawiono trasowanie - w przypadku gdy serwery BRouter nie są w stanie połączyć stacji wzdłuż torów, system awaryjnie narysuje fioletową linię prostą łączącą wszystkie zaznaczone stacje (wcześniej je omijał).",
+                    "Naprawiono zliczanie globalnej ilości stacji - licznik u użytkownika odświeża się natychmiast po zmianach administracyjnych."
+                ]
+            },
+            {
                 version: "Alpha 1.1.3",
                 title: "Drag & Drop LK i Fioletowe Trasy",
-                date: "Dzisiaj",
+                date: "Wcześniej",
                 added: [
                     "Dodano funkcję przeciągania (drag & drop) wierszy stacji w Kreatorze LK dla Administratorów i Moderatorów. Pozwala to na łatwą zmianę kolejności stacji.",
                     "Zmiana koloru generowanej trasy w kreatorze (BRouter) na fioletowy, dla lepszej widoczności i spójności z motywem.",
                     "Wprowadzono licznik wszystkich zapisanych w bazie linii (w kolorze limonkowym) widoczny dla Administracji w Kreatorze.",
                     "Pełna poprawka wsparcia zagnieżdżonych współrzędnych Firebase, zapobiegająca awariom zapisu profili.",
                     "Użytkownicy otrzymali nowy czerwony przycisk do szybkiego czyszczenia całej swojej mapy tras (masowe usuwanie)."
-                ]
-            },
-            {
-                version: "Alpha 1.1.1",
-                title: "Responsywne Okno Mapy, Naprawa Ilostanu i UI Podtypów",
-                date: "Wcześniej",
-                added: [
-                    "Mapa w trybie admina (Kreator LK) zamieniona na skalowalny kwadrat. W prawym dolnym rogu kontenera masz możliwość rozciągania mapy dla lepszej czytelności układów stacji.",
-                    "Kompleksowa naprawa zliczania taboru w Ilostanie. Zastosowano zaawansowany algorytm spadochronowy - zdjęcia nie znikają już ze statystyk, nawet w przypadku niezgodności literowej kategorii systemowych.",
-                    "W widoku właściciela Profilu wprowadzono panel sterowania. Właściciel może jednym przyciskiem usunąć własne odcinki (linie) oraz zdjęcia bezpośrednio z galerii podglądowej.",
-                    "Dodano tryb Jasny/Ciemny dostępny po prawej stronie menu.",
-                    "Nowa w pełni customowa Ikona Aparatu, pojawiająca się na głównej mapie zamiast standardowych kropek podczas wyświetlania taborytów.",
-                    "Usunięto stare emoji kosza na rzecz profesjonalnych wektorowych ikon dla narzędzi profilowych (skasuj avatar, tło)."
                 ]
             }
         ];
@@ -1577,6 +1572,7 @@
             db.collection('globalData').doc('stations').onSnapshot(doc => {
                 if (doc.exists) cloudStations = doc.data().list || [];
                 populatePhotoStations();
+                refreshStatsAndRank(); // Wymuszenie aktualizacji głównego licznika stacji
             });
 
             db.collection('globalData').doc('lines').onSnapshot(doc => {
@@ -1937,13 +1933,17 @@
                 
                 if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
                 
-                // ZMIENIONO KOLOR NA FIOLETOWY (#a259ff)
                 adminLinePolyline = L.polyline(track, { color: '#a259ff', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
                 
                 adminMiniMap.fitBounds(adminLinePolyline.getBounds());
                 showToast("Trasa geometryczna wygenerowana na mapie!", "success");
             } catch(e) {
-                showToast("Nie udało się pobrać geometrii trasy (BRouter): " + e.message, "error");
+                // FALLBACK jeśli brouter się zawiesi lub odrzuci punkty - Rysuje fioletowe proste linie
+                showToast("BRouter odrzucił trasę (zbyt dalekie punkty). Rysuję linie proste.", "warn");
+                if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
+                let fallbackTrack = points.map(p => [p.lat, p.lng]);
+                adminLinePolyline = L.polyline(fallbackTrack, { color: '#a259ff', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
+                adminMiniMap.fitBounds(adminLinePolyline.getBounds());
             }
         }
 
@@ -2042,6 +2042,9 @@
             
             let allExistingSt = getAllStations();
             let maxId = allExistingSt.length > 0 ? Math.max(...allExistingSt.map(s => s.id)) : 100;
+            
+            let updatedCloudStations = [...cloudStations];
+            let stationsChanged = false;
 
             rows.forEach((row, index) => {
                 let inputs = row.querySelectorAll('input');
@@ -2066,6 +2069,24 @@
                 if (existing) {
                     stId = existing.id;
                     lineStationIds.push(stId);
+                    
+                    // AKTUALIZACJA - PRIORYTET PINESKI: Jeśli współrzędne się różnią, nadpisujemy
+                    if (Math.abs(existing.lat - lat) > 0.00001 || Math.abs(existing.lng - lng) > 0.00001) {
+                        let cIdx = updatedCloudStations.findIndex(s => s.id === stId);
+                        if (cIdx !== -1) {
+                            updatedCloudStations[cIdx].lat = lat;
+                            updatedCloudStations[cIdx].lng = lng;
+                        } else {
+                            updatedCloudStations.push({
+                                id: stId,
+                                code: existing.code || name.substring(0, 3).toUpperCase(),
+                                name: existing.name,
+                                lat: lat,
+                                lng: lng
+                            });
+                        }
+                        stationsChanged = true;
+                    }
                 } else {
                     maxId++;
                     stId = maxId;
@@ -2076,18 +2097,19 @@
                         lat: lat,
                         lng: lng
                     };
-                    newStationsToAdd.push(newSt);
+                    updatedCloudStations.push(newSt);
                     allExistingSt.push(newSt); 
                     lineStationIds.push(maxId);
+                    stationsChanged = true;
                 }
                 
                 extendedData.push({ id: stId, type: type, desc: desc, branches: branches });
             });
 
             try {
-                if (newStationsToAdd.length > 0) {
+                if (stationsChanged) {
                     await db.collection('globalData').doc('stations').set({
-                        list: firebase.firestore.FieldValue.arrayUnion(...newStationsToAdd)
+                        list: updatedCloudStations
                     }, { merge: true });
                 }
 
@@ -2267,11 +2289,11 @@
             const allStations = getAllStations();
 
             const line = allLines.find(l => l.code === lineCode);
-            if (!line) return getFallbackCoords(startId, endId);
+            if (!line) return getFallbackCoords(startId, endId, lineCode);
 
             const idxStart = line.stations.indexOf(startId);
             const idxEnd = line.stations.indexOf(endId);
-            if (idxStart === -1 || idxEnd === -1) return getFallbackCoords(startId, endId);
+            if (idxStart === -1 || idxEnd === -1) return getFallbackCoords(startId, endId, lineCode);
 
             const step = idxStart < idxEnd ? 1 : -1;
             const pointsToVisit = [];
@@ -2280,7 +2302,7 @@
                 if(sObj && sObj.lat && sObj.lng) pointsToVisit.push(`${sObj.lng},${sObj.lat}`);
             }
 
-            if(pointsToVisit.length < 2) return getFallbackCoords(startId, endId);
+            if(pointsToVisit.length < 2) return getFallbackCoords(startId, endId, lineCode);
 
             const pointsParam = pointsToVisit.join('|');
             const url = `https://brouter.de/brouter?lonlats=${pointsParam}&profile=rail&alternativeidx=0&format=geojson`;
@@ -2301,13 +2323,31 @@
                 return { track: rawCoords.map(c => ({ lat: c[1], lng: c[0] })), distance: distanceKm };
             } catch (err) {
                 clearTimeout(timeoutId);
-                const fb = getFallbackCoords(startId, endId);
+                const fb = getFallbackCoords(startId, endId, lineCode);
                 return { track: fb, distance: calculateSimpleDistance(fb) };
             }
         }
 
-        function getFallbackCoords(startId, endId) {
+        // FALLBACK: Rysuje fioletowe linie między stacjami bez użycia BRoutera, zamiast odrzucać trasę
+        function getFallbackCoords(startId, endId, lineCode) {
+            const allLines = getAllLines();
             const allStations = getAllStations();
+            const line = allLines.find(l => l.code === lineCode);
+
+            if (line) {
+                const idxStart = line.stations.indexOf(startId);
+                const idxEnd = line.stations.indexOf(endId);
+                if (idxStart !== -1 && idxEnd !== -1) {
+                    const step = idxStart < idxEnd ? 1 : -1;
+                    const track = [];
+                    for (let i = idxStart; i !== idxEnd + step; i += step) {
+                        const st = allStations.find(s => s.id === line.stations[i]);
+                        if (st && st.lat && st.lng) track.push({ lat: st.lat, lng: st.lng });
+                    }
+                    if (track.length >= 2) return track;
+                }
+            }
+
             const stA = allStations.find(s => s.id === startId);
             const stB = allStations.find(s => s.id === endId);
             if (stA && stB) return [{ lat: stA.lat, lng: stA.lng }, { lat: stB.lat, lng: stB.lng }];
@@ -3521,7 +3561,7 @@
 
         // --- JSON BACKUP ---
         function exportUserDatabaseJSON() {
-            const payload = { version: "Alpha 1.1.3", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
+            const payload = { version: "Alpha 1.1.5", exportedAt: new Date().toISOString(), user: currentUser, userData: userData };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `spis_kolejowy_${currentUser.username}.json`);
             document.body.appendChild(a); a.click(); a.remove();
