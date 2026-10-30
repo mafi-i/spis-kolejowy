@@ -1823,10 +1823,13 @@
                     const maxWidth = 250;
                     let width = img.width, height = img.height;
                     
-                    if (width > height) { 
-                        if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; } 
-                    } else { 
-                        if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; } 
+                    if (width > maxWidth) { 
+                        height = Math.round(height * (maxWidth / width)); 
+                        width = maxWidth; 
+                    }
+                    if (height > maxHeight) { 
+                        width = Math.round(width * (maxHeight / height)); 
+                        height = maxHeight; 
                     }
                     
                     canvas.width = width; canvas.height = height;
@@ -2971,10 +2974,13 @@
                     
                     let width = img.width, height = img.height;
                     
-                    if (width > height) { 
-                        if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; } 
-                    } else { 
-                        if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; } 
+                    if (width > maxWidth) { 
+                        height = Math.round(height * (maxWidth / width)); 
+                        width = maxWidth; 
+                    }
+                    if (height > maxHeight) { 
+                        width = Math.round(width * (maxHeight / height)); 
+                        height = maxHeight; 
                     }
                     
                     canvas.width = width; canvas.height = height;
