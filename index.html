@@ -2045,6 +2045,7 @@
                             <option value="podg">🔵 Posterunek Odg.</option>
                             <option value="po">⚪ Przystanek</option>
                             <option value="none">❌ Zlikwidowany</option>
+                            <option value="punkt">⚫ Punkt Geometrii</option>
                         </select>
                     </div>
                 </td>
@@ -2057,10 +2058,36 @@
                 </td>
             `;
             
-            row.querySelector('.type-select').value = type;
-            row.querySelector('.station-name-input').value = stName;
-            row.querySelector('.desc-input').value = desc;
-            row.querySelector('.branches-input').value = branches;
+            let tSel = row.querySelector('.type-select');
+            let nInp = row.querySelector('.station-name-input');
+            let dInp = row.querySelector('.desc-input');
+            let bInp = row.querySelector('.branches-input');
+            
+            tSel.value = type;
+            nInp.value = stName;
+            dInp.value = desc;
+            bInp.value = branches;
+            
+            function togglePunkt() {
+                if (tSel.value === 'punkt') {
+                    if (!nInp.value.startsWith('[Punkt Geometrii]')) nInp.value = '[Punkt Geometrii]';
+                    nInp.style.display = 'none';
+                    dInp.style.display = 'none';
+                    bInp.style.display = 'none';
+                } else {
+                    if (nInp.value.startsWith('[Punkt Geometrii]')) nInp.value = '';
+                    nInp.style.display = '';
+                    dInp.style.display = '';
+                    bInp.style.display = '';
+                }
+                if (typeof mapInitialized !== 'undefined') redrawAdminMap();
+            }
+            
+            tSel.addEventListener('change', togglePunkt);
+            if (type === 'punkt' || stName.startsWith('[Punkt Geometrii]')) {
+                tSel.value = 'punkt';
+                togglePunkt();
+            }
             
             tbody.appendChild(row);
             redrawAdminMap();
@@ -2113,7 +2140,9 @@
                     }
                     
                     let m = L.marker([lat, lng], markerOptions).addTo(adminStationsLayer);
-                    m.bindTooltip(`<b>${escapeHTML(name)}</b>`, {permanent: true, direction: 'right', className: 'admin-map-tooltip'}).openTooltip();
+                    if (!name.startsWith("[Punkt Geometrii]")) {
+                        m.bindTooltip(`<b>${escapeHTML(name)}</b>`, {permanent: true, direction: 'right', className: 'admin-map-tooltip'}).openTooltip();
+                    }
                     
                     if(isActive) {
                         m.on('dragend', function(e) {
@@ -2314,7 +2343,7 @@
                 }
                 
                 if(!name) name = `Punkt ${index}`;
-                if (name === "[Punkt Geometrii]") name = `[Punkt Geometrii] ${code} #${index}`;
+                if (type === 'punkt' || name.startsWith("[Punkt Geometrii]")) name = `[Punkt Geometrii] ${code} #${index}`;
 
                 let existing = allExistingSt.find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
                 let stId;
@@ -3590,7 +3619,7 @@
                 });
             }
 
-            const allSt = getAllStations();
+            const allSt = getAllStations().filter(s => !s.name.startsWith("[Punkt Geometrii]"));
             const statStationsEl = document.getElementById('stat-stations');
             if (statStationsEl) {
                 statStationsEl.innerText = `${userData.visitedStations.length} / ${allSt.length}`;
@@ -3620,7 +3649,7 @@
             let sel = document.getElementById('sketch-station-select');
             if (!sel) return;
             sel.innerHTML = '<option value="">[ Wybierz stację z listy ]</option>';
-            let sorted = [...getAllStations()].sort((a,b) => a.name.localeCompare(b.name));
+            let sorted = [...getAllStations()].filter(s => !s.name.startsWith("[Punkt Geometrii]")).sort((a,b) => a.name.localeCompare(b.name));
             sorted.forEach(st => { sel.innerHTML += `<option value="${st.id}">${escapeHTML(st.name)}</option>`; });
         }
 
