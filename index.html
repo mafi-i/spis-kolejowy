@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -903,7 +902,7 @@
                         </div>
 
                         <label style="color:var(--text-muted); font-size:12px; margin-top:10px; display:block;">
-                            <input type="checkbox" id="admin-force-straight"> Wymuś linie proste (dla zlikwidowanych/nieprzejezdnych szlaków)
+                            <input type="checkbox" id="admin-force-straight"> Wymuś WSZYSTKIE linie proste (dla całkowicie zlikwidowanych szlaków)
                         </label>
                         <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; align-items:center;">
                             <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
@@ -911,7 +910,12 @@
                             <button class="btn-success" style="margin-left:auto;" onclick="adminSaveLine()">Zapisz / Aktualizuj w Chmurze</button>
                             <button class="btn-danger" style="background:#4a4a5a;" onclick="adminClearLineForm()">Wyczyść Kreator</button>
                         </div>
-                        <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
+                        <p style="font-size:11px; color:var(--text-main); margin-top:10px; line-height:1.4; background: rgba(255, 158, 0, 0.1); padding: 8px; border-left: 3px solid var(--accent-orange);">
+                            <b>Dlaczego BRouter rysuje proste lub gigantyczne objazdy?</b><br>
+                            Brązowe tory na mapie to szlaki <i>nieczynne/zlikwidowane</i> w globalnej bazie OpenStreetMap. Algorytm trasujący <b>fizycznie ich nie widzi</b> i próbuje wyznaczać objazdy po pomarańczowych (czynnych) torach. Skrypt teraz automatycznie blokuje takie objazdy i rysuje w ich miejscu czerwoną linię prostą.<br>
+                            👉 <i>Jeśli chcesz dokładnie "wygiąć" trasę na nieczynnym brązowym torze, musisz dodać więcej "Przystanków" (pinezek) w miejscach zakrętów.</i>
+                        </p>
+                        <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w chmurze.</p>
                     </div>
                     
                     <!-- LISTA DODANYCH LINII -->
@@ -2164,7 +2168,7 @@
                     let brouterDist = geojson.features[0].properties['track-length'] / 1000;
                     let directDist = calculateSimpleDistance([{lat: p1.lat, lng: p1.lng}, {lat: p2.lat, lng: p2.lng}]);
                     
-                    if (brouterDist > directDist * 2.5 + 5) {
+                    if (brouterDist > directDist * 1.5 + 3) {
                         throw new Error("Absurd detour");
                     }
                     
