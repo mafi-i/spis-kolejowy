@@ -1227,17 +1227,7 @@
 
         let uploadedImageDataUrl = "";
         
-        const defaultCarriers = [
-            "Arriva RP", "Captrain Polska", "CD Cargo Poland", "CTL Logistics",
-            "DB Cargo Polska", "Ecco Rail", "EPL", "Freightliner PL",
-            "Koleje Dolnośląskie", "Koleje Małopolskie", "Koleje Mazowieckie",
-            "Koleje Śląskie", "Koleje Wielkopolskie", "Laude Smart Intermodal",
-            "Lotos Kolej", "LTE Polska", "Łódzka Kolej Aglomeracyjna (ŁKA)", 
-            "Majkoltrans", "Metrans", "Orlen KolTrans", "PCC Intermodal", 
-            "PKP Cargo", "PKP Intercity", "PKP LHS", "Polregio", "Rail Polska", 
-            "SKM Trójmiasto", "SKM Warszawa", "Warszawska Kolej Dojazdowa (WKD)"
-        ];
-        defaultCarriers.sort((a, b) => a.localeCompare(b, 'pl'));
+        const defaultCarriers = [];
 
         let cloudCarriers = [];
         let cloudSeries = [];
