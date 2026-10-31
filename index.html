@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.7</title>
+    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.6</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -2159,6 +2160,14 @@
                     let resp = await fetch(url);
                     if(!resp.ok) throw new Error("API error");
                     let geojson = await resp.json();
+                    
+                    let brouterDist = geojson.features[0].properties['track-length'] / 1000;
+                    let directDist = calculateSimpleDistance([{lat: p1.lat, lng: p1.lng}, {lat: p2.lat, lng: p2.lng}]);
+                    
+                    if (brouterDist > directDist * 2.5 + 5) {
+                        throw new Error("Absurd detour");
+                    }
+                    
                     let rawCoords = geojson.features[0].geometry.coordinates;
                     let trackSeg = rawCoords.map(c => [c[1], c[0]]);
                     let poly = L.polyline(trackSeg, { color: '#a259ff', weight: 4, dashArray: "10, 5" });
@@ -2167,7 +2176,7 @@
                     hasErrors = true;
                     // Fallback dla pojedynczego zepsutego segmentu (czerwona linia)
                     let poly = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], { color: '#ff4d4d', weight: 4, dashArray: "8, 8" });
-                    poly.bindTooltip("BRouter odrzucił ten odcinek (np. tor w budowie/nieczynny w bazach mapy)", {sticky: true});
+                    poly.bindTooltip("BRouter odrzucił odcinek lub wymyślił absurdalny objazd (nieczynny tor).", {sticky: true});
                     adminLinePolyline.addLayer(poly);
                 }
             }
