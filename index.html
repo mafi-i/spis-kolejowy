@@ -902,16 +902,20 @@
                         </div>
 
                         <label style="color:var(--text-muted); font-size:12px; margin-top:10px; display:block;">
-                            <input type="checkbox" id="admin-force-straight"> Wymuś linie proste (dla zlikwidowanych/nieprzejezdnych szlaków)
+                            <input type="checkbox" id="admin-force-straight"> Wymuś WSZYSTKIE linie proste (dla całkowicie zlikwidowanych szlaków)
                         </label>
                         <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; align-items:center;">
                             <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
-                            <button class="btn-cyan" id="btn-draw-mode" onclick="toggleDrawingMode()" style="background:#4a4a5a; color:#fff; border-color:#fff;">✏️ Rysuj Łuki (Klikaj na mapie)</button>
                             <button class="btn-small" style="background:#ff9e00; padding:8px;" onclick="adminGenerateRoute()">[ Przelicz i Rysuj Trasę (BRouter) ]</button>
                             <button class="btn-success" style="margin-left:auto;" onclick="adminSaveLine()">Zapisz / Aktualizuj w Chmurze</button>
                             <button class="btn-danger" style="background:#4a4a5a;" onclick="adminClearLineForm()">Wyczyść Kreator</button>
                         </div>
-                        <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w globalnej bazie danych chmury, udostępniając je innym użytkownikom do zaznaczania na mapie.</p>
+                        <p style="font-size:11px; color:var(--text-main); margin-top:10px; line-height:1.4; background: rgba(255, 158, 0, 0.1); padding: 8px; border-left: 3px solid var(--accent-orange);">
+                            <b>Dlaczego BRouter rysuje proste lub gigantyczne objazdy?</b><br>
+                            Brązowe tory na mapie to szlaki <i>nieczynne/zlikwidowane</i> w globalnej bazie OpenStreetMap. Algorytm trasujący <b>fizycznie ich nie widzi</b> i próbuje wyznaczać objazdy po pomarańczowych (czynnych) torach. Skrypt teraz automatycznie blokuje takie objazdy i rysuje w ich miejscu czerwoną linię prostą.<br>
+                            👉 <i>Jeśli chcesz dokładnie "wygiąć" trasę na nieczynnym brązowym torze, musisz dodać więcej "Przystanków" (pinezek) w miejscach zakrętów.</i>
+                        </p>
+                        <p style="font-size:10px; color:var(--text-muted); margin-top:8px;">Zapisanie linii automatycznie utworzy brakujące stacje w chmurze.</p>
                     </div>
                     
                     <!-- LISTA DODANYCH LINII -->
@@ -1108,7 +1112,6 @@
         let adminStationsLayer = null; 
         let adminLinePolyline = null;  
         let activeAdminRowIndex = -1;
-        let isDrawingMode = false;
         let adminRowCounter = 0;
 
         let unreadRequests = 0;
@@ -2106,9 +2109,6 @@
                     if(isActive) {
                          let activeIcon = L.divIcon({ className: 'custom-photo-marker', html: `<div style="background-color: var(--accent-yellow); width: 14px; height: 14px; border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 10px #ffb703;"></div>`, iconSize: [18, 18], iconAnchor: [9, 9] });
                          markerOptions.icon = activeIcon;
-                    } else if (name === "[Punkt Geometrii]") {
-                         let smallIcon = L.divIcon({ className: 'custom-photo-marker', html: `<div style="background-color: #555; width: 8px; height: 8px; border-radius: 50%; border: 1px solid #000;"></div>`, iconSize: [10, 10], iconAnchor: [5, 5] });
-                         markerOptions.icon = smallIcon;
                     }
                     
                     let m = L.marker([lat, lng], markerOptions).addTo(adminStationsLayer);
@@ -2168,7 +2168,7 @@
                     let brouterDist = geojson.features[0].properties['track-length'] / 1000;
                     let directDist = calculateSimpleDistance([{lat: p1.lat, lng: p1.lng}, {lat: p2.lat, lng: p2.lng}]);
                     
-                    if (brouterDist > directDist * 2.5 + 5) {
+                    if (brouterDist > directDist * 1.5 + 3) {
                         throw new Error("Absurd detour");
                     }
                     
@@ -2205,26 +2205,7 @@
             });
             ro.observe(document.querySelector('.admin-map-wrapper'));
             
-        function toggleDrawingMode() {
-            isDrawingMode = !isDrawingMode;
-            let btn = document.getElementById('btn-draw-mode');
-            if(isDrawingMode) {
-                btn.style.background = '#00b32c';
-                btn.innerText = '🛑 Zakończ Rysowanie Łuku';
-                showToast("Tryb rysowania włączony. Klikaj na mapie, aby gęsto dodawać ukryte punkty (obrysować stary tor).", "info");
-            } else {
-                btn.style.background = '#4a4a5a';
-                btn.innerText = '✏️ Rysuj Łuki (Klikaj na mapie)';
-                showToast("Tryb rysowania wyłączony.", "info");
-            }
-        }
-
             adminMiniMap.on('click', function(e) {
-                if (isDrawingMode) {
-                    adminAddLineRow(e.latlng.lat, e.latlng.lng, "[Punkt Geometrii]", "none", "", "");
-                    return;
-                }
-                
                 if (activeAdminRowIndex === -1) {
                     showToast("Wybierz najpierw stację z tabeli (kliknij 📍), aby ustalić jej pozycję!", "warn");
                     return;
@@ -2251,9 +2232,6 @@
             document.getElementById('admin-line-end').value = '';
             document.getElementById('admin-line-tbody').innerHTML = '';
             activeAdminRowIndex = -1;
-            isDrawingMode = false;
-            let btn = document.getElementById('btn-draw-mode');
-            if(btn) { btn.style.background = '#4a4a5a'; btn.innerText = '✏️ Rysuj Łuki (Klikaj na mapie)'; }
             if(adminLinePolyline) { adminMiniMap.removeLayer(adminLinePolyline); adminLinePolyline = null; }
             if(adminStationsLayer) adminStationsLayer.clearLayers();
             showToast("Kreator został wyczyszczony.", "info");
@@ -2330,6 +2308,7 @@
                 }
                 
                 if(!name) name = `Punkt ${index}`;
+                if (name === "[Punkt Geometrii]") name = `[Punkt Geometrii] ${code} #${index}`;
 
                 let existing = allExistingSt.find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
                 let stId;
@@ -3483,16 +3462,11 @@
             startSelect.innerHTML = ''; endSelect.innerHTML = '';
             
             const allSt = getAllStations();
-            let validStationsCount = 0;
             line.stations.forEach(sId => {
                 let stObj = allSt.find(s => Number(s.id) === Number(sId));
-                if (stObj && stObj.name !== "[Punkt Geometrii]") { 
-                    startSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; 
-                    endSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; 
-                    validStationsCount++;
-                }
+                if (stObj) { startSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; }
             });
-            if (validStationsCount > 1) endSelect.selectedIndex = validStationsCount - 1;
+            if (line.stations.length > 1) endSelect.selectedIndex = line.stations.length - 1;
             document.getElementById('segment-selector-box').style.display = 'block';
         }
 
@@ -3563,7 +3537,7 @@
             let resContainer = document.getElementById('station-search-results'); resContainer.innerHTML = '';
             
             const allSt = getAllStations();
-            let filtered = allSt.filter(s => (s.name.toLowerCase().includes(query) || (s.code && s.code.toLowerCase().includes(query))) && s.name !== "[Punkt Geometrii]");
+            let filtered = allSt.filter(s => s.name.toLowerCase().includes(query) || (s.code && s.code.toLowerCase().includes(query)));
             if (filtered.length === 0) { resContainer.style.display = 'none'; return; }
             resContainer.style.display = 'flex';
             filtered.forEach(station => {
