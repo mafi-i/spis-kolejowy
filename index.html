@@ -1721,7 +1721,7 @@
             if(linesList) {
                 linesList.innerHTML = '';
                 if(linesCountBadge) {
-                    linesCountBadge.innerText = `[Zapisano w bazie: ${cloudLines.length}]`;
+                    linesCountBadge.innerText = `[Zapisano w bazie: ${cloudLines.length} | Łącznie w systemie: ${getAllLines().length}]`;
                 }
                 [...cloudLines].sort((a,b) => a.code.localeCompare(b.code, 'pl', {numeric: true})).forEach(l => {
                     let safeCode = escapeHTML(l.code);
@@ -1976,9 +1976,28 @@
             this.style.opacity = '0.5';
         }
 
+        let dragScrollInterval = null;
+        function startDragScroll(dir) {
+            if (!dragScrollInterval) {
+                dragScrollInterval = setInterval(() => { window.scrollBy(0, dir); }, 20);
+            }
+        }
+        function stopDragScroll() {
+            if (dragScrollInterval) { clearInterval(dragScrollInterval); dragScrollInterval = null; }
+        }
+
         function handleDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
+            
+            const scrollThreshold = 100;
+            if (e.clientY < scrollThreshold) {
+                startDragScroll(-15);
+            } else if (window.innerHeight - e.clientY < scrollThreshold) {
+                startDragScroll(15);
+            } else {
+                stopDragScroll();
+            }
             return false;
         }
 
@@ -1994,6 +2013,7 @@
         function handleDrop(e) {
             e.stopPropagation();
             this.style.borderTop = '';
+            if(typeof stopDragScroll === 'function') stopDragScroll();
             
             if (draggedAdminRow && draggedAdminRow !== this) {
                 let tbody = this.parentNode;
@@ -2016,6 +2036,7 @@
             let rows = document.querySelectorAll('#admin-line-tbody tr');
             rows.forEach(row => row.style.borderTop = '');
             draggedAdminRow = null;
+            if(typeof stopDragScroll === 'function') stopDragScroll();
         }
 
         function adminAddLineRow(existingLat = '', existingLng = '', stName = '', type = 'stacja', desc = '', branches = '') {
@@ -3619,10 +3640,15 @@
                 });
             }
 
-            const allSt = getAllStations().filter(s => !s.name.startsWith("[Punkt Geometrii]"));
+            const allSt = getAllStations().filter(s => !s.name.includes("[Punkt Geometrii]"));
             const statStationsEl = document.getElementById('stat-stations');
             if (statStationsEl) {
-                statStationsEl.innerText = `${userData.visitedStations.length} / ${allSt.length}`;
+                // Filtrujemy by mieć pewność, że zliczane są tylko prawdziwe stacje użytkownika
+                let validUserVisits = userData.visitedStations.filter(s => {
+                    let stObj = typeof s === 'object' ? s : allSt.find(x => Number(x.id) === Number(s));
+                    return stObj && !stObj.name.includes("[Punkt Geometrii]");
+                }).length;
+                statStationsEl.innerText = `${validUserVisits} / ${allSt.length}`;
             }
             const statRidesEl = document.getElementById('stat-rides');
             if (statRidesEl) statRidesEl.innerText = userData.rides.length;
@@ -3649,7 +3675,7 @@
             let sel = document.getElementById('sketch-station-select');
             if (!sel) return;
             sel.innerHTML = '<option value="">[ Wybierz stację z listy ]</option>';
-            let sorted = [...getAllStations()].filter(s => !s.name.startsWith("[Punkt Geometrii]")).sort((a,b) => a.name.localeCompare(b.name));
+            let sorted = [...getAllStations()].filter(s => !s.name.includes("[Punkt Geometrii]")).sort((a,b) => a.name.localeCompare(b.name));
             sorted.forEach(st => { sel.innerHTML += `<option value="${st.id}">${escapeHTML(st.name)}</option>`; });
         }
 
