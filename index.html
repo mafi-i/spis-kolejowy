@@ -1533,6 +1533,14 @@
             }
 
             initMap();
+            // Czyścimy ukryte punkty z tablicy usera (wsteczna kompatybilność, jeśli komuś się zapisały)
+            if (userData && userData.visitedStations) {
+                const allSt = getAllStations();
+                userData.visitedStations = userData.visitedStations.filter(s => {
+                    let stObj = typeof s === 'object' ? s : allSt.find(x => Number(x.id) === Number(s));
+                    return stObj && !stObj.name.includes("[Punkt Geometrii]");
+                });
+            }
             populatePhotoStations();
             renderFriendsUI();
             updateVisitedStationsUI();
@@ -3034,7 +3042,17 @@
             document.getElementById('modal-friend-name').innerText = "// Mapa: " + currentlyViewedProfile.username;
             const fData = currentlyViewedProfile.userData;
             
-            document.getElementById('modal-friend-stations').innerText = fData.visitedStations ? fData.visitedStations.length : 0;
+            
+            let validFriendVisits = 0;
+            if (fData.visitedStations) {
+                const allSt = getAllStations();
+                validFriendVisits = fData.visitedStations.filter(s => {
+                    let stObj = typeof s === 'object' ? s : allSt.find(x => Number(x.id) === Number(s));
+                    return stObj && !stObj.name.includes("[Punkt Geometrii]");
+                }).length;
+            }
+            document.getElementById('modal-friend-stations').innerText = validFriendVisits;
+    
             document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
             document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
             document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
@@ -3520,7 +3538,7 @@
             const allSt = getAllStations();
             line.stations.forEach(sId => {
                 let stObj = allSt.find(s => Number(s.id) === Number(sId));
-                if (stObj) { startSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; }
+                if (stObj && !stObj.name.includes("[Punkt Geometrii]")) { startSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; endSelect.innerHTML += `<option value="${stObj.id}">${escapeHTML(stObj.name)}</option>`; }
             });
             if (line.stations.length > 1) endSelect.selectedIndex = line.stations.length - 1;
             document.getElementById('segment-selector-box').style.display = 'block';
@@ -3593,12 +3611,16 @@
             let resContainer = document.getElementById('station-search-results'); resContainer.innerHTML = '';
             
             const allSt = getAllStations();
-            let filtered = allSt.filter(s => s.name.toLowerCase().includes(query) || (s.code && s.code.toLowerCase().includes(query)));
+            let filtered = allSt.filter(s => !s.name.includes("[Punkt Geometrii]") && (s.name.toLowerCase().includes(query) || (s.code && s.code.toLowerCase().includes(query))));
             if (filtered.length === 0) { resContainer.style.display = 'none'; return; }
             resContainer.style.display = 'flex';
             filtered.forEach(station => {
                 let item = document.createElement('div'); item.className = 'result-item'; item.innerHTML = `<span><strong>[${escapeHTML(station.code) || 'Brak'}] ${escapeHTML(station.name)}</strong></span>`;
                 item.onclick = () => {
+                    if (station.name.includes("[Punkt Geometrii]")) {
+                        showToast('To jest ukryty punkt, nie można go dodać.', 'error');
+                        return;
+                    }
                     if (!userData.visitedStations.some(s => typeof s === 'object' ? Number(s.id) === Number(station.id) : Number(s) === Number(station.id))) {
                         userData.visitedStations.push(station); saveUserDataToStorage(); updateVisitedStationsUI(); showToast(`Dodano: ${station.name}`);
                     } else showToast('Stacja już znajduje się na liście.', 'warn');
@@ -3617,7 +3639,7 @@
             const allSt = getAllStations();
             userData.visitedStations.forEach((st, idx) => {
                 let sObj = typeof st === 'object' ? st : allSt.find(x => Number(x.id) === Number(st));
-                if(sObj) {
+                if(sObj && !sObj.name.includes("[Punkt Geometrii]")) {
                     let badge = document.createElement('div'); badge.className = 'station-badge';
                     badge.innerHTML = `<span>${escapeHTML(sObj.name)}</span> <button class="btn-danger" onclick="removeStation(${idx})">Usuń</button>`;
                     container.appendChild(badge);
