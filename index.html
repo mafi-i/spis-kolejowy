@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -2183,7 +2184,18 @@
             
             if (previewPolyline) { adminMiniMap.removeLayer(previewPolyline); previewPolyline = null; }
             if (points.length > 1 && (!adminLinePolyline || !adminMiniMap.hasLayer(adminLinePolyline))) {
-                previewPolyline = L.polyline(points, { color: '#a259ff', weight: 2, dashArray: "4, 4", opacity: 0.6 }).addTo(adminMiniMap);
+                let segments = [];
+                for(let i=0; i<points.length - 1; i++) {
+                   segments.push([points[i], points[i+1]]);
+                }
+                
+                previewPolyline = L.featureGroup().addTo(adminMiniMap);
+                segments.forEach((seg, i) => {
+                    let type = document.getElementById(`admin-row-${i}`) ? document.getElementById(`admin-row-${i}`).querySelector('.type-select').value : 'stacja';
+                    let rowElement = document.querySelectorAll('#admin-line-tbody tr')[i]; let rowType = rowElement ? rowElement.querySelector('.type-select').value : 'stacja'; let color = (rowType === 'none') ? '#ff4d4d' : '#a259ff';
+                    let poly = L.polyline(seg, { color: color, weight: 2, dashArray: "4, 4", opacity: 0.8 });
+                    previewPolyline.addLayer(poly);
+                });
             }
         }
 
@@ -2217,6 +2229,17 @@
             for (let i = 0; i < points.length - 1; i++) {
                 let p1 = points[i];
                 let p2 = points[i+1];
+                let rowType = document.querySelectorAll('#admin-line-tbody tr')[i].querySelector('.type-select').value;
+                
+                if (rowType === 'none') {
+                    // Jeśli fragment zlikwidowany (none), od razu prosta linia, omijamy BRouter
+                    let poly = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], { color: '#ff4d4d', weight: 4, dashArray: "8, 8" });
+                    poly.bindTooltip("Odcinek zlikwidowany (linia prosta)", {sticky: true});
+                    adminLinePolyline.addLayer(poly);
+                    hasErrors = true;
+                    continue; // przejdź do kolejnego segmentu
+                }
+                
                 let url = `https://brouter.de/brouter?lonlats=${p1.lng},${p1.lat}|${p2.lng},${p2.lat}&profile=rail&alternativeidx=0&format=geojson`;
                 
                 try {
