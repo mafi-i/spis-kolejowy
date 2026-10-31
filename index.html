@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.6</title>
+    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.7</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -2145,10 +2145,10 @@
 
             showToast("Generowanie Linii przez BRouter...", "info");
             
-            let fullTrack = [];
             let hasErrors = false;
             
             if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
+            adminLinePolyline = L.featureGroup().addTo(adminMiniMap);
 
             for (let i = 0; i < points.length - 1; i++) {
                 let p1 = points[i];
@@ -2160,25 +2160,22 @@
                     if(!resp.ok) throw new Error("API error");
                     let geojson = await resp.json();
                     let rawCoords = geojson.features[0].geometry.coordinates;
-                    if(i === 0) {
-                        fullTrack.push(...rawCoords.map(c => [c[1], c[0]]));
-                    } else {
-                        // Omijamy pierwszy punkt kolejnego segmentu, żeby się nie dublował
-                        fullTrack.push(...rawCoords.slice(1).map(c => [c[1], c[0]]));
-                    }
+                    let trackSeg = rawCoords.map(c => [c[1], c[0]]);
+                    let poly = L.polyline(trackSeg, { color: '#a259ff', weight: 4, dashArray: "10, 5" });
+                    adminLinePolyline.addLayer(poly);
                 } catch(e) {
                     hasErrors = true;
-                    // Fallback dla pojedynczego zepsutego segmentu (rysuje prostą kreskę tylko tam, gdzie BRouter nie podołał)
-                    if(i === 0) fullTrack.push([p1.lat, p1.lng]);
-                    fullTrack.push([p2.lat, p2.lng]);
+                    // Fallback dla pojedynczego zepsutego segmentu (czerwona linia)
+                    let poly = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], { color: '#ff4d4d', weight: 4, dashArray: "8, 8" });
+                    poly.bindTooltip("BRouter odrzucił ten odcinek (np. tor w budowie/nieczynny w bazach mapy)", {sticky: true});
+                    adminLinePolyline.addLayer(poly);
                 }
             }
 
-            adminLinePolyline = L.polyline(fullTrack, { color: '#a259ff', weight: 4, dashArray: "10, 5" }).addTo(adminMiniMap);
             adminMiniMap.fitBounds(adminLinePolyline.getBounds());
             
             if(hasErrors) {
-                showToast("BRouter nie połączył niektórych fragmentów (np. tor nieczynny). Tam narysowano proste linie.", "warn");
+                showToast("Niektóre odcinki (na czerwono) odrzucone przez mapy BRouter - użyto linii prostych.", "warn");
             } else {
                 showToast("Trasa geometryczna wzdłuż torów wygenerowana!", "success");
             }
@@ -2544,47 +2541,27 @@
             if(pointsToVisit.length < 2) return getFallbackCoords(startId, endId, lineCode);
 
             const pointsParam = pointsToVisit.join('|');
-            let fullTrack = [];
-            let totalDist = 0;
-            
-            for (let i = 0; i < pointsToVisit.length - 1; i++) {
-                let p1 = pointsToVisit[i];
-                let p2 = pointsToVisit[i+1];
-                let url = `https://brouter.de/brouter?lonlats=${p1}|${p2}&profile=rail&alternativeidx=0&format=geojson`;
-                
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 4000);
-                    const resp = await fetch(url, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!resp.ok) throw new Error("BRouter fail");
-                    const geojson = await resp.json();
-                    
-                    let rawCoords = geojson.features[0].geometry.coordinates;
-                    totalDist += (geojson.features[0].properties['track-length'] / 1000);
-                    
-                    let trackSeg = rawCoords.map(c => ({ lat: c[1], lng: c[0] }));
-                    if (i > 0) trackSeg.shift();
-                    fullTrack.push(...trackSeg);
-                } catch(e) {
-                    let c1 = p1.split(','); let c2 = p2.split(',');
-                    let fallbackSeg = [
-                        {lat: parseFloat(c1[1]), lng: parseFloat(c1[0])},
-                        {lat: parseFloat(c2[1]), lng: parseFloat(c2[0])}
-                    ];
-                    totalDist += calculateSimpleDistance(fallbackSeg);
-                    if(i > 0) fallbackSeg.shift();
-                    fullTrack.push(...fallbackSeg);
-                }
-            }
-            
-            if (fullTrack.length < 2) {
+            const url = `https://brouter.de/brouter?lonlats=${pointsParam}&profile=rail&alternativeidx=0&format=geojson`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+            try {
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!resp.ok) throw new Error("Status " + resp.status);
+                const geojson = await resp.json();
+                if (!geojson.features || geojson.features.length === 0) throw new Error("Pusty wynik");
+
+                const rawCoords = geojson.features[0].geometry.coordinates;
+                const distanceMeters = geojson.features[0].properties['track-length'];
+                const distanceKm = Math.round(distanceMeters / 1000);
+                return { track: rawCoords.map(c => ({ lat: c[1], lng: c[0] })), distance: distanceKm };
+            } catch (err) {
+                clearTimeout(timeoutId);
                 const fb = getFallbackCoords(startId, endId, lineCode);
                 return { track: fb, distance: calculateSimpleDistance(fb) };
             }
-            
-            return { track: fullTrack, distance: Math.round(totalDist) };
         }
 
         function getFallbackCoords(startId, endId, lineCode) {
