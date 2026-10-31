@@ -1,9 +1,10 @@
+<!-- WERSJA UZYTKOWNIKA: Osobny kafelek mapowania zlikwidowanych tras od pinezek -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spis // Kolejowy v4.8 Cloud + Alpha 1.1.6</title>
+    <title>Spis // Kolejowy - WERSJA UŻYTKOWNIKA (Zlikwidowane)</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -902,7 +903,8 @@
                         </div>
 
                         <label style="color:var(--text-muted); font-size:12px; margin-top:10px; display:block;">
-                            <input type="checkbox" id="admin-force-straight"> Wymuś WSZYSTKIE linie proste (dla całkowicie zlikwidowanych szlaków)
+                            <input type="checkbox" id="admin-force-straight" style="display:none;"> <!-- Ukryte stare pole -->
+                            <input type="checkbox" id="admin-abandoned-mode"> [Osobny Kafelek] Rysuj trasę jako ZLIKWIDOWANĄ (łączy pinezki omijając BRouter)
                         </label>
                         <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; align-items:center;">
                             <button class="btn-cyan" onclick="adminAddLineRow()">+ Dodaj nowy wiersz (Stację)</button>
@@ -2139,6 +2141,16 @@
             if (points.length < 2) { showToast("Potrzebujesz co najmniej 2 stacji na mapie (Z pinezkami)!", "warn"); return; }
             
             let forceStraight = document.getElementById('admin-force-straight') && document.getElementById('admin-force-straight').checked;
+            let abandonedMode = document.getElementById('admin-abandoned-mode') && document.getElementById('admin-abandoned-mode').checked;
+            if (abandonedMode) {
+                if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
+                let track = points.map(p => [p.lat, p.lng]);
+                // Zlikwidowane trasy rysujemy na brązowo (lub szaro) wzdłuż pinezek
+                adminLinePolyline = L.polyline(track, { color: '#8b5a2b', weight: 5, dashArray: "12, 12" }).addTo(adminMiniMap);
+                adminMiniMap.fitBounds(adminLinePolyline.getBounds());
+                showToast("Narysowano zlikwidowaną trasę od pinezki do pinezki.", "info");
+                return;
+            }
             if (forceStraight) {
                 if (adminLinePolyline) adminMiniMap.removeLayer(adminLinePolyline);
                 let track = points.map(p => [p.lat, p.lng]);
