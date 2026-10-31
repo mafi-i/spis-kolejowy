@@ -1845,13 +1845,47 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-
-                    adminUploadedCarrierLogo = canvas.toDataURL('image/png', 0.95);
+                    // Automatyczne usuwanie jasnego/białego tła (tzw. smart background remover dla logotypów)
+                    try {
+                        let imgData = ctx.getImageData(0, 0, width, height);
+                        let data = imgData.data;
+                        
+                        // Próbkujemy narożniki, aby rozpoznać kolor tła
+                        let cornerPixels = [
+                            [0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]
+                        ];
+                        let rSum = 0, gSum = 0, bSum = 0;
+                        cornerPixels.forEach(p => {
+                            let idx = (p[1] * width + p[0]) * 4;
+                            rSum += data[idx];
+                            gSum += data[idx + 1];
+                            bSum += data[idx + 2];
+                        });
+                        let avgR = rSum / 4;
+                        let avgG = gSum / 4;
+                        let avgB = bSum / 4;
+                        
+                        // Jeśli tło jest jasne/białe (np. powyżej progu 220), zamieniamy na przezroczystość
+                        if (avgR > 215 && avgG > 215 && avgB > 215) {
+                            for (let i = 0; i < data.length; i += 4) {
+                                let r = data[i], g = data[i+1], b = data[i+2];
+                                // Jeśli piksel jest bliski wykrytemu kolorowi tła, usuwamy go (ustawiamy alpha na 0)
+                                if (r > 210 && g > 210 && b > 210 && Math.abs(r - g) < 20 && Math.abs(g - b) < 20) {
+                                    data[i + 3] = 0;
+                                }
+                            }
+                            ctx.putImageData(imgData, 0, 0);
+                        }
+                    } catch (err) {
+                        console.warn("Błąd automatycznego usuwania tła (CORS/Canvas):", err);
+                    }
+                    
+                    adminUploadedCarrierLogo = canvas.toDataURL('image/webp', 0.60);
                     
                     document.getElementById('admin-carrier-logo-preview').src = adminUploadedCarrierLogo;
                     document.getElementById('admin-carrier-logo-preview').style.display = 'block';
                     document.getElementById('admin-carrier-upload-placeholder').style.display = 'none';
-                    showToast('Logo przewoźnika gotowe!');
+                    showToast('Logo przewoźnika gotowe (tło zostało usunięte automatycznie)!');
                 };
                 img.src = event.target.result;
             };
