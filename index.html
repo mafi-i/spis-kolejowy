@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -1268,7 +1267,8 @@
         // --- AUTH OBSŁUGA Z FIREBASE ---
         let userDocUnsubscribe = null;
         let adminFeedbackUnsubscribe = null;
-        let globalListsUnsub = null;
+        let globalCarriersUnsub = null;
+        let globalSeriesUnsub = null;
         let globalStationsUnsub = null;
         let globalLinesUnsub = null;
         let sessionInitialized = false;
@@ -1404,7 +1404,8 @@
             } else {
                 currentUser = null;
                 sessionInitialized = false;
-                if (globalListsUnsub) { globalListsUnsub(); globalListsUnsub = null; }
+                if (globalCarriersUnsub) { globalCarriersUnsub(); globalCarriersUnsub = null; }
+                if (globalSeriesUnsub) { globalSeriesUnsub(); globalSeriesUnsub = null; }
                 if (globalStationsUnsub) { globalStationsUnsub(); globalStationsUnsub = null; }
                 if (globalLinesUnsub) { globalLinesUnsub(); globalLinesUnsub = null; }
 
@@ -1578,88 +1579,84 @@
 
         // --- GLOBALNE DANE ---
         function loadGlobalData() {
-            if (globalListsUnsub) globalListsUnsub();
+            if (globalCarriersUnsub) globalCarriersUnsub();
+            if (globalSeriesUnsub) globalSeriesUnsub();
             if (globalStationsUnsub) globalStationsUnsub();
             if (globalLinesUnsub) globalLinesUnsub();
 
-            globalListsUnsub = db.collection('globalData').doc('lists').onSnapshot(doc => {
-                if(doc.exists) {
-                    const data = doc.data();
-                    cloudCarriers = data.carriers || [];
-                    cloudSeries = data.series || [];
+            globalCarriersUnsub = db.collection('carriers').onSnapshot(snapshot => {
+                cloudCarriers = [];
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    cloudCarriers.push(data);
+                });
+                
+                const dl = document.getElementById('custom-carrier-dropdown');
+                if(dl) {
+                    dl.innerHTML = '';
+                    let mergedCarriers = [];
+                    let existingNames = new Set();
                     
-                    const dl = document.getElementById('custom-carrier-dropdown');
-                    if(dl) {
-                        dl.innerHTML = '';
-                        let mergedCarriers = [];
-                        let existingNames = new Set();
-                        
-                        cloudCarriers.forEach(c => {
-                            let name = typeof c === 'object' ? c.name : c;
-                            if(!existingNames.has(name)) {
-                                existingNames.add(name);
-                                mergedCarriers.push(typeof c === 'object' ? c : { name: c, logo: '' });
-                            }
-                        });
-                        
-                        defaultCarriers.forEach(c => {
-                            if(!existingNames.has(c)) {
-                                existingNames.add(c);
-                                mergedCarriers.push({ name: c, logo: '' });
-                            }
-                        });
-                        
-                        mergedCarriers.sort((a,b) => a.name.localeCompare(b.name, 'pl'));
-                        
-                        mergedCarriers.forEach(c => {
-                            let logoHTML = c.logo ? `<img src="${c.logo}" style="height:20px; width:auto; max-width:60px; object-fit:contain; border-radius:2px;">` : `<div style="width:20px; height:20px; display:inline-block;"></div>`;
-                            dl.innerHTML += `<div class="result-item" style="flex-direction:row; align-items:center; gap:8px;" onclick="selectCarrier('${escapeHTML(c.name)}')">${logoHTML} <span>${escapeHTML(c.name)}</span></div>`;
-                        });
-                    }
-
-                    const sl = document.getElementById('sketch-series');
-                    if(sl) {
-                        sl.innerHTML = '<option value="">[ Wybierz model z listy ]</option>';
-                        
-                        const categories = [
-                            "Lokomotywy elektryczne",
-                            "Lokomotywy spalinowe",
-                            "Elektryczne zespoły trakcyjne",
-                            "Spalinowe zespoły trakcyjne i autobusy szynowe"
-                        ];
-
-                        categories.forEach(cat => {
-                            let catSeries = cloudSeries.filter(s => (typeof s === 'object' ? s.category : 'Brak kategorii') === cat);
-                            if(catSeries.length > 0) {
-                                sl.innerHTML += `<option disabled style="background:var(--sub-bg); color:var(--accent-orange); font-weight:bold; text-align:center;">--- ${cat.toUpperCase()} ---</option>`;
-                                catSeries.sort((a,b) => {
-                                    let na = typeof a === 'object' ? a.name : a;
-                                    let nb = typeof b === 'object' ? b.name : b;
-                                    return sortPolishLocoSeries(na, nb);
-                                }).forEach(s => {
-                                    let name = typeof s === 'object' ? s.name : s;
-                                    let safeName = escapeHTML(name);
-                                    let safeCat = escapeHTML(cat);
-                                    let rawSubtypes = (typeof s === 'object' && s.subtypes) ? s.subtypes : [];
-                                    let safeSubtypesJSON = JSON.stringify(rawSubtypes).replace(/"/g, '&quot;');
-                                    
-                                    sl.innerHTML += `<option value='{"name":"${safeName}", "cat":"${safeCat}", "subtypes":${safeSubtypesJSON}}'>${safeName}</option>`;
-                                });
-                            }
-                        });
-
-                        sl.innerHTML += `<option disabled style="background:var(--sub-bg); color:var(--accent-cyan); font-weight:bold; text-align:center;">--- INNE ---</option>`;
-                        sl.innerHTML += `<option value="CUSTOM">➕ Dodaj ręcznie (Brak na liście)</option>`;
-                    }
+                    cloudCarriers.forEach(c => {
+                        let name = c.name;
+                        if(name && !existingNames.has(name)) {
+                            existingNames.add(name);
+                            mergedCarriers.push(c);
+                        }
+                    });
                     
-                    renderAdminLists();
-                } else {
-                    const dl = document.getElementById('custom-carrier-dropdown');
-                    if(dl) {
-                        dl.innerHTML = '';
-                        defaultCarriers.forEach(c => dl.innerHTML += `<div class="result-item" onclick="selectCarrier('${escapeHTML(c)}')"><div style="width:20px; height:20px; display:inline-block;"></div><span>${escapeHTML(c)}</span></div>`);
-                    }
+                    defaultCarriers.forEach(c => {
+                        if(!existingNames.has(c)) {
+                            existingNames.add(c);
+                            mergedCarriers.push({ name: c, logo: '' });
+                        }
+                    });
+                    
+                    mergedCarriers.sort((a,b) => a.name.localeCompare(b.name, 'pl'));
+                    
+                    mergedCarriers.forEach(c => {
+                        let logoHTML = c.logo ? `<img src="${c.logo}" style="height:20px; width:auto; max-width:60px; object-fit:contain; border-radius:2px;">` : `<div style="width:20px; height:20px; display:inline-block;"></div>`;
+                        dl.innerHTML += `<div class="result-item" style="flex-direction:row; align-items:center; gap:8px;" onclick="selectCarrier('${escapeHTML(c.name)}')">${logoHTML} <span>${escapeHTML(c.name)}</span></div>`;
+                    });
                 }
+                renderAdminLists();
+            });
+
+            globalSeriesUnsub = db.collection('series').onSnapshot(snapshot => {
+                cloudSeries = [];
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    cloudSeries.push(data);
+                });
+
+                const sl = document.getElementById('sketch-series');
+                if(sl) {
+                    sl.innerHTML = '<option value="">[ Wybierz model z listy ]</option>';
+                    const categories = [
+                        "Lokomotywy elektryczne",
+                        "Lokomotywy spalinowe",
+                        "Elektryczne zespoły trakcyjne",
+                        "Spalinowe zespoły trakcyjne i autobusy szynowe"
+                    ];
+                    categories.forEach(cat => {
+                        let catSeries = cloudSeries.filter(s => (s.category || 'Brak kategorii') === cat);
+                        if(catSeries.length > 0) {
+                            sl.innerHTML += `<option disabled style="background:var(--sub-bg); color:var(--accent-orange); font-weight:bold; text-align:center;">--- ${cat.toUpperCase()} ---</option>`;
+                            catSeries.sort((a,b) => sortPolishLocoSeries(a.name, b.name)).forEach(s => {
+                                let safeName = escapeHTML(s.name);
+                                let safeCat = escapeHTML(cat);
+                                let rawSubtypes = s.subtypes ? s.subtypes : [];
+                                let safeSubtypesJSON = JSON.stringify(rawSubtypes).replace(/"/g, '&quot;');
+                                sl.innerHTML += `<option value='{"name":"${safeName}", "cat":"${safeCat}", "subtypes":${safeSubtypesJSON}}'>${safeName}</option>`;
+                            });
+                        }
+                    });
+                    sl.innerHTML += `<option disabled style="background:var(--sub-bg); color:var(--accent-cyan); font-weight:bold; text-align:center;">--- INNE ---</option>`;
+                    sl.innerHTML += `<option value="CUSTOM">➕ Dodaj ręcznie (Brak na liście)</option>`;
+                }
+                renderAdminLists();
             });
 
             globalStationsUnsub = db.collection('globalData').doc('stations').onSnapshot(doc => {
@@ -1688,17 +1685,12 @@
             
             if(seriesList) {
                 seriesList.innerHTML = '';
-                const sortedSeries = [...cloudSeries].sort((a,b) => {
-                    let nameA = typeof a === 'object' ? a.name : a;
-                    let nameB = typeof b === 'object' ? b.name : b;
-                    return sortPolishLocoSeries(nameA, nameB);
-                });
+                const sortedSeries = [...cloudSeries].sort((a,b) => sortPolishLocoSeries(a.name, b.name));
                 sortedSeries.forEach(s => {
-                    let name = typeof s === 'object' ? s.name : s;
-                    let cat = typeof s === 'object' ? s.category : 'Inne';
-                    let power = typeof s === 'object' ? (s.power || 'Brak danych') : 'Brak danych';
-                    let subs = (typeof s === 'object' && s.subtypes && s.subtypes.length > 0) ? s.subtypes.join(', ') : 'Brak wariantów';
-                    let safeName = escapeHTML(name);
+                    let cat = s.category || 'Inne';
+                    let power = s.power || 'Brak danych';
+                    let subs = (s.subtypes && s.subtypes.length > 0) ? s.subtypes.join(', ') : 'Brak wariantów';
+                    let safeName = escapeHTML(s.name);
                     
                     seriesList.innerHTML += `<div class="admin-data-item" style="flex-direction:column; align-items:flex-start;">
                         <div style="display:flex; justify-content:space-between; width:100%;">
@@ -1712,13 +1704,9 @@
             }
             if(carriersList) {
                 carriersList.innerHTML = '';
-                [...cloudCarriers].sort((a,b)=>{
-                    let na = typeof a === 'object' ? a.name : a;
-                    let nb = typeof b === 'object' ? b.name : b;
-                    return na.localeCompare(nb,'pl');
-                }).forEach(c => {
-                    let safeC = escapeHTML(typeof c === 'object' ? c.name : c);
-                    let logoThumb = (typeof c === 'object' && c.logo) ? `<img src="${c.logo}" style="height:20px; width:auto; max-width:80px; border-radius:3px; object-fit:contain; flex-shrink:0;">` : '';
+                [...cloudCarriers].sort((a,b) => a.name.localeCompare(b.name, 'pl')).forEach(c => {
+                    let safeC = escapeHTML(c.name);
+                    let logoThumb = c.logo ? `<img src="${c.logo}" style="height:20px; width:auto; max-width:80px; border-radius:3px; object-fit:contain; flex-shrink:0;">` : '';
                     carriersList.innerHTML += `<div class="admin-data-item"><span style="display:flex; align-items:center; gap:6px;">${logoThumb}${safeC}</span> <button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="adminRemoveGlobalData('carriers', '${safeC}')">Usuń</button></div>`;
                 });
             }
@@ -1789,7 +1777,7 @@
             const rawSubtypes = document.getElementById('mod-add-series-subtypes').value.trim();
             if(!val) return;
 
-            if(cloudSeries.some(s => (typeof s === 'object' ? s.name : s).toLowerCase() === val.toLowerCase())) {
+            if(cloudSeries.some(s => s.name.toLowerCase() === val.toLowerCase())) {
                 showToast("Taka seria taboru już istnieje!", "warn"); return;
             }
             
@@ -1800,10 +1788,8 @@
 
             try {
                 let newSeriesObj = { name: val, category: cat, power: power, subtypes: subtypesArr };
-                await db.collection('globalData').doc('lists').set({
-                    series: firebase.firestore.FieldValue.arrayUnion(newSeriesObj)
-                }, { merge: true });
-                showToast("Dodano model do bazy!", "success");
+                await db.collection('series').add(newSeriesObj);
+                showToast("Dodano model do nowej bazy!", "success");
                 document.getElementById('mod-add-series-value').value = '';
                 document.getElementById('mod-add-series-subtypes').value = '';
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
@@ -1812,11 +1798,11 @@
         async function adminRemoveSeries(name) {
             if(!confirm(`Na pewno usunąć "${name}" z bazy?`)) return;
             try {
-                const updatedSeries = cloudSeries.filter(s => (typeof s === 'object' ? s.name : s) !== name);
-                await db.collection('globalData').doc('lists').update({
-                    series: updatedSeries
-                });
-                showToast("Usunięto.", "success");
+                let s = cloudSeries.find(x => x.name === name);
+                if (s && s.id) {
+                    await db.collection('series').doc(s.id).delete();
+                    showToast("Usunięto.", "success");
+                }
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
@@ -1907,15 +1893,12 @@
         }
 
         async function saveCarrierToCloud(carrierObj) {
-            let existing = cloudCarriers;
-            if(existing.map(e => typeof e === 'object' ? e.name.toLowerCase() : e.toLowerCase()).includes(carrierObj.name.toLowerCase())) {
+            if(cloudCarriers.some(e => e.name.toLowerCase() === carrierObj.name.toLowerCase())) {
                 showToast("Taki przewoźnik już istnieje!", "warn"); return;
             }
             try {
-                await db.collection('globalData').doc('lists').set({
-                    carriers: firebase.firestore.FieldValue.arrayUnion(carrierObj)
-                }, { merge: true });
-                showToast("Dodano przewoźnika do bazy!", "success");
+                await db.collection('carriers').add(carrierObj);
+                showToast("Dodano przewoźnika do nowej bazy!", "success");
                 document.getElementById('mod-add-carrier-value').value = '';
                 adminUploadedCarrierLogo = '';
                 let preview = document.getElementById('admin-carrier-logo-preview');
@@ -1928,7 +1911,7 @@
         
         function updateCarrierLogoPreview(carrierName) {
             let logoImg = document.getElementById('sketch-carrier-logo-preview');
-            let carrierData = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === carrierName);
+            let carrierData = cloudCarriers.find(c => c.name === carrierName);
             if (carrierData && typeof carrierData === 'object' && carrierData.logo) {
                 logoImg.src = carrierData.logo;
                 logoImg.style.display = 'block';
@@ -1937,41 +1920,19 @@
             }
         }
 
-        async function adminAddGlobalData(type) {
-            const inputId = 'mod-add-carrier-value';
-            const val = document.getElementById(inputId).value.trim();
-            if(!val) return;
-
-            let existing = cloudCarriers;
-            if(existing.map(e => e.toLowerCase()).includes(val.toLowerCase())) {
-                showToast("Taka wartość już istnieje!", "warn"); return;
-            }
-
-            try {
-                await db.collection('globalData').doc('lists').set({
-                    [type]: firebase.firestore.FieldValue.arrayUnion(val)
-                }, { merge: true });
-                showToast("Dodano do bazy!", "success");
-                document.getElementById(inputId).value = '';
-            } catch(e) { showToast("Błąd: " + e.message, "error"); }
-        }
-
         async function adminRemoveGlobalData(type, val) {
+            if(type !== 'carriers') return;
             if(!confirm(`Na pewno usunąć "${val}" z bazy?`)) return;
             try {
-                let toRemove = val;
-                if (type === 'carriers') {
-                    let objMatch = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === val);
-                    if(objMatch) toRemove = objMatch;
+                let c = cloudCarriers.find(x => x.name === val);
+                if (c && c.id) {
+                    await db.collection('carriers').doc(c.id).delete();
+                    showToast("Usunięto.", "success");
                 }
-                await db.collection('globalData').doc('lists').update({
-                    [type]: firebase.firestore.FieldValue.arrayRemove(toRemove)
-                });
-                showToast("Usunięto.", "success");
             } catch(e) { showToast("Błąd: " + e.message, "error"); }
         }
 
-        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN MAPA + BROUTER + DRAG&DROP) ---
+        // --- ZARZĄDZANIE KREATOREM LINII (ADMIN MAPA \+ BROUTER \+ DRAG&DROP) ---
         let draggedAdminRow = null;
 
         function handleDragStart(e) {
@@ -3401,7 +3362,7 @@
                 let card = document.createElement('div'); card.className = 'photo-card';
                 let subInfo = p.subtype ? `<span style="font-size:11px; color:var(--text-muted);">(${escapeHTML(p.subtype)})</span> ` : '';
                 
-                let carrierData = cloudCarriers.find(c => (typeof c === 'object' ? c.name : c) === p.carrier);
+                let carrierData = cloudCarriers.find(c => c.name === p.carrier);
                 let logoHTML = (carrierData && typeof carrierData === 'object' && carrierData.logo) ? `<img src="${carrierData.logo}" style="height:20px; width:auto; max-width:80px; object-fit:contain; border-radius:3px; vertical-align:middle; margin-right:5px; flex-shrink:0;">` : '';
                 card.innerHTML = `
                     <div style="display:flex; gap:12px; align-items:center;">
