@@ -1199,7 +1199,9 @@
             [54.83, 18.35]
         ];
 
-        let userData = { visitedStations: [], rides: [], photos: [], friends: [], pendingRequests: [] };
+        let userData = { visitedStations: [], rides: [], friends: [], pendingRequests: [] };
+        let userPhotos = [];
+        let userPhotosUnsub = null;
         let globalSelectedSubtype = '';
 
         const changelogData = [
@@ -1317,7 +1319,7 @@
                         role: "user",
                         pendingRequests: [],
                         notifications: [],
-                        userData: { visitedStations: [], rides: [], photos: [], friends: [] },
+                        userData: { visitedStations: [], rides: [], friends: [] },
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
@@ -1370,8 +1372,41 @@
                             role: escapeHTML(data.role) || "user",
                             createdAt: data.createdAt
                         };
-                        userData = data.userData || { visitedStations: [], rides: [], photos: [], friends: [] };
+                        userData = data.userData || { visitedStations: [], rides: [], friends: [] };
                         
+                        
+                        // AUTO-MIGRACJA STARYCH ZDJĘĆ DO NOWEJ KOLEKCJI
+                        if (userPhotos && userPhotos.length > 0) {
+                            let batch = db.batch();
+                            userPhotos.forEach(p => {
+                                let docRef = db.collection('photos').doc();
+                                p.uid = currentUser.uid;
+                                p.author = currentUser.username;
+                                batch.set(docRef, p);
+                            });
+                            batch.update(db.collection('users').doc(currentUser.uid), {
+                                'userData.photos': firebase.firestore.FieldValue.delete()
+                            });
+                            batch.commit().then(() => showToast("Zmigrowano stare zdjęcia do nowej bazy!", "success"));
+                            delete userData.photos;
+                        }
+                        
+                        if (userPhotosUnsub) userPhotosUnsub();
+                        userPhotosUnsub = db.collection('photos').where('uid', '==', currentUser.uid).onSnapshot(snap => {
+                            userPhotos = [];
+                            snap.forEach(doc => {
+                                let d = doc.data();
+                                d.id = doc.id;
+                                userPhotos.push(d);
+                            });
+                            if (sessionInitialized) {
+                                updatePhotosUI();
+                                updateTaborStats();
+                                if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData, userPhotos);
+                                refreshStatsAndRank();
+                            }
+                        });
+    
                         if (!sessionInitialized) {
                             sessionInitialized = true;
                             loadGlobalData();
@@ -1384,7 +1419,7 @@
                             updatePhotosUI();
                             renderFriendsUI();
                             refreshStatsAndRank();
-                            if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData);
+                            if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData, userPhotos);
                         }
                         
                         checkPendingRequests(data.pendingRequests || []);
@@ -1398,6 +1433,7 @@
                 if (globalSeriesUnsub) { globalSeriesUnsub(); globalSeriesUnsub = null; }
                 if (globalStationsUnsub) { globalStationsUnsub(); globalStationsUnsub = null; }
                 if (globalLinesUnsub) { globalLinesUnsub(); globalLinesUnsub = null; }
+                if (userPhotosUnsub) { userPhotosUnsub(); userPhotosUnsub = null; }
 
                 document.getElementById('main-content').style.display = 'none';
                 document.getElementById('nav-menu').style.display = 'none';
@@ -1414,7 +1450,7 @@
             if (!currentUser) return;
             localStorage.setItem(`spis_kolejowy_data_${currentUser.email}`, JSON.stringify(userData));
             refreshStatsAndRank();
-            if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData);
+            if (map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData, userPhotos);
 
             db.collection('users').doc(currentUser.uid).update({
                 userData: userData
@@ -1535,7 +1571,7 @@
             updatePhotosUI();
             refreshStatsAndRank();
 
-            setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData); }, 300);
+            setTimeout(() => { if(map && mainDynamicLayer) renderMapDynamicElements(map, mainDynamicLayer, userData, userPhotos); }, 300);
         }
 
         async function repairCorruptedStationsInCloud(rawList) {
@@ -2487,19 +2523,12 @@
             }
         }
 
-        async function adminDeletePhoto(targetUid, photoUrl) {
+        async function adminDeletePhoto(docId) {
             if(!confirm("MODERACJA: Czy na pewno chcesz usunąć to zdjęcie tego użytkownika?")) return;
             try {
-                const doc = await db.collection('users').doc(targetUid).get();
-                if(!doc.exists) return;
-                
-                let targetUserData = doc.data().userData;
-                targetUserData.photos = targetUserData.photos.filter(p => p.url !== photoUrl);
-                
-                await db.collection('users').doc(targetUid).update({ 'userData': targetUserData });
+                await db.collection('photos').doc(docId).delete();
                 showToast("Usunięto zdjęcie w trybie moderatora.", "success");
-                
-                openProfile(targetUid);
+                if(currentlyViewedProfile) openProfile(currentlyViewedProfile.uid);
             } catch(e) {
                 showToast("Błąd usuwania zdjęcia: " + e.message, "error");
             }
@@ -2682,7 +2711,7 @@
             }).catch(e => console.warn("Borders offline fallback"));
         }
 
-        function renderMapDynamicElements(targetMap, layerGroup, dataObj) {
+        function renderMapDynamicElements(targetMap, layerGroup, dataObj, photosArr = []) {
             if (!targetMap || !layerGroup) return;
             layerGroup.clearLayers();
             
@@ -2711,8 +2740,8 @@
                 });
             }
 
-            if (dataObj.photos && dataObj.photos.length > 0) {
-                dataObj.photos.forEach(photo => {
+            if (photosArr && photosArr.length > 0) {
+                photosArr.forEach(photo => {
                     if (photo.lat && photo.lng) {
                         let subInfo = photo.subtype ? ` <i>(${escapeHTML(photo.subtype)})</i>` : '';
                         L.marker([photo.lat, photo.lng], { icon: photoIconObj })
@@ -2740,7 +2769,7 @@
             if (viewName === 'aktualizacja') {
                 refreshStatsAndRank();
             }
-            if (viewName === 'mapa' && map) setTimeout(() => { map.invalidateSize(); renderMapDynamicElements(map, mainDynamicLayer, userData); }, 200);
+            if (viewName === 'mapa' && map) setTimeout(() => { map.invalidateSize(); renderMapDynamicElements(map, mainDynamicLayer, userData, userPhotos); }, 200);
             if (viewName === 'zdjecia') { initMiniMap(); setTimeout(() => { if (miniMap) miniMap.invalidateSize(); }, 200); }
             
             if (viewName === 'admin' && currentUser) {
@@ -2781,9 +2810,17 @@
                         banner: data.banner || "",
                         createdAt: data.createdAt,
                         role: escapeHTML(data.role) || 'user',
-                        userData: data.userData || { photos: [], rides: [], visitedStations: [] }
+                        userData: data.userData || { rides: [], visitedStations: [] }
                     };
                 }
+                
+                const photosSnap = await db.collection('photos').where('uid', '==', pData.uid).get();
+                pData.photos = [];
+                photosSnap.forEach(d => {
+                    let photo = d.data();
+                    photo.id = d.id;
+                    pData.photos.push(photo);
+                });
                 
                 currentlyViewedProfile = pData;
 
@@ -2896,7 +2933,7 @@
                 const gallery = document.getElementById('profile-gallery');
                 gallery.innerHTML = '';
                 
-                let publicPhotos = pData.userData.photos.filter(p => p.visibility !== 'private');
+                let publicPhotos = pData.photos.filter(p => p.visibility !== 'private');
                 if (publicPhotos.length === 0) {
                     gallery.innerHTML = '<span style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Brak zdjęć w galerii.</span>';
                 } else {
@@ -2914,9 +2951,9 @@
                         
                         let moderBtn = '';
                         if(isMe) {
-                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%; font-size:11px;" onclick="removePhotoByUrl('${p.url}')">🗑️ Usuń swoje zdjęcie</button>`;
+                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%; font-size:11px;" onclick="removePhoto('${p.id}')">🗑️ Usuń swoje zdjęcie</button>`;
                         } else if(currentUser.role === 'admin' || currentUser.role === 'moderator') {
-                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%; font-size:11px;" onclick="adminDeletePhoto('${pData.uid}', '${p.url}')">🗑️ Usuń (Moderacja)</button>`;
+                            moderBtn = `<button class="btn-danger" style="margin-top:8px; width:100%; font-size:11px;" onclick="adminDeletePhoto('${p.id}')">🗑️ Usuń (Moderacja)</button>`;
                         }
                         
                         gallery.innerHTML += `
@@ -2950,14 +2987,7 @@
             openProfile(currentUser.uid);
         }
 
-        function removePhotoByUrl(url) {
-            if(!confirm("Czy na pewno usunąć to zdjęcie z Twojego spisu?")) return;
-            userData.photos = userData.photos.filter(p => p.url !== url);
-            saveUserDataToStorage();
-            updatePhotosUI();
-            showToast("Zdjęcie usunięte.", "warn");
-            openProfile(currentUser.uid);
-        }
+        
 
         function handleProfileFriendAction() {
             if(!currentlyViewedProfile) return;
@@ -2991,7 +3021,7 @@
     
             document.getElementById('modal-friend-rides').innerText = fData.rides ? fData.rides.length : 0;
             document.getElementById('modal-friend-km').innerText = calculateTotalKm(fData.rides) + " km";
-            document.getElementById('modal-friend-photos').innerText = fData.photos ? fData.photos.length : 0;
+            document.getElementById('modal-friend-photos').innerText = currentlyViewedProfile.photos ? currentlyViewedProfile.photos.length : 0;
             
             document.getElementById('friend-modal').style.display = 'flex';
             
@@ -3003,7 +3033,7 @@
             }
             setTimeout(() => { 
                 friendMap.invalidateSize(); 
-                renderMapDynamicElements(friendMap, friendDynamicLayer, fData);
+                renderMapDynamicElements(friendMap, friendDynamicLayer, fData, currentlyViewedProfile.photos);
             }, 200);
         }
 
@@ -3181,14 +3211,14 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const maxWidth = 1600, maxHeight = 1200;
+                    const maxWidth = 1000, maxHeight = 800;
                     let width = img.width, height = img.height;
                     if (width > height) { if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; } } 
                     else { if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; } }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    uploadedImageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    uploadedImageDataUrl = canvas.toDataURL('image/webp', 0.75);
                     showPreviewImage(uploadedImageDataUrl);
                     showToast(`Skompresowano zdjęcie (${width}x${height}px)`);
                 };
@@ -3280,9 +3310,9 @@
                 visibility: visibility, device: device
             };
 
-            userData.photos.push(newPhoto);
-            saveUserDataToStorage();
-            updatePhotosUI();
+            newPhoto.uid = currentUser.uid;
+            newPhoto.author = currentUser.username;
+            db.collection('photos').add(newPhoto).catch(e => showToast('Błąd zapisu: ' + e.message, 'error'));
 
             document.getElementById('sketch-number').value = '';
             document.getElementById('sketch-painting-custom').value = '';
@@ -3312,10 +3342,10 @@
 
         function updatePhotosUI() {
             let container = document.getElementById('user-photos-list');
-            if (userData.photos.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak wpisów w bazie.</span>`; updateTaborStats(); return; }
+            if (userPhotos.length === 0) { container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Brak wpisów w bazie.</span>`; updateTaborStats(); return; }
             container.innerHTML = '';
             
-            userData.photos.forEach((p, idx) => {
+            userPhotos.forEach((p) => {
                 let card = document.createElement('div'); card.className = 'photo-card';
                 let subInfo = p.subtype ? `<span style="font-size:11px; color:var(--text-muted);">(${escapeHTML(p.subtype)})</span> ` : '';
                 
@@ -3327,17 +3357,24 @@
                         <div><strong style="color:var(--accent-yellow); font-size:14px;">${escapeHTML(p.series)} ${subInfo}${escapeHTML(p.number)}</strong> <span style="color:var(--accent-cyan);">${logoHTML}[${escapeHTML(p.carrier) || 'Brak'}]</span>
                         <span style="color:var(--text-muted);">• ${escapeHTML(p.painting) || 'Standardowe'}</span><br>
                         <span style="color:var(--text-muted); font-size:11px;">Data: ${escapeHTML(p.date)} • ${p.visibility === 'private' ? '<span style="color:#ff4d4d">Niepubliczne</span>' : 'Publiczne'} • ${escapeHTML(p.device) || 'Aparat'}</span></div></div>
-                    <button class="btn-danger" onclick="removePhoto(${idx})">Usuń</button>`;
+                    <button class="btn-danger" onclick="removePhoto('${p.id}')">Usuń</button>`;
                 container.appendChild(card);
             });
             updateTaborStats();
         }
 
-        function removePhoto(idx) {
-            userData.photos.splice(idx, 1);
-            saveUserDataToStorage();
-            updatePhotosUI();
-            showToast('Usunięto zdjęcie.', 'warn');
+        async function removePhoto(docId) {
+            if(!confirm('Czy na pewno chcesz usunąć to zdjęcie?')) return;
+            try {
+                await db.collection('photos').doc(docId).delete();
+                showToast('Usunięto zdjęcie.', 'warn');
+                if (currentlyViewedProfile && currentlyViewedProfile.uid === currentUser.uid) {
+                    currentlyViewedProfile.photos = currentlyViewedProfile.photos.filter(p => p.id !== docId);
+                    openProfile(currentUser.uid);
+                }
+            } catch(e) {
+                showToast('Błąd usuwania: ' + e.message, 'error');
+            }
         }
 
         // --- STATYSTYKI TABORU & DRILLDOWN ---
@@ -3365,8 +3402,8 @@
             const stats = {};
             cats.forEach(c => { stats[c.id] = { series: new Set(), count: 0 }; });
 
-            if (userData.photos && userData.photos.length > 0) {
-                userData.photos.forEach(p => {
+            if (userPhotos && userPhotos.length > 0) {
+                userPhotos.forEach(p => {
                     let cat = p.category || getCategoryForSeries(p.series || '');
                     if (!stats[cat]) cat = "Lokomotywy elektryczne";
                     stats[cat].series.add((p.series || 'Nieznana').toUpperCase().trim()); 
@@ -3404,7 +3441,7 @@
 
             const validCats = ["Lokomotywy elektryczne", "Elektryczne zespoły trakcyjne", "Lokomotywy spalinowe", "Spalinowe zespoły trakcyjne i autobusy szynowe", "Lokomotywy parowe"];
             let seriesMap = {};
-            userData.photos.forEach(p => {
+            userPhotos.forEach(p => {
                 let pCat = p.category || getCategoryForSeries(p.series || '');
                 if (!validCats.includes(pCat)) pCat = "Lokomotywy elektryczne";
                 
@@ -3433,7 +3470,7 @@
             document.getElementById('drilldown-photos-title').innerText = `Seria: ${escapeHTML(seriesName)}`;
             
             let photosCont = document.getElementById('drilldown-photos-container'); photosCont.innerHTML = '';
-            let targetPhotos = userData.photos.filter(p => (p.series || 'Nieznana').toUpperCase().trim() === seriesName);
+            let targetPhotos = userPhotos.filter(p => (p.series || 'Nieznana').toUpperCase().trim() === seriesName);
             
             targetPhotos.sort((a,b) => (a.number || '').localeCompare(b.number || '', 'pl', { numeric: true }));
 
